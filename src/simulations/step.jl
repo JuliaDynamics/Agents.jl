@@ -1,61 +1,38 @@
+import CommonSolve
+using CommonSolve: step!
 export step!, dummystep
 
 """
-    step!(model, agent_step!, n::Int = 1)
-    step!(model, agent_step!, model_step!, n::Int = 1, agents_first::Bool = true)
+    step!(model::ABM)
 
-Update agents `n` steps according to the stepping function `agent_step!`.
-Agents will be activated as specified by the `model.scheduler`.
-`model_step!` is triggered _after_ every scheduled agent has acted, unless
-the argument `agents_first` is `false` (which then first calls `model_step!` and then
-activates the agents).
+Perform one simulation step for the `model`.
+For continuous time models, this means to run to the model
+up to the next event and perform that.
 
-`step!` ignores scheduled IDs that do not exist within the model, allowing
-you to safely kill agents dynamically.
+    step!(model::ABM, t::Real)
 
-    step!(model, agent_step!, model_step!, n::Function, agents_first::Bool = true)
+Step the model forwards until there is a temporal difference `≥ t`
+from the current model time. I.e., step the model forwards for at least `t` time.
+For discrete time models like [`StandardABM`](@ref) `t` must be integer
+and evolves the model for _exactly_ `t` steps.
 
-In this version `n` is a function.
-Then `step!` runs the model until `n(model, s)` returns `true`, where `s` is the
-current amount of steps taken, starting from 0.
-For this method of `step!`, `model_step!` must be provided always (use [`dummystep`](@ref)
-if you have no model stepping dynamics).
+    step!(model::ABM, f::Function)
 
-See also [Advanced stepping](@ref) for stepping complex models where `agent_step!` might
-not be convenient.
+Step the model forwards until `f(model, t)` returns `true`,
+where `t` is the current amount of time the model has been evolved
+for, starting from the model's initial time.
+
+See also [Advanced stepping](@ref advanced_stepping).
 """
-function step! end
-
-"""
-    dummystep(model)
-
-Use instead of `model_step!` in [`step!`](@ref) if no function is useful to be defined.
-"""
-dummystep(model) = nothing
-"""
-    dummystep(agent, model)
-
-Use instead of `agent_step!` in [`step!`](@ref) if no function is useful to be defined.
-"""
-dummystep(agent, model) = nothing
-
-until(s, n::Integer, model) = s < n
-until(s, n, model) = !n(model, s)
-
-step!(model::ABM, agent_step!, n::Integer=1, agents_first::Bool=true) = step!(model, agent_step!, dummystep, n, agents_first)
-
-function step!(model::ABM, agent_step!, model_step!, n = 1, agents_first=true)
-    s = 0
-    while until(s, n, model)
-        !agents_first && model_step!(model)
-        if agent_step! ≠ dummystep
-            activation_order = schedule(model)
-            for index in activation_order
-                index in allids(model) || continue
-                agent_step!(model.agents[index], model)
-            end
-        end
-        agents_first && model_step!(model)
-        s += 1
-    end
+function CommonSolve.step!(model::AgentBasedModel, args...)
+    error(lazy"`step!` not implemented yet for model of type $(typeof(model)).")
+    return model
 end
+
+# Generic functions that are used in the stepping of all types of models
+# this one is a type dispatch for whether the model is "unremovable" or not
+agent_not_removed(id, model::DictABM) = hasid(model, id)
+agent_not_removed(::Int, ::VecABM) = true
+# this one just checks until when we should step in a `while` loop
+until(t1, t0, n::Real, ::ABM) = t1 < t0+n
+until(t1, t0, f, model::ABM) = !f(model, t1-t0)

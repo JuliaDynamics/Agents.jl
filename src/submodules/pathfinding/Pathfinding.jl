@@ -16,7 +16,7 @@ precalculated path using the [`move_along_route!`](@ref) function.
 
 Refer to the [Maze Solver](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/maze/),
 [Mountain Runners](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/runners/)
-and [Rabbit, Fox, Hawk](@ref)
+and [Rabbit, Fox, Hawk](https://juliadynamics.github.io/Agents.jl/stable/examples/rabbit_fox_hawk/)
 examples using path-finding and see the available functions below as well.
 """
 module Pathfinding
@@ -46,5 +46,6 @@ export CostMetric,
 # Deprecations
 @deprecate set_target! plan_route!
 @deprecate set_best_target! plan_best_route!
+@deprecate kill_agent! remove_agent!
 
 end # module

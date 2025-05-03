@@ -10,10 +10,7 @@ const SPEED = 0.004
 const AGENTS_IN_TEXT = 800 # how many agents to create inside the text
 const steps_per_day = 24
 
-mutable struct PoorSoul <: AbstractAgent
-    id::Int
-    pos::NTuple{2,Float64}
-    vel::NTuple{2,Float64}
+@agent struct PoorSoul(ContinuousAgent{2,Float64})
     mass::Float64
     days_infected::Int  # number of days since is infected
     status::Symbol  # :S, :I or :R
@@ -37,7 +34,7 @@ end
 function sir_model_step!(model)
     r = model.interaction_radius
     for (a1, a2) in interacting_pairs(model, r, :all)
-        transmit!(a1, a2, model.reinfection_probability, model.rng)
+        transmit!(a1, a2, model.reinfection_probability, abmrng(model))
         elastic_collision!(a1, a2, :mass)
     end
 end
@@ -55,7 +52,7 @@ function recover_or_die!(agent, model)
     if agent.days_infected ≥ agent.recovery_period
         if agent.mass ≠ Inf
             kill_agent!(agent, model)
-        elseif rand(model.rng) ≤ model.death_rate
+        elseif rand(abmrng(model)) ≤ model.death_rate
             kill_agent!(agent, model)
         else
             agent.status = :R
@@ -94,7 +91,7 @@ function sir_logo_initiation(;
     )
     rng = Random.Xoshiro(seed)
     space = ContinuousSpace(logo_dims ./ 100)
-    model = ABM(PoorSoul, space; rng, properties)
+    model = StandardABM(PoorSoul, space; rng, properties)
 
     ## Add pre-defined static individuals
     #--------------------------------------

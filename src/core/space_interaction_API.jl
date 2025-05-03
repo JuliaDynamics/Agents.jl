@@ -1,6 +1,6 @@
 #=
 This file establishes the agent-space interaction API.
-All space types should implement this API (and obviously be subtypes of `AbstractSpace`)
+All space types should implement this API (and be subtypes of `AbstractSpace`)
 Some functions DO NOT need to be implemented for every space, they are space agnostic.
 These functions have complete source code here, while the functions that DO need to
 be implemented for every space have only documentation strings here and an
@@ -13,15 +13,16 @@ fields should be supplied. See the top of src/core/agents.jl for examples.
 =#
 export move_agent!,
     add_agent!,
-    add_agent_pos!,
-    kill_agent!,
-    genocide!,
+    add_agent_own_pos!,
+    remove_agent!,
+    remove_all!,
     random_position,
     nearby_positions,
     nearby_ids,
     nearby_agents,
     random_nearby_id,
     random_nearby_agent,
+    random_nearby_position,
     plan_route!,
     plan_best_route!,
     move_along_route!,
@@ -32,12 +33,14 @@ export move_agent!,
 #######################################################################################
 """
     random_position(model) → pos
+
 Return a random position in the model's space (always with appropriate Type).
 """
 random_position(model) = notimplemented(model)
 
 """
     add_agent_to_space!(agent, model)
+
 Add the agent to the underlying space structure at the agent's own position.
 This function is called after the agent is already inserted into the model dictionary
 and `maxid` has been updated. This function is NOT part of the public API.
@@ -56,20 +59,20 @@ remove_agent_from_space!(agent, model) = notimplemented(model)
 # %% IMPLEMENT: Neighbors and stuff
 #######################################################################################
 """
-    nearby_ids(position, model::ABM, r = 1; kwargs...) → ids
+    nearby_ids(pos, model::ABM, r = 1; kwargs...) → ids
 
 Return an iterable over the IDs of the agents within distance `r` (inclusive) from the given
-`position`. The `position` must match type with the spatial structure of the `model`.
+position. The position must match type with the spatial structure of the `model`.
 The specification of what "distance" means depends on the space, hence it is explained
 in each space's documentation string. Keyword arguments are space-specific and also
 described in each space's documentation string.
 
-`nearby_ids` always includes IDs with 0 distance to `position`.
+`nearby_ids` always includes IDs with 0 distance to `pos`.
 """
-nearby_ids(position, model, r = 1) = notimplemented(model)
+nearby_ids(pos, model, r = 1) = notimplemented(model)
 
 """
-    nearby_positions(position, model::ABM{<:DiscreteSpace}, r=1; kwargs...)
+    nearby_positions(pos, model::ABM{<:DiscreteSpace}, r=1; kwargs...)
 
 Return an iterable of all positions within "radius" `r` of the given `position`
 (which excludes given `position`).
@@ -85,7 +88,7 @@ For [`OpenStreetMapSpace`](@ref) this means "nearby intersections" and operates 
 on the underlying graph of the OSM, providing the intersection nodes nearest to the
 given position.
 """
-nearby_positions(position, model, r = 1) = notimplemented(model)
+nearby_positions(pos, model, r = 1) = notimplemented(model)
 
 #######################################################################################
 # %% OPTIONAL IMPLEMENT
@@ -111,7 +114,7 @@ has been set for it. Used in setups where using [`move_along_route!`](@ref) is v
 is_stationary(agent, model) = notimplemented(model)
 
 #######################################################################################
-# %% Space agnostic killing and moving
+# %% Space agnostic removing and moving
 #######################################################################################
 """
     move_agent!(agent [, pos], model::ABM) → agent
@@ -121,7 +124,7 @@ Move agent to the given position, or to a random one if a position is not given.
 
 The agent's position is updated to match `pos` after the move.
 """
-function move_agent!(agent::A, pos::ValidPos, model::ABM{<:AbstractSpace,A}) where {A<:AbstractAgent}
+function move_agent!(agent::AbstractAgent, pos::Any, model::ABM)
     remove_agent_from_space!(agent, model)
     agent.pos = pos
     add_agent_to_space!(agent, model)
@@ -132,120 +135,122 @@ function move_agent!(agent, model::ABM)
 end
 
 """
-    kill_agent!(agent::AbstractAgent, model::ABM)
-    kill_agent!(id::Int, model::ABM)
+    remove_agent!(agent::AbstractAgent, model::ABM)
+    remove_agent!(id::Int, model::ABM)
 
 Remove an agent from the model.
 """
-function kill_agent!(a::AbstractAgent, model::ABM)
-    remove_agent_from_model!(a, model)
+function remove_agent!(a::AbstractAgent, model::ABM)
+    remove_agent_from_container!(a, model)
     remove_agent_from_space!(a, model)
 end
-kill_agent!(id::Integer, model::ABM) = kill_agent!(model[id], model)
+remove_agent!(id::Integer, model::ABM) = remove_agent!(model[id], model)
 
 """
-    genocide!(model::ABM)
-Kill all the agents of the model.
+    remove_all!(model::ABM)
+Remove all the agents of the model.
 """
-function genocide!(model::ABM)
-    for a in allagents(model)
-        kill_agent!(a, model)
-    end
-    model.maxid[] = 0
+function remove_all!(model::ABM)
+    remove_all_from_space!(model)
+    remove_all_from_model!(model)
+    getfield(model, :maxid)[] = 0
 end
 
 """
-    genocide!(model::ABM, n::Int)
-Kill the agents whose IDs are larger than n.
+    remove_all!(model::ABM, n::Int)
+Remove the agents whose IDs are larger than n.
 """
-function genocide!(model::ABM, n::Integer)
+function remove_all!(model::ABM, n::Integer)
     for id in allids(model)
-        id > n && kill_agent!(id, model)
+        id > n && remove_agent!(id, model)
     end
-    model.maxid[] = n
+    getfield(model, :maxid)[] = n
 end
 
-
 """
-    genocide!(model::ABM, IDs)
-Kill the agents with the given IDs.
+    remove_all!(model::ABM, IDs)
+Remove the agents with the given IDs.
 """
-function genocide!(model::ABM, ids)
+function remove_all!(model::ABM, ids)
     for id in ids
-        kill_agent!(id, model)
+        remove_agent!(id, model)
     end
 end
 
 """
-    genocide!(model::ABM, f::Function)
-Kill all agents where the function `f(agent)` returns `true`.
+    remove_all!(model::ABM, f::Function)
+Remove all agents where the function `f(agent)` returns `true`.
 """
-function genocide!(model::ABM, f::Function)
+function remove_all!(model::ABM, f::Function)
     for a in allagents(model)
-        f(a) && kill_agent!(a, model)
+        f(a) && remove_agent!(a, model)
     end
 end
 
 #######################################################################################
 # %% Space agnostic adding
 #######################################################################################
+
 """
-    add_agent_pos!(agent::AbstractAgent, model::ABM) → agent
+    add_agent_own_pos!(agent::AbstractAgent, model::ABM) → agent
+
 Add the agent to the `model` at the agent's own position.
 """
-function add_agent_pos!(agent::AbstractAgent, model::ABM)
-    add_agent_to_model!(agent, model)
+function add_agent_own_pos!(agent::AbstractAgent, model::ABM)
+    add_agent_to_container!(agent, model)
+    extra_actions_after_add!(agent, model)
     add_agent_to_space!(agent, model)
     return agent
 end
 
 """
     add_agent!(agent::AbstractAgent [, pos], model::ABM) → agent
+
 Add the `agent` to the model in the given position.
 If `pos` is not given, the `agent` is added to a random position.
 The `agent`'s position is always updated to match `position`, and therefore for `add_agent!`
-the position of the `agent` is meaningless. Use [`add_agent_pos!`](@ref) to use
+the position of the `agent` is meaningless. Use [`add_agent_own_pos!`](@ref) to use
 the `agent`'s position.
-
 The type of `pos` must match the underlying space position type.
 """
 function add_agent!(agent::AbstractAgent, model::ABM)
     agent.pos = random_position(model)
-    add_agent_pos!(agent, model)
+    add_agent_own_pos!(agent, model)
 end
 
-function add_agent!(agent::AbstractAgent, pos::ValidPos, model::ABM)
+function add_agent!(agent::AbstractAgent, pos::Any, model::ABM)
     agent.pos = pos
-    add_agent_pos!(agent, model)
+    add_agent_own_pos!(agent, model)
 end
 
 """
-    add_agent!([pos,] model::ABM, args...; kwargs...) → newagent
-Create and add a new agent to the model using the constructor of the agent type of the model.
-Optionally provide a position to add the agent to as *first argument*, which must
-match the space position type.
+    add_agent!([pos,] model::ABM, args...) → newagent
+    add_agent!([pos,] model::ABM; kwargs...) → newagent
 
-This function takes care of setting the agent's id *and* position.
-The extra provided `args...` and `kwargs...` are propagated to other fields
-of the agent constructor (see example below).
+Use one of these two versions to create and add a new agent to the model using the
+constructor of the agent type of the model. Optionally provide a position to add
+the agent to as *first argument*, which must match the space position type.
 
-    add_agent!([pos,] A::Type, model::ABM, args...; kwargs...) → newagent
+This function takes care of setting the agent id *and* position.
+The extra provided `args...` or `kwargs...` are propagated to other fields
+of the agent constructor (see example below). Mixing `args...` and `kwargs...`
+is not possible, only one of the two can be used to set the fields.
 
-Use this version for mixed agent models, with `A` the agent type you wish to create
-(to be called as `A(id, pos, args...; kwargs...)`), because it is otherwise not possible
-to deduce a constructor for `A`.
+    add_agent!([pos,] A::Type, model::ABM, args...) → newagent
+    add_agent!([pos,] A::Type, model::ABM; kwargs...) → newagent
+
+Use one of these two versions for mixed agent models, with `A` the agent type you wish to create,
+because it is otherwise not possible to deduce a constructor for `A`.
 
 ## Example
+
 ```julia
 using Agents
-mutable struct Agent <: AbstractAgent
-    id::Int
-    pos::Int
-    w::Float64
-    k::Bool
+@agent struct Agent(GraphAgent)
+    w::Float64 = 0.1
+    k::Bool = false
 end
-Agent(id, pos; w=0.5, k=false) = Agent(id, pos, w, k) # keyword constructor
-model = ABM(Agent, GraphSpace(complete_digraph(5)))
+model = StandardABM(Agent, GraphSpace(complete_digraph(5)))
 
 add_agent!(model, 1, 0.5, true) # incorrect: id/pos is set internally
 add_agent!(model, 0.5, true) # correct: w becomes 0.5
@@ -253,34 +258,41 @@ add_agent!(5, model, 0.5, true) # add at position 5, w becomes 0.5
 add_agent!(model; w = 0.5) # use keywords: w becomes 0.5, k becomes false
 ```
 """
-function add_agent!(model::ABM{S,A}, properties...; kwargs...) where {S,A<:AbstractAgent}
-    add_agent!(A, model, properties...; kwargs...)
+function add_agent!(model::ABM, args::Vararg{Any, N}; kwargs...) where {N}
+    A = agenttype(model)
+    add_agent!(A, model, args...; kwargs...)
 end
 
-function add_agent!(A::Type{<:AbstractAgent}, model::ABM, properties...; kwargs...)
-    add_agent!(random_position(model), A, model, properties...; kwargs...)
+function add_agent!(A::Union{Function, Type}, model::ABM, 
+        args::Vararg{Any, N}; kwargs...) where {N}
+    add_agent!(random_position(model), A, model, args...; kwargs...)
 end
 
 function add_agent!(
-    pos::ValidPos,
-    model::ABM{S,A},
-    properties...;
-    kwargs...,
-) where {S,A<:AbstractAgent}
-    add_agent!(pos, A, model, properties...; kwargs...)
-end
-
-# lowest level:
-function add_agent!(
-    pos::ValidPos,
-    A::Type{<:AbstractAgent},
+    pos::Any,
     model::ABM,
-    properties...;
+    args::Vararg{Any, N};
     kwargs...,
-)
+) where {N}
+    A = agenttype(model)
+    add_agent!(pos, A, model, args...; kwargs...)
+end
+
+# lowest level - actually constructs the agent
+function add_agent!(
+    pos::Any,
+    A::Union{Function, Type},
+    model::ABM,
+    args::Vararg{Any, N};
+    kwargs...,
+) where {N}
     id = nextid(model)
-    newagent = A(id, pos, properties...; kwargs...)
-    add_agent_pos!(newagent, model)
+    if !isempty(args)
+        newagent = A(id, pos, args...)
+    else
+        newagent = A(; id = id, pos = pos, kwargs...)
+    end
+    add_agent_own_pos!(newagent, model)
 end
 
 #######################################################################################
@@ -292,7 +304,7 @@ end
 Same as `nearby_ids(agent.pos, model, r)` but the iterable *excludes* the given
 `agent`'s id.
 """
-function nearby_ids(agent::A, model::ABM, r = 1; kwargs...) where {A<:AbstractAgent}
+function nearby_ids(agent::AbstractAgent, model::ABM, r = 1; kwargs...)
     all = nearby_ids(agent.pos, model, r; kwargs...)
     Iterators.filter(i -> i ≠ agent.id, all)
 end
@@ -302,12 +314,7 @@ end
 
 Same as `nearby_positions(agent.pos, model, r)`.
 """
-function nearby_positions(
-    agent::A,
-    model::ABM{S,A},
-    r = 1;
-    kwargs...,
-) where {S,A<:AbstractAgent}
+function nearby_positions(agent::AbstractAgent, model::ABM, r = 1; kwargs...)
     nearby_positions(agent.pos, model, r; kwargs...)
 end
 
@@ -322,52 +329,91 @@ nearby_agents(a, model, r = 1; kwargs...) =
     (model[id] for id in nearby_ids(a, model, r; kwargs...))
 
 """
-    random_nearby_id(agent, model::ABM, r = 1; kwargs...) → id
+    random_nearby_id(agent, model::ABM, r = 1, f = nothing, alloc = false; kwargs...) → id
+Return the `id` of a random agent near the position of the given `agent`.
 
-Return the `id` of a random agent near the position of the given `agent` using an optimized
-algorithm from [Reservoir sampling](https://en.wikipedia.org/wiki/Reservoir_sampling#An_optimal_algorithm).
 Return `nothing` if no agents are nearby.
 
 The value of the argument `r` and possible keywords operate identically to [`nearby_ids`](@ref).
+
+A filter function `f(id)` can be passed so that to restrict the sampling on only those ids for which
+the function returns `true`. The argument `alloc` can be used if the filtering condition
+is expensive since in this case the allocating version can be more performant.
+`nothing` is returned if no nearby id satisfies `f`.
+
+For discrete spaces, use [`random_id_in_position`](@ref) instead to return a random id at a given
+position.
+
+This function, as all the other methods which sample from lazy iterators, uses an optimized
+algorithm which doesn't require to collect all elements to just sample one of them.
 """
-function random_nearby_id(a, model, r = 1; kwargs...)
-    # Uses Reservoir sampling (https://en.wikipedia.org/wiki/Reservoir_sampling)
+function random_nearby_id(a, model, r = 1, f = nothing, alloc = false; kwargs...)
     iter = nearby_ids(a, model, r; kwargs...)
-
-    res = iterate(iter)
-    isnothing(res) && return    # `iterate` returns `nothing` when it ends
-
-    choice, state = res         # random ID to return, and the state of the iterator
-    w = max(rand(model.rng), eps())  # rand returns in range [0,1)
-
-    skip_counter = 0            # skip entries in the iterator
-    while !isnothing(state) && !isnothing(iter)
-        if skip_counter == 0
-            choice, state = res
-            skip_counter = floor(log(rand(model.rng)) / log(1 - w))
-            w *= max(rand(model.rng), eps())
+    if isnothing(f)
+        return itsample(abmrng(model), iter, StreamSampling.AlgRSWRSKIP())
+    else
+        if alloc
+            return sampling_with_condition_single(iter, f, model)
         else
-            _, state = res
-            skip_counter -= 1
+            iter_filtered = Iterators.filter(id -> f(id), iter)
+            return itsample(abmrng(model), iter_filtered, StreamSampling.AlgRSWRSKIP())
         end
-
-        res = iterate(iter, state)
-        isnothing(res) && break
     end
-
-    return choice
 end
 
 """
-    random_nearby_agent(agent, model::ABM, r = 1; kwargs...) → agent
-
-Return the a random agent near the position of the given `agent`. Return `nothing` if no agent
+    random_nearby_agent(agent, model::ABM, r = 1, f = nothing, alloc = false; kwargs...) → agent
+Return a random agent near the position of the given `agent` or `nothing` if no agent
 is nearby.
 
 The value of the argument `r` and possible keywords operate identically to [`nearby_ids`](@ref).
+
+A filter function `f(agent)` can be passed so that to restrict the sampling on only those agents for which
+the function returns `true`. The argument `alloc` can be used if the filtering condition
+is expensive since in this case the allocating version can be more performant.
+`nothing` is returned if no nearby agent satisfies `f`.
+
+For discrete spaces, use [`random_agent_in_position`](@ref) instead to return a random agent at a given
+position.
 """
-function random_nearby_agent(a, model, r = 1; kwargs...)
-    id = random_nearby_id(a, model, r; kwargs...)
-    isnothing(id) && return
+function random_nearby_agent(a, model, r = 1, f = nothing, alloc = false; kwargs...)
+    iter_ids = nearby_ids(a, model, r; kwargs...)
+    if isnothing(f)
+        id = itsample(abmrng(model), iter_ids, StreamSampling.AlgRSWRSKIP())
+    else
+        if alloc
+            id = sampling_with_condition_single(iter_ids, f, model, id -> model[id])
+        else
+            iter_filtered = Iterators.filter(id -> f(model[id]), iter_ids)
+            id = itsample(abmrng(model), iter_filtered, StreamSampling.AlgRSWRSKIP())
+        end
+    end
+    isnothing(id) && return nothing
     return model[id]
+end
+
+"""
+    random_nearby_position(pos, model::ABM, r=1, f = nothing, alloc = false; kwargs...) → position
+Return a random position near the given position.
+Return `nothing` if the space doesn't allow for nearby positions.
+
+The value of the argument `r` and possible keywords operate identically to [`nearby_positions`](@ref).
+
+A filter function `f(pos)` can be passed so that to restrict the sampling on only those positions for which
+the function returns `true`. The argument `alloc` can be used if the filtering condition
+is expensive since in this case the allocating version can be more performant.
+`nothing` is returned if no nearby position satisfies `f`.
+"""
+function random_nearby_position(pos, model, r=1, f = nothing, alloc = false; kwargs...)
+    iter = nearby_positions(pos, model, r; kwargs...)
+    if isnothing(f)
+        return itsample(abmrng(model), iter, StreamSampling.AlgRSWRSKIP())
+    else
+        if alloc
+            return sampling_with_condition_single(iter, f, model)
+        else
+            iter_filtered = Iterators.filter(pos -> f(pos), iter)
+            return itsample(abmrng(model), iter_filtered, StreamSampling.AlgRSWRSKIP())
+        end
+    end
 end

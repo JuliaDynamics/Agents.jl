@@ -1,19 +1,27 @@
 export paramscan
 
 """
-    paramscan(parameters, initialize; kwargs...) → adf, mdf
+    paramscan(parameters::AbstractDict, initialize; kwargs...) → adf, mdf
 
-Perform a parameter scan of a ABM simulation output by collecting data from all
+Perform a parameter scan of an ABM simulation output by collecting data from all
 parameter combinations into dataframes (one for agent data, one for model data).
 The dataframes columns are both the collected data (as in [`run!`](@ref)) but also the
 input parameter values used.
 
-`parameters` is a dictionary with key type `Symbol` which contains various parameters that
-will be scanned over (as well as other parameters that remain constant).
-This function uses `DrWatson`'s [`dict_list`](https://juliadynamics.github.io/DrWatson.jl/dev/run&list/#DrWatson.dict_list)
-convention. This means that every entry of `parameters` that is a `Vector`
-contains many parameters and thus is scanned. All other entries of
-`parameters` that are not `Vector`s are not expanded in the scan.
+`parameters` is a dictionary with key type `Symbol`. Each entry of the dictionary
+maps a parameter key to the parameter values that should be scanned over
+(or to a single parameter value that will remain constant throughout the scans).
+The approach regarding `parameters` is as follows:
+
+- If the value of a specific key is a `Vector`, all values of the vector are expended
+  as values for the parameter to scan over.
+- If the value of a specific key is not a `Vector`, it is assumed that whatever this
+  value is, it corresponds to a single and constant parameter value and therefore it is not
+  expanded or scanned over.
+
+This is done so that parameter values that are inherently iterable (such as a `String`)
+are not wrongly expanded into their constituents. (if the value of a parameter
+is itself a `Vector`, then you need to pass in a vector of vectors to scan the parameter)
 
 The second argument `initialize` is a function that creates an ABM and returns it.
 It must accept keyword arguments which are the *keys* of the `parameters` dictionary.
@@ -24,8 +32,8 @@ see the example below.
 ## Keywords
 The following keywords modify the `paramscan` function:
 
-- `include_constants::Bool = false`: by default, only the varying parameters (Vector in
-  `parameters`) will be included in the output `DataFrame`. If `true`, constant parameters
+- `include_constants::Bool = false`: by default, only the varying parameters (`Vector` values
+  in `parameters`) will be included in the output `DataFrame`. If `true`, constant parameters
   (non-Vector in `parameters`) will also be included.
 - `parallel::Bool = false` whether `Distributed.pmap` is invoked to run simulations
   in parallel. This must be used in conjunction with `@everywhere` (see
@@ -33,25 +41,22 @@ The following keywords modify the `paramscan` function:
 - `showprogress::Bool = false` whether a progressbar will be displayed to indicate % runs finished.
 
 All other keywords are propagated into [`run!`](@ref).
-Furthermore, `agent_step!, model_step!, n` are also keywords here, that are given
-to [`run!`](@ref) as arguments. Naturally, stepping functions and the
-number of time steps (`agent_step!`, `model_step!`, and `n`) and at least one
-of `adata, mdata` are mandatory.
+Furthermore, `n` is also a keyword here, that is given to [`run!`](@ref) as argument.
+Naturally, the number of time steps `n` and at least one of `adata, mdata` are mandatory.
 The `adata, mdata` lists shouldn't contain the parameters that are already in
 the `parameters` dictionary to avoid duplication.
 
 ## Example
-A runnable example that uses `paramscan` is shown in [Schelling's segregation model](@ref).
+A runnable example that uses `paramscan` is shown in [Schelling's segregation model](@ref Tutorial).
 There, we define
 ```julia
 function initialize(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3)
     space = GridSpaceSingle(griddims, periodic = false)
     properties = Dict(:min_to_be_happy => min_to_be_happy)
-    model = ABM(SchellingAgent, space;
+    model = StandardABM(SchellingAgent, space;
                 properties = properties, scheduler = Schedulers.randomly)
     for n in 1:numagents
-        agent = SchellingAgent(n, (1, 1), false, n < numagents / 2 ? 1 : 2)
-        add_agent_single!(agent, model)
+        add_agent_single!(SchellingAgent, model, n < numagents / 2 ? 1 : 2)
     end
     return model
 end
@@ -67,13 +72,11 @@ parameters = Dict(
     :griddims => (20, 20),            # not Vector = not expanded
 )
 
-adf, _ = paramscan(parameters, initialize; adata, agent_step!, n = 3)
+adf, _ = paramscan(parameters, initialize; adata, n = 3)
 ```
-
-
 """
 function paramscan(
-    parameters::Dict,
+    parameters::AbstractDict,
     initialize;
     include_constants::Bool = false,
     parallel::Bool = false,
@@ -81,9 +84,13 @@ function paramscan(
     model_step! = dummystep,
     n = 1,
     showprogress::Bool = false,
+    warn_deprecation = true,
     kwargs...,
 )
-
+    if agent_step! != dummystep || model_step! != dummystep
+    @warn "Passing agent_step! and model_step! to paramscan is deprecated.
+          These functions should be already presented inside the model instance." maxlog=1
+    end
     if include_constants
         output_params = collect(keys(parameters))
     else
@@ -95,8 +102,7 @@ function paramscan(
     progress = ProgressMeter.Progress(length(combs); enabled = showprogress)
     mapfun = parallel ? pmap : map
     all_data = ProgressMeter.progress_map(combs; mapfun, progress) do comb
-        run_single(comb, output_params, initialize;
-                   agent_step!, model_step!, n, kwargs...)
+        run_single(comb, output_params, initialize; n, kwargs...)
     end
 
     df_agent = DataFrame()
@@ -139,7 +145,7 @@ function run_single(
     kwargs...,
 )
     model = initialize(; param_dict...)
-    df_agent_single, df_model_single = run!(model, agent_step!, model_step!, n; kwargs...)
+    df_agent_single, df_model_single = run!(model, n; kwargs...)
     output_params_dict = filter(j -> first(j) in output_params, param_dict)
     insertcols!(df_agent_single, output_params_dict...)
     insertcols!(df_model_single, output_params_dict...)

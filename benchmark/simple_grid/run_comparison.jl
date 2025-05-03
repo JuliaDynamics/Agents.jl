@@ -13,4 +13,4 @@ const moore = [
 include("dict_based.jl")
 include("gridspace_based.jl")
 include("simple_grid_space.jl")
-include("abusive_unkillable.jl")
+include("abusive_unremovable.jl")

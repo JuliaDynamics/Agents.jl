@@ -1,7 +1,7 @@
 # # Optimizing agent based models
 
 # Sometimes we need to fine-tune our ABMs parameters to a specific outcome.
-# The brute-force solution can quickly become infeasible for even for a few different
+# The brute-force solution can quickly become infeasible even for a few different
 # parameter settings over a number of valid scan ranges. Most of the time,
 # ABMs are also stochastic, so the effect of a parameter setting should be derived from
 # taking the average value only after running the model several times.
@@ -23,7 +23,7 @@
 # To look for optimal parameters, we need to define a cost function.
 # The cost function takes as arguments the model parameters that we want to tune;
 # in a SIR model, that would be the migration rate, death rate, transmission rate,
-# when an infected person has been detected (`β_det`), or when the remain undetected
+# when an infected person has been detected (`β_det`), or when they remain undetected
 # (`β_und`), infection period, reinfection probability, and time until the infection
 # is detected. The function returns an *objective*: this value takes the form one
 # or more numbers, which the optimiser will attempt to minimize.
@@ -33,7 +33,7 @@
 # using Statistics: mean
 #
 # function cost(x)
-#     model, anget_step!,  = Models.sir(;
+#     model = sir(;
 #         Ns = [500, 500, 500],
 #         migration_rate = x[1],
 #         death_rate = x[2],
@@ -49,7 +49,6 @@
 #
 #     _, mdf = run!(
 #         model,
-#         agent_step!,
 #         50;
 #         mdata = [infected_fraction],
 #         when_model = [50],
@@ -135,7 +134,7 @@
 # Unfortunately we've not given the optimiser information we probably needed to.
 # Notice that the death rate is 96%, with reinfection quite low.
 # When all the infected individuals die, infection doesn't transmit - the optimiser has
-# managed to reduce the infection rate by killing the infected.
+# managed to reduce the infection rate by removing the infected.
 
 # This is not the work of some sadistic AI, just an oversight in our instructions.
 # Let's modify the cost function to also keep the mortality rate low.

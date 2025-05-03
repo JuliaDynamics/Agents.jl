@@ -1,32 +1,78 @@
 # API
 
-The API of Agents.jl is defined on top of the fundamental structures [`AgentBasedModel`](@ref), [Space](@ref Space), [`AbstractAgent`](@ref) which are described in the [Tutorial](@ref) page.
+The API of Agents.jl is defined on top of the fundamental structures [`AgentBasedModel`](@ref), [Space](@ref available_spaces), [`AbstractAgent`](@ref) which are described in the [Tutorial](@ref) page.
 In this page we list the remaining API functions, which constitute the bulk of Agents.jl functionality.
 
-## [Concrete ABM implementations](@id ABM_Implementations)
+## [AgentBasedModel](@id ABM_Implementations)
+
+- [`AgentBasedModel`](@ref)
+- [`StandardABM`](@ref)
+- [`EventQueueABM`](@ref)
+
+```@docs
+AgentBasedModel
+step!(::AgentBasedModel, args...)
+```
+
+### Discrete time models
+
 ```@docs
 StandardABM
-UnkillableABM
-FixedMassABM
+```
+
+### Continuous time models
+
+```@docs
+EventQueueABM
+AgentEvent
+add_event!
+```
+
+## Agent types
+
+```@docs
+@agent
+@multiagent
+AbstractAgent
+```
+
+### Minimal agent types
+
+The [`@agent`](@ref) macro can be used to define new agent types from the minimal agent types that are listed below:
+
+```@docs
+NoSpaceAgent
+GraphAgent
+GridAgent
+ContinuousAgent
+OSMAgent
 ```
 
 ## Agent/model retrieval and access
+
 ```@docs
 getindex(::ABM, ::Integer)
 getproperty(::ABM, ::Symbol)
+random_id
 random_agent
 nagents
 allagents
 allids
+hasid
 abmproperties
 abmrng
 abmscheduler
+abmspace
+abmtime
+abmevents
 ```
 
-## Available spaces
-Here we list the spaces that are available "out of the box" from Agents.jl. To create your own, see [Creating a new space type](@ref).
+## [Available spaces](@id available_spaces)
+
+Here we list the spaces that are available "out of the box" from Agents.jl. To create your own, see the developer documentation on [creating a new space type](@ref make_new_space).
 
 ### Discrete spaces
+
 ```@docs
 GraphSpace
 GridSpace
@@ -34,11 +80,13 @@ GridSpaceSingle
 ```
 
 Here is a specification of how the metrics look like:
-```@example
+
+```@example MAIN
 include("distances_example_plot.jl") # hide
 ```
 
 ### Continuous spaces
+
 ```@docs
 ContinuousSpace
 OpenStreetMapSpace
@@ -47,8 +95,8 @@ OpenStreetMapSpace
 ## Adding agents
 ```@docs
 add_agent!
-add_agent_pos!
-nextid
+add_agent_own_pos!
+replicate!
 random_position
 ```
 
@@ -56,11 +104,12 @@ random_position
 ```@docs
 move_agent!
 walk!
+randomwalk!
 get_direction
 ```
 
 ### Movement with paths
-For [`OpenStreetMapSpace`](@ref), and [`GridSpace`](@ref)/[`ContinuousSpace`](@ref) using [`Pathfinding.Pathfinder`](@ref), a special
+For [`OpenStreetMapSpace`](@ref), and [`GridSpace`](@ref)/[`ContinuousSpace`](@ref) using [`Pathfinding`](@ref), a special
 movement method is available.
 
 ```@docs
@@ -72,8 +121,8 @@ is_stationary
 
 ## Removing agents
 ```@docs
-kill_agent!
-genocide!
+remove_agent!
+remove_all!
 sample!
 ```
 
@@ -83,20 +132,24 @@ normalize_position
 spacesize
 ```
 
-## Discrete space exclusives
+## [`DiscreteSpace` exclusives](@id DiscreteSpace_exclusives)
 ```@docs
 positions
 npositions
 ids_in_position
 id_in_position
 agents_in_position
+random_id_in_position
+random_agent_in_position
 fill_space!
 has_empty_positions
 empty_positions
+empty_nearby_positions
 random_empty
 add_agent_single!
 move_agent_single!
-isempty(::Integer, ::ABM)
+swap_agents!
+isempty(::Int, ::ABM)
 ```
 
 ## `GraphSpace` exclusives
@@ -107,9 +160,8 @@ add_vertex!
 rem_vertex!
 ```
 
-## `ContinuousSpace` exclusives
+## [`ContinuousSpace` exclusives](@id ContinuosSpace_exclusives)
 ```@docs
-nearby_ids_exact
 nearest_neighbor
 get_spatial_property
 get_spatial_index
@@ -142,6 +194,7 @@ nearby_agents
 nearby_positions
 random_nearby_id
 random_nearby_agent
+random_nearby_position
 ```
 
 ## A note on iteration
@@ -154,16 +207,16 @@ Specifically, imagine the scenario
 using Agents
 # We don't need to make a new agent type here,
 # we use the minimal agent for 4-dimensional grid spaces
-model = ABM(GridAgent{4}, GridSpace((5, 5, 5, 5)))
+model = StandardABM(GridAgent{4}, GridSpace((5, 5, 5, 5)))
 add_agent!((1, 1, 1, 1), model)
 add_agent!((1, 1, 1, 1), model)
 add_agent!((2, 1, 1, 1), model)
 for id in ids_in_position((1, 1, 1, 1), model)
-    kill_agent!(id, model)
+    remove_agent!(id, model)
 end
 collect(allids(model))
 ```
-You will notice that only 1 agent got killed. This is simply because the final state of the iteration of `ids_in_position` was reached unnaturally, because the length of its output was reduced by 1 _during_ iteration.
+You will notice that only 1 agent was removed. This is simply because the final state of the iteration of `ids_in_position` was reached unnaturally, because the length of its output was reduced by 1 _during_ iteration.
 To avoid problems like these, you need to `collect` the iterator to have a non dynamic version.
 
 **Lazy** means that when possible the outputs of the iteration are not collected and instead are generated on the fly.
@@ -192,48 +245,18 @@ map_agent_groups
 index_mapped_groups
 ```
 
-## Minimal agent types
-The [`@agent`](@ref) macro can be used to define new agent types from the minimal agent types that are listed below:
-
+## Data collection and analysis
 ```@docs
-NoSpaceAgent
-GraphAgent
-GridAgent
-ContinuousAgent
-OSMAgent
-```
-
-## Parameter scanning
-```@docs
+run!
+ensemblerun!
 paramscan
 ```
 
-## Data collection
-The central simulation function is [`run!`](@ref), which is mentioned in our [Tutorial](@ref).
-But there are other functions that are related to simulations listed here.
-Specifically, these functions aid in making custom data collection loops, instead of using the `run!` function.
 
-For example, the core loop of `run!` is just
-```julia
-df_agent = init_agent_dataframe(model, adata)
-df_model = init_model_dataframe(model, mdata)
+### Manual data collection
 
-s = 0
-while until(s, n, model)
-  if should_we_collect(s, model, when)
-      collect_agent_data!(df_agent, model, adata, s)
-  end
-  if should_we_collect(s, model, when_model)
-      collect_model_data!(df_model, model, mdata, s)
-  end
-  step!(model, agent_step!, model_step!, 1)
-  s += 1
-end
-return df_agent, df_model
-```
-(here `until` and `should_we_collect` are internal functions)
-
-`run!` uses the following functions:
+The central simulation function is [`run!`](@ref).
+Here are some functions that aid in making custom data collection loops, instead of using the `run!` function:
 
 ```@docs
 init_agent_dataframe
@@ -243,13 +266,38 @@ collect_model_data!
 dataname
 ```
 
+For example, the core loop of `run!` is just
+```julia
+df_agent = init_agent_dataframe(model, adata)
+df_model = init_model_dataframe(model, mdata)
+
+t0 = abmtime(model)
+t = t0
+while until(t, t0, n, model)
+  if should_we_collect(t, model, when)
+      collect_agent_data!(df_agent, model, adata)
+  end
+  if should_we_collect(t, model, when_model)
+      collect_model_data!(df_model, model, mdata)
+  end
+  step!(model, 1)
+  t = abmtime(model)
+end
+return df_agent, df_model
+```
+(here `until` and `should_we_collect` are internal functions)
+
 ## [Schedulers](@id Schedulers)
+
 ```@docs
 Schedulers
+schedule(::ABM)
 ```
 
 ### Predefined schedulers
+
 Some useful schedulers are available below as part of the Agents.jl API:
+
 ```@docs
 Schedulers.fastest
 Schedulers.ByID
@@ -257,9 +305,10 @@ Schedulers.Randomly
 Schedulers.Partially
 Schedulers.ByProperty
 Schedulers.ByType
+Schedulers.ByKind
 ```
 
-### Advanced scheduling
+### [Advanced scheduling](@id advanced_scheduling)
 You can use [Function-like objects](https://docs.julialang.org/en/v1/manual/methods/#Function-like-objects) to make your scheduling possible of arbitrary events.
 For example, imagine that after the `n`-th step of your simulation you want to fundamentally change the order of agents. To achieve this you can define
 ```julia
@@ -289,13 +338,9 @@ ms = MyScheduler(100, 0.5)
 step!(model, agentstep, modelstep, 100; scheduler = ms)
 ```
 
-## Ensemble runs and Parallelization
-```@docs
-ensemblerun!
-```
 
 ### How to use `Distributed`
-To use the `parallel=true` option of [`ensemblerun!`](@ref) you need to load `Agents` and define your fundamental types at all processors. How to do this is shown in [Ensembles and distributed computing](@ref) section of Schelling's Segregation Model example. See also the [Performance Tips](@ref) page for parallelization.
+To use the `parallel=true` option of [`ensemblerun!`](@ref) you need to load `Agents` and define your fundamental types at all processors. See the [Performance Tips](@ref) page for parallelization.
 
 ## Path-finding
 ```@docs
@@ -326,5 +371,24 @@ AgentsIO.populate_from_csv!
 AgentsIO.dump_to_csv
 ```
 
+It is also possible to write data to file at predefined intervals while running your model, instead of storing it in memory:
+```@docs
+offline_run!
+```
+
 In case you require custom serialization for model properties, refer to the [Developer Docs](@ref)
 for details.
+
+## Visualizations
+
+```@docs
+abmplot
+abmplot!
+abmexploration
+abmvideo
+ABMObservable
+add_interaction!
+translate_polygon
+scale_polygon
+rotate_polygon
+```

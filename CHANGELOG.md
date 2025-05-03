@@ -1,4 +1,139 @@
-# main
+# v6.3
+
+**Experimental**: The `StructVector` container type, that supports a Struct-of-Arrays (SoA) layout, has been added. It currently only works with single agent types.
+
+# v6.2
+
+The `EventQueueABM` which was previously considered experimental is now considered to be stable.
+
+All references to the obsolete 'kind' concept have been removed, now everything is based on different agent types.
+
+# v6.1
+
+The `@multiagent` macro introduced in Agents.jl v6.0 has been completely overhauled. We found a better methodology to create performant multi-agent types that can re-use existing agent types. Please read the docstring of the new `@multiagent` and consult the updated tutorial in v6.1 for more details.
+
+All `@multiagent`-specific functions that were introduced in v6.0, such as `kindof`, have also been deprecated, see the main tutorial.
+
+For `EventQueueABM`, that was an experimental feature that used to work only with `kindof`, it is also now changed to work with the standard `typeof` of the base Julia language.
+
+# v6 - New Major release!
+
+## Potentially BREAKING changes
+
+_We tried to deprecate every major change, resulting in practically no breakage from v5 to v6. However, in version v6.2 we will remove all deprecations (and hence un-updated code will break)_
+
+- The `@agent` macro has been rewritten to support fields with default and const values. It has a new usage syntax now that parallelizes more Julia's native `struct` declaration. The old macro version still works but it's deprecated. Since now the macro supports these features, using `@agent` is the only supported way to create agent types for Agents.jl.
+- Manually setting or altering the ids of agents is no longer allowed. The agent id is now considered a read-only field, and is set internally by Agents.jl to enable hidden optimizations in the future. Due to this, the `nextid` function is no longer public API. As a consequence, new constructor of agents which accept the model as first argument have been created with the agent macro e.g. `A(model, pos; kwargs...)`, so that to handle the id assignment automatically.
+  - We anyways recommend using exclusively the API function `add_agent!` to create new model agents. This means you never have to care about the id!
+- Agent types in `ContinuousSpace` now use `SVector` for their `pos` and `vel` fields rather than `NTuple`. `NTuple` usage in `ContinuousSpace` is officially deprecated, but backward compatibility is *mostly* maintained. Known breakages include the comparison of agent position and/or velocity with user-defined tuples, e.g., doing `agent.pos == (0.5, 0.5)`. This will always be `false` in v6 as `agent.pos` is an `SVector`. The rest of the functionality should all work without problems, such as moving agents to tuple-based positions etc.
+- The `:step` column name of the dataframes resulting from `run!` has been renamed to `:time`, to accommodate for the fact that now both discrete time and continuous time models are possible in Agents.jl.
+
+## New features
+
+- `AgentBasedModel` defines an API that new model types may extend.
+  This opens the door for making new types of models as well as better integration
+  of other agent based modelling frameworks with Agents.jl.
+- Every aspect of Agents.jl is orthogonal to `AgentBasedModel`: movement and neighbor searching in any space, data collection, visualizations, etc., are independent of the specific type of `AgentBasedModel` and work out of the box with any model.
+- Logic of when to collect data in `run!` has been improved to accommodate both discrete and continuous time models. This is reflected in the new options for the keyword `when`.
+  - A new keyword `init` is now available for `run!` to data collect from the model before evolving it. Whether data were collected at time 0 or not was not really obvious in the original version of `run!` due to the ambiguity of the previous handling of `when`.
+- A new `@multiagent` macro allows to run multi-agent simulations much more efficiently. It has
+  two version: In `:opt_speed` the created agents are optimized such as there is virtually
+  no performance difference between having 1 agent type at the cost of each agent occupying
+  more memory that in the `Union` case. In `:opt_memory` each agent is optimized to occupy practically
+  the same memory as the `Union` case, however this comes at a cost of performance versus having 1 type.
+  `@multiagent` kinds support multiple dispatch like syntax with the `@dispatch` macro.
+- A new experimental model type `EventQueueABM` has been implemented. It operates in continuous time through
+  the scheduling of events at arbitrary time points, in contrast with the discrete time nature of a `StandardABM`.
+- Both the visualization and the model abstract interface have been refactored to improve the user
+  experience to conform to the Agents.jl API when creating a new model type and its visualizations.
+- Grid and continuous spaces support boundaries with mixed periodicity, specified by tuples with a `Bool` value for each dimension, e.g. `GridSpace((5,5); periodic=(true,false))` is periodic along the first dimension but not along the second.
+- `Arrow` backend in `offline_run!` is now supported also for Windows users.
+- The model time is now tracked automatically, accessible through `abmtime(model)`. This is part of the new `AgentBasedModel` API.
+- Two new functions `random_id_in_position` and `random_agent_in_position` can be used to select a random id/agent in a position in discrete spaces (even with filtering).
+- A new function `swap_agents` can be used to swap the positions of a pair of agents, which works even in spaces which allow 1 agent per position.
+- New function `hasid` to check if a model has an agent with a given id.
+
+## Performance Improvements
+
+- A new argument `alloc` can be used to select a more performant version in relation to the expensiveness of the filtering for all random methods selecting ids/agents/positions.
+- The `random_agent` function is now much faster than before. The functions `random_nearby_position`, `random_nearby_id` and `random_nearby_agent` are much faster thanks to a faster sampling function.
+- The `nearby_agents` function for `ContinuousSpace` and `GridSpace` is now 1.5x faster than before.
+- The `sample!` function is much faster than before.
+
+## Deprecations
+
+- The way the evolution rule (`agent_step!, model_step!`) is handled has changed. Now, the stepping functions must be given to the agent based model during construction of the model instead of given to `step!, run!, abmplot, ...`. This change is important and allows us to:
+  - Have Agents.jl have the same mental model as DifferentialEquations.jl, DynamicalSystems.jl, and other dynamical modelling packages, where the evolution rules are part of the central simulation struct.
+  - Allows us to develop new types of models that may have rules that are defined differently, without being based on e.g., two particular functions.
+  - Allows us to develop (in the future) a new model type that is optimized for multi-agent simulations.
+  - Allows other developers of agent based modelling packages to integrate with Agents.jl by extending the established API.
+- The `UnremovableABM` type is deprecated, instead `container = Vector` should be passed when creating the model.
+- Passing the `step` argument to `collect_model_data!, collect_agent_data!` is deprecated since the time of the model
+  is used automatically.
+- `add_agent_pos!` has been deprecated in favor of the more descriptive `add_agent_own_pos!`.
+- `schedule(model, scheduler)` is deprecated. Use `scheduler(model)` together with `hasid(model)`.
+- Deprecations that were in place in v5 (see section `# v5` of this CHANGELOG) have been removed.
+- `nearby_ids_exact` is deprecated in favour of setting the `search` keyword to `:exact`
+- Keyword `spf` is deprecated in favor of `dt` in `abmvideo`.
+
+# v5.17
+
+- New function `replicate!` allows to create a new instance of a given agent at the same position with the possibility to specify some
+  fields with new values.
+- The `sample!` function is 3x faster than before.
+
+# v5.16
+
+- New function `offline_run!` allows writing data to file at predefined intervals during `run!` instead of storing it in memory. Currently supports [CSV](https://csv.juliadata.org/stable/) and [Arrow](https://apache.github.io/arrow-julia/stable/) files.
+
+# v5.15
+- Agents.jl moved to Julia 1.9+, and now exports visualization
+  and interactive applications automatically once Makie (or Makie backends
+  such as GLMakie) come into scope, using the new package extension system.
+  The only downside of this is that now to visualize ABMs on open street
+  maps, the package OSMMakie.jl must be explicitly loaded as well.
+- Nearby look-ups with `nearby_positions`, `nearby_ids` and derivatives are now incrementally faster than before more the radius increases.
+- The `randomwalk!` function is now supported for any number of dimensions in ContinuousSpace when used to create isotropic/uniform random walks. For all type of `AbstractGridSpace`, the `randomwalk!` function supports a new keyword `force_motion`, which is false by default. See the docs to be informed on the effect of setting this keyword. Besides, in the continuous space default case random walks are up to 2 times faster than before.
+- Adding agents through `properties...` is an order of magnitude faster, now matching the performance of the other versions.
+- The `ByProperty` scheduler can now accept any type of (ordered) properties, while before it was restricted to only floats. The `ByID` scheduler of an `UnremovableABM` is now as fast as the `Fastest` scheduler since in this case they are actually equivalent.
+
+# v5.14
+
+- New optional filtering functionality to restrict the sampling added to `random_nearby_position`, `random_nearby_id` and `random_nearby_agent`.
+
+# v5.13
+
+- `random_nearby_position`, `random_nearby_id` and `random_nearby_agent` are up to 2 times faster thanks to a faster sampling function.
+
+# v5.12
+
+- The `random_nearby_position` function is now much faster for GridSpaces.
+
+# v5.11
+
+- Iterating in neighborhood searches (with `nearby_ids` and derivative functions) in `GridSpace` and `ContinuousSpace` is now about 2 times faster than before.
+
+# v5.10
+
+- `FixedMassABM` is now deprecated and will be removed in future versions. Turns out, there is no performance benefit of using it over `UnremovableABM`. In fact, there is a performance **deficit** in doing so.
+
+# v5.9
+
+- `sample!` is now much faster than before when the size of the sample is big, with a size of 1 million agents the function is now 1000x faster.
+- A memory bug about offsets calculation has been solved; besides, the `calculate_offsets` function has been sped-up by a significant amount.
+- The following renames have been done (with deprecations):
+  - `genocide! -> remove_all!`
+  - `kill_agent! -> remove_agent!`
+  - `UnkillableABM -> UnremovableABM`
+- New function `random_nearby_position` that returns a random neighbouring position.
+- New function `empty_nearby_positions` that returns an iterable of all empty neighboring positions.
+
+# v5.8
+- `random_agent` is now faster and has two options on how to find a random agent, each of which can offer a different performance benefit depending on the density of agents that satisfy the clause.
+- New function `randomwalk!` replaces `walk!(agent, rand, model)` (now deprecated), allowing easier creation of random walks in both discrete and continuous spaces. Random walks in continuous space also allow users to specify the reorientation distributions: `polar` in 2D; `polar` and `azimuthal` in 3D. This way, correlated random walks can be produced.
+- Thanks to the use of a new algorithm, the `nearby_positions` function for graphspaces is now much faster.
+- Huge improvement of performance of the `get_direction` function in the periodic case.
+- `normalize_position` is now 50x faster for the case of a non-periodic grid.
 
 # v5.7
 - Internals of `AgentBasedModel` got reworked. It is now an abstract type, defining an abstract interface that concrete implementations may satisfy. This paves the way for flexibly defining new variants of `AgentBasedModel` that are more specialized in their applications.
@@ -18,6 +153,7 @@
   It now also allows inheriting fields from any other type.
 - The `@agent` macro is now THE way to create agent types for Agents.jl simulations.
   Directly creating structs by hand is no longer mentioned in the documentation at all. This will allow us in the future to utilize additional fields that the user does not have to know about, which may bring new features or performance gains by being part of the agent structures.
+  - EDIT: This has been _retracted_ in future versions. `@agent` is the recommended way, but manual creation is also valid.
 - The minimal agent types like `GraphAgent` can be used normally as standard agent
   types that only have the mandatory fields. This is now clear in the docs.
   (this was possible also before v5.4, just not clear)
@@ -236,3 +372,4 @@ therefore are not "truly breaking".
 * It is now possible to `step!` until a boolean condition is met.
 # v2.0
 Changelog is kept with respect to version 2.0.
+

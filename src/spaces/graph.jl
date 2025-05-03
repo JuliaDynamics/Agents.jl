@@ -17,18 +17,27 @@ Create a `GraphSpace` instance that is underlined by an arbitrary graph from
 arbitrary amount of agents, and each agent can move between the nodes of the graph.
 The position type for this space is `Int`, use [`GraphAgent`](@ref) for convenience.
 
-`Graphs.nv` and `Graphs.ne` can be used in a model with a `GraphSpace` to obtain
-the number of nodes or edges in the graph.
+`GraphSpace` inherits from `DiscreteSpace` and all functions for [`DiscreteSpace`](@ref DiscreteSpace_exclusives)
+are available. On top of that, `Graphs.nv` and `Graphs.ne` can be used in a model
+with a `GraphSpace` to obtain the number of nodes or edges in the graph.
 The underlying graph can be altered using [`add_vertex!`](@ref) and [`rem_vertex!`](@ref).
 
 An example using `GraphSpace` is [SIR model for the spread of COVID-19](@ref).
 
-If you want to model social networks, where each agent is equivalent with a node of
-a graph, you're better of using `nothing` as the model space, and using
-a graph from Graphs.jl directly in the model parameters, as shown in the
-[Social networks with Graphs.jl](@ref) integration example.
+!!! note "Not for social networks!"
+    `GraphSpace` is not intended for "social-network-like" agent based
+    modelling, where each agent is equivalent with a node of a network/graph and
+    the graph represents connections between agents. Rather, `GraphSpace` is
+    suitable for when the coordinates of spatial locations are not as important as the
+    connections between them. `GraphSpace` is suited for e.g., modelling cities
+    where each can host many agents.
+
+    If you want to make a "social-network" like simulation, see [the integration with
+    Graphs.jl example](@ref social_networks). Typically you won't need a space structure at all!
+
 
 ## Distance specification
+
 In functions like [`nearby_ids`](@ref), distance for `GraphSpace` means
 the degree of neighbors in the graph (thus distance is always an integer).
 For example, for `r=2` includes first and second degree neighbors.
@@ -56,29 +65,25 @@ end
 The minimal agent struct for usage with [`GraphSpace`](@ref).
 It has an additional `pos::Int` field. See also [`@agent`](@ref).
 """
-@agent GraphAgent NoSpaceAgent begin
+@agent struct GraphAgent(NoSpaceAgent)
     pos::Int
 end
 
 #######################################################################################
 # Agents.jl space API
 #######################################################################################
-random_position(model::ABM{<:GraphSpace}) = rand(model.rng, 1:nv(model))
+random_position(model::ABM{<:GraphSpace}) = rand(abmrng(model), 1:nv(model))
 
-function remove_agent_from_space!(
-    agent::A,
-    model::ABM{<:GraphSpace,A},
-) where {A <: AbstractAgent}
-    agentpos = agent.pos
+function remove_agent_from_space!(a::AbstractAgent, model::ABM{<:GraphSpace})
+    agentpos = a.pos
     ids = ids_in_position(agentpos, model)
-    deleteat!(ids, findfirst(a -> a == agent.id, ids))
-    return model
+    ai = findfirst(id -> id == a.id, ids)
+    isnothing(ai) && error(lazy"Tried to remove agent with ID $(a.id) from the space, but that agent is not on the space")
+    deleteat!(ids, ai)
+    return a
 end
 
-function add_agent_to_space!(
-    agent::A,
-    model::ABM{<:GraphSpace,A},
-) where {A <: AbstractAgent}
+function add_agent_to_space!(agent::AbstractAgent, model::ABM{<:GraphSpace})
     push!(ids_in_position(agent.pos, model), agent.id)
     return agent
 end
@@ -86,22 +91,21 @@ end
 # The following is for the discrete space API:
 npositions(space::GraphSpace) = nv(space.graph)
 positions(space::GraphSpace) = 1:npositions(space)
-ids_in_position(n::Integer, model::ABM{<:GraphSpace}) = model.space.stored_ids[n]
+ids_in_position(n::Integer, model::ABM{<:GraphSpace}) = ids_in_position(n, abmspace(model))
+ids_in_position(n::Integer, space::GraphSpace) = space.stored_ids[n]
+
 # NOTICE: The return type of `ids_in_position` must support `length` and `isempty`!
 
 #######################################################################################
 # Neighbors
 #######################################################################################
 function nearby_ids(pos::Int, model::ABM{<:GraphSpace}, r = 1; kwargs...)
-    if r == 0
-        return ids_in_position(pos, model)
-    end
     np = nearby_positions(pos, model, r; kwargs...)
-    vcat(model.space.stored_ids[pos], model.space.stored_ids[np]...)
+    vcat(abmspace(model).stored_ids[pos], abmspace(model).stored_ids[np]...)
 end
 
 # This function is here purely because of performance reasons
-function nearby_ids(agent::A, model::ABM{<:GraphSpace,A}, r = 1; kwargs...) where {A <: AbstractAgent}
+function nearby_ids(agent::AbstractAgent, model::ABM{<:GraphSpace}, r = 1; kwargs...)
     all = nearby_ids(agent.pos, model, r; kwargs...)
     filter!(i -> i ≠ agent.id, all)
 end
@@ -113,55 +117,24 @@ function nearby_positions(
 )
     @assert neighbor_type ∈ (:default, :all, :in, :out)
     if neighbor_type == :default
-        Graphs.neighbors(model.space.graph, position)
+        Graphs.neighbors(abmspace(model).graph, position)
     elseif neighbor_type == :in
-        Graphs.inneighbors(model.space.graph, position)
+        Graphs.inneighbors(abmspace(model).graph, position)
     elseif neighbor_type == :out
-        Graphs.outneighbors(model.space.graph, position)
+        Graphs.outneighbors(abmspace(model).graph, position)
     else
-        Graphs.all_neighbors(model.space.graph, position)
+        Graphs.all_neighbors(abmspace(model).graph, position)
     end
 end
 
 #######################################################################################
 # Mutable graph functions
 #######################################################################################
-export rem_node!, add_node!, rem_vertex!, add_vertex!, add_edge!, rem_edge!
-
-"""
-     rem_node!(model::ABM{<: GraphSpace}, n::Int)
-Remove node (i.e. position) `n` from the model's graph. All agents in that node are killed.
-**Warning:** Graphs.jl (and thus Agents.jl) swaps the index of the last node with
-that of the one to be removed, while every other node remains as is. This means that
- when doing `rem_node!(n, model)` the last node becomes the `n`-th node while the previous
- `n`-th node (and all its edges and agents) are deleted.
- """
- function rem_node!(model::ABM{<:GraphSpace}, n::Int)
-     for id in copy(ids_in_position(n, model))
-         kill_agent!(model[id], model)
-     end
-    V = nv(model)
-    success = Graphs.rem_vertex!(model.space.graph, n)
-    n > V && error("Node number exceeds amount of nodes in graph!")
-    s = model.space.stored_ids
-    s[V], s[n] = s[n], s[V]
-    pop!(s)
-end
-
-"""
-    add_node!(model::ABM{<: GraphSpace})
- Add a new node (i.e. possible position) to the model's graph and return it.
- You can connect this new node with existing ones using [`add_edge!`](@ref).
- """
- function add_node!(model::ABM{<:GraphSpace})
-     add_vertex!(model.space.graph)
-     push!(model.space.stored_ids, Int[])
-     return nv(model)
- end
+export rem_vertex!, add_vertex!, add_edge!, rem_edge!
 
 """
     rem_vertex!(model::ABM{<:GraphSpace}, n::Int)
-Remove node (i.e. position) `n` from the model's graph. All agents in that node are killed.
+Remove node (i.e. position) `n` from the model's graph. All agents in that node are removed from the model.
 
 **Warning:** Graphs.jl (and thus Agents.jl) swaps the index of the last node with
 that of the one to be removed, while every other node remains as is. This means that
@@ -170,12 +143,12 @@ when doing `rem_vertex!(n, model)` the last node becomes the `n`-th node while t
 """
 function Graphs.rem_vertex!(model::ABM{<:GraphSpace}, n::Int)
     for id in copy(ids_in_position(n, model))
-        kill_agent!(model[id], model)
+        remove_agent!(model[id], model)
     end
     V = nv(model)
-    success = Graphs.rem_vertex!(model.space.graph, n)
+    success = Graphs.rem_vertex!(abmspace(model).graph, n)
     n > V && error("Node number exceeds amount of nodes in graph!")
-    s = model.space.stored_ids
+    s = abmspace(model).stored_ids
     s[V], s[n] = s[n], s[V]
     pop!(s)
 end
@@ -186,23 +159,23 @@ Add a new node (i.e. possible position) to the model's graph and return it.
 You can connect this new node with existing ones using [`add_edge!`](@ref).
 """
 function Graphs.add_vertex!(model::ABM{<:GraphSpace})
-    add_vertex!(model.space.graph)
-    push!(model.space.stored_ids, Int[])
+    add_vertex!(abmspace(model).graph)
+    push!(abmspace(model).stored_ids, Int[])
     return nv(model)
 end
 
 """
     add_edge!(model::ABM{<:GraphSpace},  args...; kwargs...)
 Add a new edge (relationship between two positions) to the graph.
-Returns a boolean, true if the operation was successful. 
+Returns a boolean, true if the operation was successful.
 
 `args` and `kwargs` are directly passed to the `add_edge!` dispatch that acts the underlying graph type.
 """
-Graphs.add_edge!(model::ABM{<:GraphSpace}, args...; kwargs...) = add_edge!(model.space.graph, args...; kwargs...)
+Graphs.add_edge!(model::ABM{<:GraphSpace}, args::Vararg{Any, N}; kwargs...) where {N} = add_edge!(abmspace(model).graph, args...; kwargs...)
 
 """
     rem_edge!(model::ABM{<:GraphSpace}, n, m)
 Remove an edge (relationship between two positions) from the graph.
-Returns a boolean, true if the operation was successful. 
+Returns a boolean, true if the operation was successful.
 """
-Graphs.rem_edge!(model::ABM{<:GraphSpace}, n, m) = rem_edge!(model.space.graph, n, m)
+Graphs.rem_edge!(model::ABM{<:GraphSpace}, n, m) = rem_edge!(abmspace(model).graph, n, m)

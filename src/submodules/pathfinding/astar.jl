@@ -49,21 +49,22 @@ to specify the level of discretisation of the space.
 ## Keywords
 - `diagonal_movement = true` specifies if movement can be to diagonal neighbors of a
   tile, or only orthogonal neighbors. Only available for [`GridSpace`](@ref)
-- `admissibility = 0.0` allows the algorithm to aprroximate paths to speed up pathfinding.
+- `admissibility = 0.0` allows the algorithm to approximate paths to speed up pathfinding.
   A value of `admissibility` allows paths with at most `(1+admissibility)` times the optimal
   length.
-- `walkmap = trues(size(space))` specifies the (un)walkable positions of the
+- `walkmap = trues(spacesize(space))` specifies the (un)walkable positions of the
   space. If specified, it should be a `BitArray` of the same size as the corresponding
   `GridSpace`. By default, agents can walk anywhere in the space.
 - `cost_metric = DirectDistance{D}()` is an instance of a cost metric and specifies the
   metric used to approximate the distance between any two points.
 
 Utilization of all features of `AStar` occurs in the
-[3D Mixed-Agent Ecosystem with Pathfinding](@ref) example.
+[3D Mixed-Agent Ecosystem with Pathfinding](@id rabbit_fox_hawk)
+example.
 """
 function AStar(
     dims::NTuple{D,T};
-    periodic::Bool = false,
+    periodic::Union{Bool,NTuple{D,Bool}} = false,
     diagonal_movement::Bool = true,
     admissibility::Float64 = 0.0,
     walkmap::BitArray{D} = trues(dims),
@@ -84,7 +85,7 @@ AStar(
     space::GridSpace{D,periodic};
     diagonal_movement::Bool = true,
     admissibility::Float64 = 0.0,
-    walkmap::BitArray{D} = trues(size(space)),
+    walkmap::BitArray{D} = trues(spacesize(space)),
     cost_metric::CostMetric{D} = DirectDistance{D}(),
 ) where {D,periodic} =
     AStar(size(space); periodic, diagonal_movement, admissibility, walkmap, cost_metric)
@@ -97,7 +98,10 @@ function AStar(
 ) where {D,periodic}
     @assert walkmap isa BitArray{D} || cost_metric isa PenaltyMap "Pathfinding in ContinuousSpace requires either walkmap to be specified or cost_metric to be a PenaltyMap"
     isnothing(walkmap) && (walkmap = BitArray(trues(size(cost_metric.pmap))))
-    AStar(Agents.spacesize(space); periodic, diagonal_movement = true, admissibility, walkmap, cost_metric)
+    AStar(Tuple(Agents.spacesize(space));
+        periodic, diagonal_movement = true,
+        admissibility, walkmap, cost_metric
+    )
 end
 
 
@@ -112,13 +116,16 @@ function vonneumann_neighborhood(D)
 end
 
 function Base.show(io::IO, pathfinder::AStar{D,P,M}) where {D,P,M}
-    periodic = P ? "periodic, " : ""
+    periodic = get_periodic_type(pathfinder)
     moore = M ? "diagonal, " : "orthogonal, "
     s =
         "A* in $(D) dimensions, $(periodic)$(moore)ϵ=$(pathfinder.admissibility), " *
         "metric=$(pathfinder.cost_metric)"
     print(io, s)
 end
+get_periodic_type(::AStar{D,false,M}) where {D,M} = ""
+get_periodic_type(::AStar{D,true,M}) where {D,M} = "periodic, "
+get_periodic_type(::AStar{D,P,M}) where {D,P,M} = "mixed periodicity, "
 
 struct GridCell
     f::Int
@@ -192,6 +199,13 @@ end
     (mod1.(cur .+ β.I, size(pathfinder.walkmap)) for β in pathfinder.neighborhood)
 @inline get_neighbors(cur, pathfinder::AStar{D,false}) where {D} =
     (cur .+ β.I for β in pathfinder.neighborhood)
+@inline function get_neighbors(cur, pathfinder::AStar{D,P}) where {D,P}
+    s = size(pathfinder.walkmap)
+    (
+        ntuple(i -> P[i] ? mod1(cur[i] + β[i], s[i]) : cur[i] + β[i], D)
+        for β in pathfinder.neighborhood
+    )
+end
 @inline inbounds(n, pathfinder, closed) =
     all(1 .<= n .<= size(pathfinder.walkmap)) && pathfinder.walkmap[n...] && n ∉ closed
 
@@ -203,9 +217,9 @@ Base.isempty(id::Int, pathfinder::AStar) =
 Same, but for pathfinding with A*.
 """
 Agents.is_stationary(
-    agent::A,
+    agent::AbstractAgent,
     pathfinder::AStar,
-) where {A<:AbstractAgent} = isempty(agent.id, pathfinder)
+) = isempty(agent.id, pathfinder)
 
 """
     Pathfinding.penaltymap(pathfinder)
@@ -226,16 +240,13 @@ function penaltymap(pathfinder::AStar)
 end
 
 """
-    Pathfinding.kill_agent!(agent, model, pathfinder)
-The same as `kill_agent!(agent, model)`, but also removes the agent's path data
+    Pathfinding.remove_agent!(agent, model, pathfinder)
+
+The same as `remove_agent!(agent, model)`, but also removes the agent's path data
 from `pathfinder`.
 """
-function Agents.kill_agent!(
-    agent::A,
-    model::ABM{S,A},
-    pathfinder::AStar,
-) where {S,A<:AbstractAgent}
+function Agents.remove_agent!(agent::AbstractAgent, model::ABM, pathfinder::AStar)
     delete!(pathfinder.agent_paths, agent.id)
-    Agents.remove_agent_from_model!(agent, model)
+    Agents.remove_agent_from_container!(agent, model)
     Agents.remove_agent_from_space!(agent, model)
 end

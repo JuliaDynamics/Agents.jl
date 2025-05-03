@@ -1,7 +1,6 @@
 using Agents, Random
 using StatsBase: sample
 using GLMakie
-using InteractiveDynamics
 
 # Input
 
@@ -45,7 +44,7 @@ Makie.renderstring!(
 
 include("logo_model_def.jl")
 
-static_preplot!(ax, model) = hidedecorations!(ax)
+static_preplot!(ax, p) = hidedecorations!(ax)
 ax_kwargs = (;
     leftspinecolor = BLACK,
     rightspinecolor = BLACK,

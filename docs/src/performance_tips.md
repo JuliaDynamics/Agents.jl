@@ -24,7 +24,7 @@ For distributed computing to work, all definitions must be preceded with
 using Distributed
 @everywhere using Agents
 @everywhere function initialized
-@everywhere mutable struct SchellingAgent(...) ...
+@everywhere @agent struct SchellingAgent(...) ...
 @everywhere function agent_step!(...) = ...
 @everywhere adata = ...
 ```
@@ -46,7 +46,7 @@ in `schelling.jl`:
 ```
 using Agents
 function initialize(...) ...
-mutable struct SchellingAgent(...) ...
+@agent struct SchellingAgent(...) ...
 function agent_step!(...) = ...
 ```
 then `include` the file with `everywhere`:
@@ -66,11 +66,10 @@ This tip is actually not related to Agents.jl and you will also read about it in
 
 ```julia
 using Agents
-struct MyAgent <: AbstractAgent
-	id::Int
+@agent struct MyAgent(NoSpaceAgent) <: AbstractAgent
 end
 properties = Dict(:par1 => 1, :par2 => 1.0, :par3 => "Test")
-model = ABM(MyAgent; properties = properties)
+model = StandardABM(MyAgent; properties = properties)
 model_step!(model) = begin
 	a = model.par1 * model.par2
 end
@@ -97,14 +96,14 @@ which makes the model stepping function have type instability due to the model p
 
 The solution is to use a Dictionary for model properties only when all values are of the same type, or to use a custom `mutable struct` for model properties where each property is type annotated, e.g:
 ```julia
-Base.@kwdef mutable struct Parameters
+@kwdef mutable struct Parameters
 	par1::Int = 1
 	par2::Float64 = 1.0
 	par3::String = "Test"
 end
 
 properties = Parameters()
-model = ABM(MyAgent; properties = properties)
+model = StandardABM(MyAgent; properties = properties)
 ```
 
 ## Don't use agents to represent a spatial property
@@ -116,12 +115,17 @@ It might be tempting to represent this property as a specific type of agent like
 However, in Agents.jl this is not necessary and a much more performant approach can be followed.
 Specifically, you can represent this property as a standard Julia `Array` that is a property of the model. This will typically lead to a 5-10 fold increase in performance.
 
-For an example of how this is done, see the [Forest fire](@ref) model, which is a cellular automaton that has no agents in it, or the [Daisyworld](@ref) model, which has both agents as well as a spatial property represented by an `Array`.
+For an example of how this is done, see the [Forest fire](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/forest_fire/) model, which is a cellular automaton that has no agents in it, or the [Daisyworld](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/daisyworld/) model, which has both agents as well as a spatial property represented by an `Array`.
 
-## Avoid `Union`s of many different agent types (temporary!)
-Due to the way Julia's type system works, and the fact that agents are grouped in a dictionary mapping IDs to agent instances, using multiple types for different agents always creates a performance hit because it leads to type instability.
+## [Multiple agent types: `@multiagent` versus `Union` types](@id multi_vs_union)
 
-Thankfully, due to some performance enhancements in Base Julia, unions of up to three different Agent types do not suffer much. You can see this by running the `test/performance/variable_agent_types_simple_dynamics.jl` file, which benchmarks the time to run a model that will do exactly the same amount of numeric operations, but each time subdividing it among an increasing number of agent types. Its output is
+Due to the way Julia's type system works, and the fact that agents are grouped in a container mapping IDs to agent instances, using a `Union` for different agent types always creates a performance hit because it leads to type instability.
+
+The [`@multiagent`](@ref) macro enclose all types in a single one making working with it type stable.
+
+In the following script, which you can find in `test/performance/variable_agent_types_simple_dynamics.jl`, we create a basic money-exchange ABM with many different agent types (up to 15), while having the simulation rules the same regardless of how many agent types are there.
+We then compare the performance of the two versions for multiple agent types, incrementally employing more agents from 2 to 15.
+Here are the results of how much time it took to run each version:
 
 ```@example performance
 using Agents
@@ -130,8 +134,17 @@ t = joinpath(dirname(dirname(x)), "test", "performance", "variable_agent_types_s
 include(t)
 ```
 
-The result is that having many types (here 15 different types) makes the code about 5-6 times slower.
+Finally, we also have a more realistic benchmark of the two approaches at [`test/performance/multiagent_vs_union.jl`](https://github.com/JuliaDynamics/Agents.jl/blob/main/test/performance/multiagent_vs_union.jl) where each type has a different set of behaviours, unlike in the previous benchmark. The result of running the model with the two methodologies are
 
-**Notice that this is a temporary problem! In the future we plan to re-work Agents.jl internals regarding multi-agent models and deal with this performance hit without requiring the user to do something differently.**
+```@example performance_2
+using Agents
+x = pathof(Agents)
+t = joinpath(dirname(dirname(x)), "test", "performance", "multiagent_vs_union.jl")
+include(t)
+```
 
-At the moment, if you want to use many different agent types, you can try including all properties all types should have in one type. You can specify what "type" of agent it is via including a field `type` or `kind` whose value is a symbol: `:wolf, :sheep, :grass`. Properties that should only belong to one kind of agent could be initialized with a "null" value for the other kinds. This will increase the amount of memory used by the model, as all agent instances will contain more data than necessary, so you need to check yourself if the performance gain due to type stability makes up for it.
+As you can see, [`@multiagent`](@ref) has the edge over a `Union`: there is a general 1.5-2x advantage in many cases
+in its favour. This is true for Julia>=1.11, where we then suggest to go with [`@multiagent`](@ref) only if the speed of the
+simulation is critical. However, keep in mind that on Julia<=1.10 the difference is much bigger: [`@multiagent`](@ref)
+is almost one order of magnitude faster than a `Union`.
+
