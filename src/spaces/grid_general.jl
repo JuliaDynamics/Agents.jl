@@ -239,9 +239,8 @@ end
     @inbounds offset = iter.nindices[state]
     nearby_pos = iter.pos .+ offset
     # check if we are far from the wall to skip bounds checks
-    if iter.do_bounds
-        nearby_pos = checkbounds(Bool, iter.stored_ids, nearby_pos...) ? 
-            nearby_pos : mod1.(nearby_pos, iter.space_size)
+    if iter.do_bounds && !checkbounds(Bool, iter.stored_ids, nearby_pos...)
+        nearby_pos = mod1.(nearby_pos, iter.space_size)
     end
     return (nearby_pos, state + 1)
 end
