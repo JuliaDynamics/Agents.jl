@@ -40,22 +40,22 @@ end
 
 ## Inspection
 
-# Agents.ids_to_inspect(model::ABM{<:ContinuousSpace}, pos) =
-#     nearby_ids_exact(pos, model, 0.00001)
+Agents.ids_to_inspect(model::ABM{<:ContinuousSpace}, pos) =
+    nearby_ids_exact(pos, model, 0.00001)
 
 
-# Fixed implementation for 3D
-function Agents.ids_to_inspect(model::ABM{<:ContinuousSpace}, pos)
-    space = abmspace(model)
-    D = length(spacesize(space))
+# # Fixed implementation for 3D
+# function Agents.ids_to_inspect(model::ABM{<:ContinuousSpace}, pos)
+#     space = abmspace(model)
+#     D = length(spacesize(space))
 
-    if D == 3
-        # 3D plots in Makie use normalized coordinates
-        extent = space.extent
-        transformed_pos = ntuple(i -> (pos[i] + 1) * extent[i] / 2, D)
-        nearby_ids_exact(transformed_pos, model, 0.00001)
-    else
-        # 2D plots don't have this issue
-        nearby_ids_exact(pos, model, 0.00001)
-    end
-end
+#     if D == 3
+#         # 3D plots in Makie use normalized coordinates
+#         extent = space.extent
+#         transformed_pos = ntuple(i -> (pos[i] + 1) * extent[i] / 2, D)
+#         nearby_ids_exact(transformed_pos, model, 0.00001)
+#     else
+#         # 2D plots don't have this issue
+#         nearby_ids_exact(pos, model, 0.00001)
+#     end
+# end

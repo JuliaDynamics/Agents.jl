@@ -125,35 +125,93 @@ function Makie.show_data(inspector::DataInspector,
 end
 
 # 3D space
+# function Makie.show_data(inspector::DataInspector,
+#     p::ABMP{<:Agents.AbstractSpace}, idx, source::MeshScatter)
+#     @info "show_data called for MeshScatter! idx=$idx"
+
+#     pos = Makie.position_on_plot(source, idx)
+#     @info "Position on plot: $pos"
+
+#     proj_pos = Makie.shift_project(Makie.parent_scene(p), pos)
+#     @info "Projected position: $proj_pos"
+
+#     Makie.update_tooltip_alignment!(inspector, proj_pos)
+
+#     model = p.abmobs[].model[]
+#     converted_pos = convert_element_pos(abmspace(model), pos)
+#     @info "Converted position: $converted_pos"
+
+#     agent_string = Agents.agent2string(model, converted_pos)
+#     @info "Agent string: $agent_string"
+
+#     a = inspector.plot.attributes
+#     a.text[] = agent_string
+#     a.visible[] = true
+
+#     @info "Tooltip visible: $(a.visible[]), Text: $(a.text[])"
+
+#     return true
+# end
+
 function Makie.show_data(inspector::DataInspector,
-        p::ABMP{<:Agents.AbstractSpace}, idx, source::MeshScatter)
-    pos = Makie.position_on_plot(source, idx)
-    proj_pos = Makie.shift_project(Makie.parent_scene(p), pos)
-    Makie.update_tooltip_alignment!(inspector, proj_pos)
+    p::Plot{AgentsVisualizations._abmplot, <:Tuple},
+    idx::UInt32, source::MeshScatter)
 
     model = p.abmobs[].model[]
-    a = inspector.plot.attributes
-    a.text[] = Agents.agent2string(model, convert_element_pos(abmspace(model), pos))
-    a.visible[] = true
 
-    return true
+    # For meshscatter, each agent is represented by one marker instance
+    # The idx directly corresponds to the agent index in most cases
+    # But we should verify this with the actual data
+
+    # Get all agent IDs in the order they appear in the plot
+    agent_ids = collect(allids(model))
+
+    # In Agents.jl, the meshscatter should have one marker per agent
+    # So idx should directly correspond to the agent index
+    agent_idx = Int(idx)
+
+    if agent_idx <= length(agent_ids)
+        agent_id = agent_ids[agent_idx]
+        agent = model[agent_id]
+        
+        # Generate tooltip
+        a = inspector.plot.attributes
+        a.text[] = Agents.agent2string(agent)
+        a.visible[] = true
+        
+        # Position tooltip at the clicked point
+        pos = Makie.position_on_plot(source, idx)
+        proj_pos = Makie.shift_project(Makie.parent_scene(p), pos)
+        Makie.update_tooltip_alignment!(inspector, proj_pos)
+        
+        return true
+    end
+
+    return false
 end
 
 function Agents.agent2string(model::ABM, pos)
+    @info "agent2string called with pos: $pos"
     ids = Agents.ids_to_inspect(model, pos)
+    
+    # Convert the iterator to an array
+    ids_array = collect(ids)
+    @info "Found agent IDs: $ids_array"
+    
     s = ""
-
-    for (i, id) in enumerate(ids)
+    for (i, id) in enumerate(ids_array)
         if i > 1
             s *= "\n"
         end
         s *= Agents.agent2string(model[id])
     end
 
+    @info "Final string: '$s'"
     return s
 end
 
 function Agents.agent2string(agent::A) where {A<:AbstractAgent}
+
     agentstring = "▶ $(nameof(A))\n"
 
     agentstring *= "id: $(getproperty(agent, :id))\n"
