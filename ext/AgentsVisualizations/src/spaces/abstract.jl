@@ -158,28 +158,19 @@ function Makie.show_data(inspector::DataInspector,
     idx::UInt32, source::MeshScatter)
 
     model = p.abmobs[].model[]
-
-    # For meshscatter, each agent is represented by one marker instance
-    # The idx directly corresponds to the agent index in most cases
-    # But we should verify this with the actual data
-
-    # Get all agent IDs in the order they appear in the plot
     agent_ids = collect(allids(model))
-
-    # In Agents.jl, the meshscatter should have one marker per agent
-    # So idx should directly correspond to the agent index
     agent_idx = Int(idx)
 
     if agent_idx <= length(agent_ids)
         agent_id = agent_ids[agent_idx]
         agent = model[agent_id]
         
-        # Generate tooltip
+        # Use existing Agents.jl functionality to handle multiple agents
         a = inspector.plot.attributes
-        a.text[] = Agents.agent2string(agent)
+        a.text[] = Agents.agent2string(model, agent.pos)
         a.visible[] = true
         
-        # Position tooltip at the clicked point
+        # Position tooltip
         pos = Makie.position_on_plot(source, idx)
         proj_pos = Makie.shift_project(Makie.parent_scene(p), pos)
         Makie.update_tooltip_alignment!(inspector, proj_pos)
