@@ -93,16 +93,10 @@ function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:GridSpaceSingle{D,true}}, 
     nindices = get_offset_indices(model, r)
     stored_ids = abmspace(model).stored_ids
     space_size = spacesize(model)
-    position_iterator = (pos .+ β for β in nindices)
-    # check if we are far from the wall to skip bounds checks
-    if all(i -> r < pos[i] <= space_size[i] - r, 1:D)
-        ids_iterator = (stored_ids[p...] for p in position_iterator
-                        if stored_ids[p...] != 0)
-    else
-        ids_iterator = (checkbounds(Bool, stored_ids, p...) ?
-                        stored_ids[p...] : stored_ids[mod1.(p, space_size)...]
-                        for p in position_iterator if stored_ids[mod1.(p, space_size)...] != 0)
-    end
+    do_bounds = !all(i -> r < pos[i] <= space_size[i] - r, 1:D)
+    ids_iterator = PeriodicNearbyIDS{D, eltype(nindices), typeof(stored_ids)}(
+        pos, length(nindices), nindices, stored_ids, space_size, do_bounds
+    )
     return ids_iterator
 end
 
@@ -112,18 +106,63 @@ function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:GridSpaceSingle{D,false}},
     nindices = get_offset_indices(model, r)
     stored_ids = abmspace(model).stored_ids
     space_size = spacesize(model)
-    position_iterator = (pos .+ β for β in nindices)
-    # check if we are far from the wall to skip bounds checks
-    if all(i -> r < pos[i] <= space_size[i] - r, 1:D)
-        ids_iterator = (stored_ids[p...] for p in position_iterator
-                        if stored_ids[p...] != 0)
-    else
-        ids_iterator = (stored_ids[p...] for p in position_iterator
-                        if checkbounds(Bool, stored_ids, p...) && stored_ids[p...] != 0)
-    end
+    do_bounds = !all(i -> r < pos[i] <= space_size[i] - r, 1:D)
+    ids_iterator = NonPeriodicNearbyIDS{D, eltype(nindices), typeof(stored_ids)}(
+        pos, length(nindices), nindices, stored_ids, space_size, do_bounds
+    )
     return ids_iterator
 end
 
+struct PeriodicNearbyIDS{D,Q,I}
+    pos::GridPos{D}
+    len::Int
+    nindices::Vector{Q}
+    stored_ids::I
+    space_size::NTuple{D, Int}
+    do_bounds::Bool
+end
+@inline function Base.iterate(iter::PeriodicNearbyIDS, state=1)
+    while state <= iter.len
+        @inbounds offset = iter.nindices[state]
+        pos = iter.pos .+ offset
+        if iter.do_bounds && !checkbounds(Bool, iter.stored_ids, pos...)
+            pos = mod1.(pos, iter.space_size)
+        end
+        @inbounds id = iter.stored_ids[pos...]
+        state += 1
+        id != 0 && return (id, state)
+    end
+    return nothing
+end
+Base.IteratorSize(::Type{<:PeriodicNearbyIDS}) = Base.SizeUnknown()
+Base.eltype(::Type{PeriodicNearbyIDS}) = Int
+
+struct NonPeriodicNearbyIDS{D,Q,I}
+    pos::GridPos{D}
+    len::Int
+    nindices::Vector{Q}
+    stored_ids::I
+    space_size::NTuple{D, Int}
+    do_bounds::Bool
+end
+@inline function Base.iterate(iter::NonPeriodicNearbyIDS, state=1)
+    while state <= iter.len
+        @inbounds offset = iter.nindices[state]
+        pos = iter.pos .+ offset
+        if iter.do_bounds && !checkbounds(Bool, iter.stored_ids, pos...)
+            state += 1
+            continue
+        end
+        @inbounds id = iter.stored_ids[pos...]
+        state += 1
+        id != 0 && return (id, state)
+    end
+    return nothing
+end
+Base.IteratorSize(::Type{<:NonPeriodicNearbyIDS}) = Base.SizeUnknown()
+Base.eltype(::Type{NonPeriodicNearbyIDS}) = Int
+
+# TODO: create custom iterator also for this case
 function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:GridSpaceSingle{D,P}}, r = 1,
         get_offset_indices = offsets_within_radius # internal, see last function
     ) where {D,P}
