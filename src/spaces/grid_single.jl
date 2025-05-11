@@ -135,7 +135,7 @@ end
     return nothing
 end
 Base.IteratorSize(::Type{<:PeriodicNearbyIDS}) = Base.SizeUnknown()
-Base.eltype(::Type{PeriodicNearbyIDS}) = Int
+Base.eltype(::PeriodicNearbyIDS) = Int
 
 struct NonPeriodicNearbyIDS{D,Q,I}
     pos::GridPos{D}
@@ -160,7 +160,7 @@ end
     return nothing
 end
 Base.IteratorSize(::Type{<:NonPeriodicNearbyIDS}) = Base.SizeUnknown()
-Base.eltype(::Type{NonPeriodicNearbyIDS}) = Int
+Base.eltype(::NonPeriodicNearbyIDS) = Int
 
 # TODO: create custom iterator also for this case
 function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:GridSpaceSingle{D,P}}, r = 1,
