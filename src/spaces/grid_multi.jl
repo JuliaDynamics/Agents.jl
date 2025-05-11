@@ -127,11 +127,6 @@ function nearby_ids(pos::NTuple{D, Int}, space::GridSpace{D,P}, r::Real = 1) whe
     return GridSpaceIdIterator{P, D}(stored_ids, nindices, pos, L, space_size, nocheck)
 end
 
-mutable struct IdIteratorState
-    pos_i::Int
-    inner_i::Int
-    ids_in_pos::Vector{Int}
-end
 struct GridSpaceIdIterator{P,D}
     stored_ids::Array{Vector{Int},D}  # Reference to array in grid space
     indices::Vector{NTuple{D,Int}}    # Result of `offsets_within_radius` pretty much
@@ -144,7 +139,7 @@ Base.eltype(::Type{<:GridSpaceIdIterator}) = Int # It returns IDs
 Base.IteratorSize(::Type{<:GridSpaceIdIterator}) = Base.SizeUnknown()
 
 # Initialize iteration
-function Base.iterate(iter::GridSpaceIdIterator)
+@inline function Base.iterate(iter::GridSpaceIdIterator)
     @inbounds begin
     indices, L, origin = iter.indices, iter.L, iter.origin
     combine, invalid = iter.nocheck ? (combine_positions_nocheck, invalid_access_nocheck) :
@@ -161,26 +156,28 @@ function Base.iterate(iter::GridSpaceIdIterator)
     end
     # We have a valid position index and a non-empty position
     ids_in_pos = iter.stored_ids[pos_index...]
+    p_ids_in_pos = pointer(ids_in_pos)
+    l_ids_in_pos = length(ids_in_pos)
     id = ids_in_pos[1]
-    return (id, IdIteratorState(pos_i, 2, ids_in_pos))
+    return (id, (pos_i, 2, p_ids_in_pos, l_ids_in_pos))
     end
 end
 
 # For performance we need a different method of starting the iteration
 # and another one that continues iteration. Second case uses the explicitly
 # known knowledge of `pos_i` being a valid position index.
-function Base.iterate(iter::GridSpaceIdIterator, state)
+@inline function Base.iterate(iter::GridSpaceIdIterator, state)
     @inbounds begin
-    inner_i, ids_in_pos = state.inner_i, state.ids_in_pos
-    if inner_i > length(ids_in_pos)
+    pos_i, inner_i, p_ids_in_pos, l_ids_in_pos = state
+    if inner_i > l_ids_in_pos
         # we have exhausted IDs in current position, so we reset and go to next
-        pos_i, L = state.pos_i, iter.L
+        L = iter.L
         # Stop iteration if `pos_i` exceeded the amount of positions
         pos_i === L && return nothing
+        pos_i += 1
         indices, origin = iter.indices, iter.origin
         combine, invalid = iter.nocheck ? (combine_positions_nocheck, invalid_access_nocheck) :
                                           (combine_positions, invalid_access)
-        pos_i += 1
         pos_index = combine(indices[pos_i], origin, iter)
         # Of course, we need to check if we have valid index
         while invalid(pos_index, iter)
@@ -189,13 +186,13 @@ function Base.iterate(iter::GridSpaceIdIterator, state)
             pos_index = combine(indices[pos_i], origin, iter)
         end
         ids_in_pos = iter.stored_ids[pos_index...]
-        state.pos_i, state.ids_in_pos = pos_i, ids_in_pos
+        p_ids_in_pos = pointer(ids_in_pos)
+        l_ids_in_pos = length(ids_in_pos)
         inner_i = 1
     end
     # We reached the next valid position and non-empty position
-    id = ids_in_pos[inner_i]
-    state.inner_i = inner_i + 1
-    return (id, state)
+    id = unsafe_load(p_ids_in_pos, inner_i)
+    return (id, (pos_i, inner_i + 1, p_ids_in_pos, l_ids_in_pos))
     end
 end
 
