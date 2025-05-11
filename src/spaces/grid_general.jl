@@ -247,7 +247,7 @@ end
 end
 Base.IteratorSize(::Type{<:PeriodicNearbyPositions}) = Base.HasLength()
 Base.length(iter::PeriodicNearbyPositions) = iter.len
-Base.eltype(::Type{PeriodicNearbyPositions{D}}) where {D} = GridPos{D}
+Base.eltype(::PeriodicNearbyPositions{D}) where {D} = GridPos{D}
 
 struct NonPeriodicNearbyPositions{D,Q,I}
     pos::GridPos{D}
@@ -273,7 +273,7 @@ end
     return (nearby_pos, state + 1)
 end
 Base.IteratorSize(::Type{<:NonPeriodicNearbyPositions}) = Base.SizeUnknown()
-Base.eltype(::Type{NonPeriodicNearbyPositions{D}}) where {D} = GridPos{D}
+Base.eltype(::NonPeriodicNearbyPositions{D}) where {D} = GridPos{D}
 
 function random_nearby_position(pos::GridPos{D}, model::ABM{<:AbstractGridSpace{D,false}}, r=1; kwargs...) where {D}
     nindices = offsets_within_radius_no_0(abmspace(model), r)
