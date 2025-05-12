@@ -190,7 +190,7 @@ function nearby_positions(
     stored_ids = space.stored_ids
     do_bounds = !all(i -> r < pos[i] <= space_size[i] - r, 1:D)
     return PeriodicNearbyPositions{D, eltype(nindices), typeof(stored_ids)}(
-        pos, nindices, stored_ids, space_size, do_bounds
+        pos, length(nindices), nindices, stored_ids, space_size, do_bounds
     )
 end
 function nearby_positions(
@@ -202,7 +202,7 @@ function nearby_positions(
     stored_ids = space.stored_ids
     do_bounds = !all(i -> r < pos[i] <= space_size[i] - r, 1:D)
     return NonPeriodicNearbyPositions{D, eltype(nindices), typeof(stored_ids)}(
-        pos, nindices, stored_ids, space_size, do_bounds
+        pos, length(nindices), nindices, stored_ids, space_size, do_bounds
     )
 end
 
@@ -229,13 +229,14 @@ end
 
 struct PeriodicNearbyPositions{D,Q,I}
     pos::GridPos{D}
+    len::Int
     nindices::Vector{Q}
     stored_ids::I
     space_size::NTuple{D, Int}
     do_bounds::Bool
 end
 @inline function Base.iterate(iter::PeriodicNearbyPositions, state=1)
-    state > length(iter.nindices) && return nothing
+    state > iter.len && return nothing
     @inbounds offset = iter.nindices[state]
     nearby_pos = iter.pos .+ offset
     # check if we are far from the wall to skip bounds checks
@@ -245,24 +246,25 @@ end
     return (nearby_pos, state + 1)
 end
 Base.IteratorSize(::Type{<:PeriodicNearbyPositions}) = Base.HasLength()
-Base.length(iter::PeriodicNearbyPositions) = length(iter.nindices)
-Base.eltype(::Type{PeriodicNearbyPositions{D}}) where {D} = GridPos{D}
+Base.length(iter::PeriodicNearbyPositions) = iter.len
+Base.eltype(::PeriodicNearbyPositions{D}) where {D} = GridPos{D}
 
 struct NonPeriodicNearbyPositions{D,Q,I}
     pos::GridPos{D}
+    len::Int
     nindices::Vector{Q}
     stored_ids::I
     space_size::NTuple{D, Int}
     do_bounds::Bool
 end
 @inline function Base.iterate(iter::NonPeriodicNearbyPositions, state=1)
-    state > length(iter.nindices) && return nothing
+    state > iter.len && return nothing
     @inbounds offset = iter.nindices[state]
     nearby_pos = iter.pos .+ offset
     # check if we are far from the wall to skip bounds checks
     if iter.do_bounds
         while !checkbounds(Bool, iter.stored_ids, nearby_pos...)
-            state == length(iter.nindices) && return nothing
+            state == iter.len && return nothing
             state += 1
             @inbounds offset = iter.nindices[state]
             nearby_pos = iter.pos .+ offset
@@ -271,7 +273,7 @@ end
     return (nearby_pos, state + 1)
 end
 Base.IteratorSize(::Type{<:NonPeriodicNearbyPositions}) = Base.SizeUnknown()
-Base.eltype(::Type{NonPeriodicNearbyPositions{D}}) where {D} = GridPos{D}
+Base.eltype(::NonPeriodicNearbyPositions{D}) where {D} = GridPos{D}
 
 function random_nearby_position(pos::GridPos{D}, model::ABM{<:AbstractGridSpace{D,false}}, r=1; kwargs...) where {D}
     nindices = offsets_within_radius_no_0(abmspace(model), r)
