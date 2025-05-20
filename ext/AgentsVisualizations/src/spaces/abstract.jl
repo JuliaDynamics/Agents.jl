@@ -124,6 +124,7 @@ function Makie.show_data(inspector::DataInspector,
     return true
 end
 
+# 3D space
 function Makie.show_data(inspector::DataInspector,
         p::ABMP{<:Agents.AbstractSpace}, idx, source::MeshScatter)
     pos = Makie.position_on_plot(source, idx)
@@ -164,6 +165,7 @@ end
 function Agents.agent2string(model::ABM, pos)
     ids = Agents.ids_to_inspect(model, pos)
     s = ""
+    
     for (i, id) in enumerate(ids)
         if i > 1
             s *= "\n"
