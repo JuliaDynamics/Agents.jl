@@ -125,30 +125,39 @@ function Makie.show_data(inspector::DataInspector,
 end
 
 function Makie.show_data(inspector::DataInspector,
-    p::Plot{AgentsVisualizations._abmplot, <:Tuple},
-    idx::UInt32, source::MeshScatter)
+        p::ABMP{<:Agents.AbstractSpace}, idx, source::MeshScatter)
+    pos = Makie.position_on_plot(source, idx)
+    proj_pos = Makie.shift_project(Makie.parent_scene(p), pos)
+    Makie.update_tooltip_alignment!(inspector, proj_pos)
 
     model = p.abmobs[].model[]
+    
+    # BUGFIX: In 3D plots, position_on_plot returns coordinates in view/camera space,
+    # not world space. This causes position-based agent lookup to fail after camera
+    # manipulation. Instead, we use the index to get the agent's actual position.    
     agent_ids = collect(allids(model))
     agent_idx = Int(idx)
 
+    # Safety check to prevent index errors when hovering near plot boundaries
     if agent_idx <= length(agent_ids)
         agent_id = agent_ids[agent_idx]
-        agent = model[agent_id]
+        agent_pos = model[agent_id].pos
         
-        # Use existing functionality to handle multiple agents
+        # Use the agent's actual position (in world coordinates) instead of
+        # the transformed position from position_on_plot. This ensures we
+        # find all agents at the same position correctly.
         a = inspector.plot.attributes
-        a.text[] = Agents.agent2string(model, agent.pos)
+        a.text[] = Agents.agent2string(model, agent_pos)
         a.visible[] = true
-        
-        # Position tooltip
-        pos = Makie.position_on_plot(source, idx)
-        proj_pos = Makie.shift_project(Makie.parent_scene(p), pos)
-        Makie.update_tooltip_alignment!(inspector, proj_pos)
         
         return true
     end
-
+    
+    # If index is invalid, hide the tooltip
+    a = inspector.plot.attributes
+    a.text[] = ""
+    a.visible[] = false
+    
     return false
 end
 
