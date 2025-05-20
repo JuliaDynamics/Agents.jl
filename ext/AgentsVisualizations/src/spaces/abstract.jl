@@ -124,35 +124,6 @@ function Makie.show_data(inspector::DataInspector,
     return true
 end
 
-# 3D space
-# function Makie.show_data(inspector::DataInspector,
-#     p::ABMP{<:Agents.AbstractSpace}, idx, source::MeshScatter)
-#     @info "show_data called for MeshScatter! idx=$idx"
-
-#     pos = Makie.position_on_plot(source, idx)
-#     @info "Position on plot: $pos"
-
-#     proj_pos = Makie.shift_project(Makie.parent_scene(p), pos)
-#     @info "Projected position: $proj_pos"
-
-#     Makie.update_tooltip_alignment!(inspector, proj_pos)
-
-#     model = p.abmobs[].model[]
-#     converted_pos = convert_element_pos(abmspace(model), pos)
-#     @info "Converted position: $converted_pos"
-
-#     agent_string = Agents.agent2string(model, converted_pos)
-#     @info "Agent string: $agent_string"
-
-#     a = inspector.plot.attributes
-#     a.text[] = agent_string
-#     a.visible[] = true
-
-#     @info "Tooltip visible: $(a.visible[]), Text: $(a.text[])"
-
-#     return true
-# end
-
 function Makie.show_data(inspector::DataInspector,
     p::Plot{AgentsVisualizations._abmplot, <:Tuple},
     idx::UInt32, source::MeshScatter)
@@ -165,7 +136,7 @@ function Makie.show_data(inspector::DataInspector,
         agent_id = agent_ids[agent_idx]
         agent = model[agent_id]
         
-        # Use existing Agents.jl functionality to handle multiple agents
+        # Use existing functionality to handle multiple agents
         a = inspector.plot.attributes
         a.text[] = Agents.agent2string(model, agent.pos)
         a.visible[] = true
@@ -182,13 +153,8 @@ function Makie.show_data(inspector::DataInspector,
 end
 
 function Agents.agent2string(model::ABM, pos)
-    @info "agent2string called with pos: $pos"
     ids = Agents.ids_to_inspect(model, pos)
-    
-    # Convert the iterator to an array
     ids_array = collect(ids)
-    @info "Found agent IDs: $ids_array"
-    
     s = ""
     for (i, id) in enumerate(ids_array)
         if i > 1
@@ -197,12 +163,10 @@ function Agents.agent2string(model::ABM, pos)
         s *= Agents.agent2string(model[id])
     end
 
-    @info "Final string: '$s'"
     return s
 end
 
 function Agents.agent2string(agent::A) where {A<:AbstractAgent}
-
     agentstring = "▶ $(nameof(A))\n"
 
     agentstring *= "id: $(getproperty(agent, :id))\n"
