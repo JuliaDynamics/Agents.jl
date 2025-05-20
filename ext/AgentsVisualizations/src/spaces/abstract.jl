@@ -154,9 +154,8 @@ end
 
 function Agents.agent2string(model::ABM, pos)
     ids = Agents.ids_to_inspect(model, pos)
-    ids_array = collect(ids)
     s = ""
-    for (i, id) in enumerate(ids_array)
+    for (i, id) in enumerate(ids)
         if i > 1
             s *= "\n"
         end
