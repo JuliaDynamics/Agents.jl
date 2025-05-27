@@ -24,6 +24,18 @@ If you wish to do any development work, it is better to use
 git clone https://github.com/JuliaDynamics/Agents.jl.git --single-branch
 ```
 
+## Agent Container Utilities
+
+The functions `agent_container_type` and `construct_agent_container` are internal utilities for handling agent storage containers.
+
+- **`agent_container_type`**:  
+  Returns the appropriate container type for storing agents of type `A` using the specified container type.
+
+- **`construct_agent_container`**:  
+  Constructs and returns an instance of the agent container type for agents of type `A`.
+
+These utilities help standardize how agent collections are created and managed internally.
+
 ## [Creating a new model type](@id make_new_model)
 
 Note that new model types target applications where a fundamentally different
@@ -72,28 +84,28 @@ As before, all custom space types should implement this API and be subtypes of
 To implement this API for your custom space:
 
 1. Copy the methods from the list below.
-    Make sure to also copy the first line defining the `ABMPlot` type in your working
-    environment which is necessary to be able to extend the API.
-    Inside `ABMPlot` you can find all the plot args and kwargs as well as the plot
-    properties that have been lifted from them (see the "Lifting" section of this API).
-    You can then easily access them inside your functions via the dot syntax, e.g. with
-    `p.color` or `p.plotkwargs`, and use them as needed.
+   Make sure to also copy the first line defining the `ABMPlot` type in your working
+   environment which is necessary to be able to extend the API.
+   Inside `ABMPlot` you can find all the plot args and kwargs as well as the plot
+   properties that have been lifted from them (see the "Lifting" section of this API).
+   You can then easily access them inside your functions via the dot syntax, e.g. with
+   `p.color` or `p.plotkwargs`, and use them as needed.
 1. Replace `Agents.AbstractSpace` with the name of your space type.
 1. Implement at least the required methods.
 1. Implement optional methods as needed.
-    Some methods DO NOT need to be implemented for every space, they are optional.
-    The necessity to implement these methods depends on the supertypes of your custom type.
-    For example, you will get a lot of methods "for free" if your `CustomType` is a subtype
-    of `Agents.AbstractGridSpace`.
-    As a general rule of thumb: The more abstract your `CustomSpace`'s supertype is, the
-    more methods you will have to extend/adapt.
+   Some methods DO NOT need to be implemented for every space, they are optional.
+   The necessity to implement these methods depends on the supertypes of your custom type.
+   For example, you will get a lot of methods "for free" if your `CustomType` is a subtype
+   of `Agents.AbstractGridSpace`.
+   As a general rule of thumb: The more abstract your `CustomSpace`'s supertype is, the
+   more methods you will have to extend/adapt.
 
 !!! info "Checking for missing methods"
-    We provide a convenient function `Agents.check_space_visualization_API(::ABM)` to check
-    for the availability of methods used to plot ABMs with custom spaces via `abmplot`.
-    By default, the function is called whenever you want to plot a custom space.
-    This behavior can be disabled by passing `enable_space_checks = false` as a keyword
-    argument to `abmplot`.
+We provide a convenient function `Agents.check_space_visualization_API(::ABM)` to check
+for the availability of methods used to plot ABMs with custom spaces via `abmplot`.
+By default, the function is called whenever you want to plot a custom space.
+This behavior can be disabled by passing `enable_space_checks = false` as a keyword
+argument to `abmplot`.
 
 The methods to be extended for visualization of a new space type are structured into four
 groups:
@@ -152,14 +164,14 @@ end
 ```
 
 !!! tip "Changing visualization of existing space types"
-    The same approach outlined above also applies in cases when you want to overwrite the
-    default methods for an already existing space type.
-    For instance, this might often be the case for models with `Nothing` space.
+The same approach outlined above also applies in cases when you want to overwrite the
+default methods for an already existing space type.
+For instance, this might often be the case for models with `Nothing` space.
 
 ## Designing a new Pathfinder Cost Metric
 
 To define a new cost metric, simply make a struct that subtypes `CostMetric` and provide
-a `delta_cost` function for it. These methods work solely for A* at present, but
+a `delta_cost` function for it. These methods work solely for A\* at present, but
 will be available for other pathfinder algorithms in the future.
 
 ```@docs

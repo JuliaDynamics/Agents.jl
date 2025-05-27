@@ -3,14 +3,16 @@
 # model interface. All these are public (exported) functions.
 export random_agent, random_id, nagents, allagents, allids
 
+# Utility to extract the agent type from the model type parameter
+agenttype(m::ABM) = Base.unwrap_unionall(typeof(m)).parameters[2]
+
 """
     model[id]
     getindex(model::ABM, id::Int)
 
 Return an agent given its ID.
 """
-Base.getindex(m::ABM, id::Integer) = agent_container(m)[id]
-
+Base.getindex(m::ABM, id::Integer) = retrieve_agent(agent_container(m), id, agenttype(m))
 """
     allids(model)
 Return an iterator over all agent IDs of the model.
@@ -61,7 +63,7 @@ are split into groups).
 optimistic version doesn't find any agent satisfying the condition: if the filtering
 condition is expensive an allocating fallback can be more performant.
 """
-function random_agent(model, condition; optimistic = true, alloc = false)
+function random_agent(model, condition; optimistic=true, alloc=false)
     if optimistic
         return optimistic_random_agent(model, condition, alloc)
     else
@@ -69,7 +71,7 @@ function random_agent(model, condition; optimistic = true, alloc = false)
     end
 end
 
-function optimistic_random_agent(model, condition, alloc; n_attempts = nagents(model))
+function optimistic_random_agent(model, condition, alloc; n_attempts=nagents(model))
     @inbounds while n_attempts != 0
         idx = random_id(model)
         condition(model[idx]) && return model[idx]

@@ -8,17 +8,23 @@ Union type representing the possible container types for storing agents.
 ContainerType{A} = Union{AbstractDict{Int,A},AbstractVector{A}}
 
 """
-    struct AgentWrapperSoA{C} <: AbstractAgent
+    AgentWrapperSoA <: AbstractAgent
 
-Wrapper type for agents in a StructVector container.
+Wrapper type for agents in a StructVector container
 """
-struct AgentWrapperSoA{A, C} <: AbstractAgent
+struct AgentWrapperSoA{A,C} <: AbstractAgent
     soa::C
     id::Int
 end
+
+"""
+`SoAType` is a type alias for `AgentWrapperSoA`.
+
+This alias is provided for convenience and to improve code readability.
+"""
 const SoAType = AgentWrapperSoA
 
-function AgentWrapperSoA{A}(soa::C, id::Int) where {A<:AbstractAgent, C}
+function AgentWrapperSoA{A}(soa::C, id::Int) where {A<:AbstractAgent,C}
     return AgentWrapperSoA{A,C}(soa, id)
 end
 
@@ -34,14 +40,19 @@ end
 """
     agent_container_type(container::Type, A)
 
-Returns the container type for storing agents of type `A` in the specified container type `container`.
+Return the container type for storing agents of type `A` in the specified container type `container`.
 """
 agent_container_type(::Type{T}, A) where {T<:AbstractDict} = T{Int,A}
 agent_container_type(::Type{T}, A) where {T<:AbstractVector} = T{A}
 agent_container_type(container, A) = throw(
-    ArgumentError("Unrecognised container $container, please specify `Dict`, `Vector` or `StructVector`.")
+    ArgumentError("Unrecognised container $container, please provide a valid container type")
 )
 
+"""
+    construct_agent_container(container::Type, A)
+
+Construct and return an instance of the agent container type using the specified `container` type.
+"""
 function construct_agent_container(container::Type, A)
     C = agent_container_type(container, A)
     if C <: StructVector
