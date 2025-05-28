@@ -152,13 +152,13 @@ function StandardABM(
         In particular this means it is not needed to pass the stepping functions in step!,
         run!, offline_run!, ensemblerun!, abmplot, abmplot!, abmexploration, abmvideo and
         ABMObservable.
-        """ maxlog = 1
+        """ maxlog=1
     end
     if container == StructVector
         if !(A <: SoAType)
             @warn "The agent type passed to the model constructor is of type $A but a model with a 
             StructVector container will have agents of type SoAType{$A}. Pass this to the constructor 
-            to remove this warning." maxlog = 1
+            to remove this warning." maxlog=1
         else
             A = A.body.parameters[1]
         end
@@ -170,7 +170,7 @@ function StandardABM(
     agents_types = union_types(A)
     T = typeof(agents_types)
     return StandardABM{S,A,typeof(agents),T,G,K,F,P,R}(agents, agent_step!, model_step!, space, scheduler,
-        properties, rng, agents_types, agents_first, Ref(0), Ref(0))
+                                        properties, rng, agents_types, agents_first, Ref(0), Ref(0))
 end
 
 function StandardABM(agent::AbstractAgent, args::Vararg{Any, N}; kwargs...) where {N}
