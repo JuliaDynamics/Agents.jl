@@ -44,5 +44,9 @@ function remove_agent_from_container!(agent::AbstractAgent, model::Union{VecABM,
     error("Cannot remove agents in a `StandardABM` with a vector container.")
 end
 
+# Internal utility for retrieving agents by id from a container
+retrieve_agent(container::StructVector, id::Int, ::Type{A}) where {A} = AgentWrapperSoA{A}(container, id)
+retrieve_agent(container, id::Int, ::Type{A}) where {A} = container[id]
+
 random_id(model::DictABM) = rand(abmrng(model), agent_container(model)).first
 random_agent(model::DictABM) = rand(abmrng(model), agent_container(model)).second

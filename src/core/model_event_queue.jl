@@ -223,9 +223,6 @@ function EventQueueABM(
     )
 end
 
-function Base.getindex(model::EventQueueABM{S, A, C}, id::Int) where {S,A,C<:StructVector}
-    return AgentWrapperSoA{A}(agent_container(model), id)
-end
 ###########################################################################################
 # %% Adding events to the queue
 ###########################################################################################
