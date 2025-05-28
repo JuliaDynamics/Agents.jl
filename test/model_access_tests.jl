@@ -6,12 +6,12 @@ using Agents, Test
             @testset "ContainerType=$(ContainerType)" for ContainerType in (Dict, Vector, StructVector)
 
                 extra_args = ifelse(ModelType != EventQueueABM, (), ((),))
-                extra_kwargs = ifelse(ModelType != EventQueueABM, (warn_deprecation=false,), ((autogenerate_on_add = false),))
+                extra_kwargs = ifelse(ModelType != EventQueueABM, (warn_deprecation = false, ), ((autogenerate_on_add=false),))
                 # For StructVector container, we need to wrap the agent type with SoAType
                 agent_type = ContainerType == StructVector ? SoAType{NoSpaceAgent} : NoSpaceAgent
                 model = ModelType(agent_type, extra_args...;
-                    properties=Dict(:a => 2, :b => "test"),
-                    container=ContainerType, extra_kwargs...
+                    properties = Dict(:a => 2, :b => "test"),
+                    container = ContainerType, extra_kwargs...
                 )
                 # Add agents differently based on container type
                 for i in 1:5
@@ -60,8 +60,8 @@ using Agents, Test
                     par2::Float64
                     par3::String
                 end
-                properties = Properties(1, 1.0, "Test")
-                model = ModelType(agent_type, extra_args...; properties, container=ContainerType, extra_kwargs...)
+                properties = Properties(1,1.0,"Test")
+                model = ModelType(agent_type, extra_args...; properties, container = ContainerType, extra_kwargs...)
                 @test abmproperties(model) isa Properties
                 @test model.par1 == 1
                 @test model.par2 == 1.0
@@ -75,7 +75,7 @@ using Agents, Test
                 @test model.par3 == "Changed"
                 @test_throws ErrorException model.par4 = 5
 
-                model = ModelType(agent_type, extra_args...; container=ContainerType, extra_kwargs...)
+                model = ModelType(agent_type, extra_args...; container = ContainerType, extra_kwargs...)
                 @test_throws ErrorException model.a = 5
             end
         end
@@ -88,9 +88,9 @@ using Agents, Test
             weight::Float64
         end
         prop2 = TestContainer(1, 0.5)
-        model1 = StandardABM(NoSpaceAgent; properties=prop1, warn_deprecation=false)
-        model2 = StandardABM(NoSpaceAgent; properties=prop2, warn_deprecation=false)
-        model3 = StandardABM(SoAType{NoSpaceAgent}; properties=prop1, container=StructVector, warn_deprecation=false)
+        model1 = StandardABM(NoSpaceAgent; properties = prop1, warn_deprecation = false)
+        model2 = StandardABM(NoSpaceAgent; properties = prop2, warn_deprecation = false)
+        model3 = StandardABM(SoAType{NoSpaceAgent}; properties = prop1, container = StructVector, warn_deprecation = false)
         add_agent!(NoSpaceAgent, model3)
 
         test1(model) = model.a
@@ -101,30 +101,30 @@ using Agents, Test
     end
 
     @testset "Core methods" begin
-        model = StandardABM(GridAgent{2}, GridSpace((5, 5)), warn_deprecation=false)
+        model = StandardABM(GridAgent{2}, GridSpace((5,5)), warn_deprecation = false)
         @test Agents.agenttype(model) == GridAgent{2}
         @test Agents.spacetype(model) <: GridSpace
-        @test size(abmspace(model)) == (5, 5)
+        @test size(abmspace(model)) == (5,5)
         @test all(isempty(p, model) for p in positions(model))
-        model_soa = StandardABM(SoAType{GridAgent{2}}, GridSpace((5, 5)), container=StructVector, warn_deprecation=false)
+        model_soa = StandardABM(SoAType{GridAgent{2}}, GridSpace((5,5)), container = StructVector, warn_deprecation = false)
         @test Agents.agenttype(model_soa) == GridAgent{2}
         @test Agents.spacetype(model_soa) <: GridSpace
-        @test size(abmspace(model_soa)) == (5, 5)
+        @test size(abmspace(model_soa)) == (5,5)
         @test all(isempty(p, model_soa) for p in positions(model_soa))
     end
 
     @testset "Display" begin
         using Agents.Graphs: path_graph
-        model = StandardABM(NoSpaceAgent, warn_deprecation=false)
+        model = StandardABM(NoSpaceAgent, warn_deprecation = false)
         @test occursin("no spatial structure", sprint(show, model))
-        model = StandardABM(GridAgent{2}, GridSpace((5, 5)), warn_deprecation=false)
+        model = StandardABM(GridAgent{2}, GridSpace((5,5)), warn_deprecation = false)
         @test sprint(show, model)[1:25] == "StandardABM with 0 agents"
         @test sprint(show, Agents.abmspace(model)) == "GridSpace with size (5, 5), metric=chebyshev, periodic=true"
-        model = StandardABM(ContinuousAgent{2}, ContinuousSpace((1.0, 1.0)), warn_deprecation=false)
+        model = StandardABM(ContinuousAgent{2}, ContinuousSpace((1.0,1.0)), warn_deprecation = false)
         @test sprint(show, Agents.abmspace(model)) == "periodic continuous space with [1.0, 1.0] extent and spacing=0.05"
-        model = StandardABM(GraphAgent, GraphSpace(path_graph(5)), warn_deprecation=false)
+        model = StandardABM(GraphAgent, GraphSpace(path_graph(5)), warn_deprecation = false)
         @test sprint(show, Agents.abmspace(model)) == "GraphSpace with 5 positions and 4 edges"
-        model_soa = StandardABM(SoAType{NoSpaceAgent}, container=StructVector, warn_deprecation=false)
+        model_soa = StandardABM(SoAType{NoSpaceAgent}, container = StructVector, warn_deprecation = false)
         @test occursin("no spatial structure", sprint(show, model_soa))
         @test occursin("agents container: StructVector", sprint(show, model_soa))
     end
@@ -133,7 +133,7 @@ end
 
 @testset "SoAType Specific Tests" begin
     @testset "SoAType wrapper functionality with StandardABM" begin
-        model = StandardABM(SoAType{NoSpaceAgent}, container=StructVector, warn_deprecation=false)
+        model = StandardABM(SoAType{NoSpaceAgent}, container = StructVector, warn_deprecation = false)
         for i in 1:3
             add_agent!(NoSpaceAgent, model)
         end
@@ -155,7 +155,7 @@ end
         @test soa.id[1] == 200
     end
     @testset "add_agent! with StructVector in StandardABM" begin
-        model = StandardABM(SoAType{NoSpaceAgent}, container=StructVector, warn_deprecation=false)
+        model = StandardABM(SoAType{NoSpaceAgent}, container = StructVector, warn_deprecation = false)
         # Add an agent and verify it's accessible
         agent = add_agent!(NoSpaceAgent, model)
         @test agent isa NoSpaceAgent

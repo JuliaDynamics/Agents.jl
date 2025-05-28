@@ -10,9 +10,9 @@ ContainerType{A} = Union{AbstractDict{Int,A},AbstractVector{A}}
 """
     AgentWrapperSoA <: AbstractAgent
 
-Wrapper type for agents in a StructVector container
+Wrapper type for agents in a StructVector container.
 """
-struct AgentWrapperSoA{A,C} <: AbstractAgent
+struct AgentWrapperSoA{A, C} <: AbstractAgent
     soa::C
     id::Int
 end
@@ -24,7 +24,7 @@ This alias is provided for convenience and to improve code readability.
 """
 const SoAType = AgentWrapperSoA
 
-function AgentWrapperSoA{A}(soa::C, id::Int) where {A<:AbstractAgent,C}
+function AgentWrapperSoA{A}(soa::C, id::Int) where {A<:AbstractAgent, C}
     return AgentWrapperSoA{A,C}(soa, id)
 end
 

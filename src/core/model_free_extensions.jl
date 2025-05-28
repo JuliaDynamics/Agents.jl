@@ -63,7 +63,7 @@ are split into groups).
 optimistic version doesn't find any agent satisfying the condition: if the filtering
 condition is expensive an allocating fallback can be more performant.
 """
-function random_agent(model, condition; optimistic=true, alloc=false)
+function random_agent(model, condition; optimistic = true, alloc = false)
     if optimistic
         return optimistic_random_agent(model, condition, alloc)
     else
@@ -71,7 +71,7 @@ function random_agent(model, condition; optimistic=true, alloc=false)
     end
 end
 
-function optimistic_random_agent(model, condition, alloc; n_attempts=nagents(model))
+function optimistic_random_agent(model, condition, alloc; n_attempts = nagents(model))
     @inbounds while n_attempts != 0
         idx = random_id(model)
         condition(model[idx]) && return model[idx]

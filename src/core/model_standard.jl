@@ -132,16 +132,16 @@ end
 """
 function StandardABM(
     A::Type,
-    space::S=nothing;
-    agent_step!::G=dummystep,
-    model_step!::K=dummystep,
-    container::Type=Dict,
-    scheduler::F=Schedulers.fastest,
-    properties::P=nothing,
-    rng::R=Random.default_rng(),
-    agents_first::Bool=true,
-    warn=true,
-    warn_deprecation=true
+    space::S = nothing;
+    agent_step!::G = dummystep,
+    model_step!::K = dummystep,
+    container::Type = Dict,
+    scheduler::F = Schedulers.fastest,
+    properties::P = nothing,
+    rng::R = Random.default_rng(),
+    agents_first::Bool = true,
+    warn = true,
+    warn_deprecation = true
 ) where {S<:SpaceType,G,K,F,P,R<:AbstractRNG}
     if warn_deprecation && agent_step! == dummystep && model_step! == dummystep
         @warn """
@@ -173,7 +173,7 @@ function StandardABM(
         properties, rng, agents_types, agents_first, Ref(0), Ref(0))
 end
 
-function StandardABM(agent::AbstractAgent, args::Vararg{Any,N}; kwargs...) where {N}
+function StandardABM(agent::AbstractAgent, args::Vararg{Any, N}; kwargs...) where {N}
     return StandardABM(typeof(agent), args...; kwargs...)
 end
 
