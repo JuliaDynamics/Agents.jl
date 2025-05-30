@@ -125,11 +125,14 @@ end
 
 function Base.setproperty!(m::ABM, s::Symbol, x)
     properties = abmproperties(m)
-    exception = ErrorException(
-        "Cannot set property $(s) for model $(nameof(typeof(m))) with "*
-        "properties container type $(typeof(properties))."
-    )
-    properties === nothing && throw(exception)
+
+    if properties === nothing
+        exception = ErrorException(
+            "Cannot set property $(s) for model $(nameof(typeof(m))) with " *
+            "properties container type $(typeof(properties))."
+        )
+        throw(exception)
+    end     
     if properties isa Dict && haskey(properties, s)
         properties[s] = x
     elseif hasproperty(properties, s)
