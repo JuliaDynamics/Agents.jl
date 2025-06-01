@@ -9,21 +9,28 @@ nextid(model::DictABM) = getfield(model, :maxid)[] + 1
 nextid(model::Union{VecABM, StructVecABM}) = nagents(model) + 1
 hasid(model::Union{VecABM, StructVecABM}, id::Int) = id ≤ nagents(model)
 
-function add_agent_to_container!(agent::AbstractAgent, model::DictABM)
-    if haskey(agent_container(model), agent.id)
-        error(lazy"Can't add agent to model. There is already an agent with id=$(agent.id)")
+function add_agent_to_container!(agent::AbstractAgent, container::AbstractDict)
+    if haskey(container, agent.id)
+        error(lazy"Can't add agent to container. There is already an agent with id=$(agent.id)")
     else
-        agent_container(model)[agent.id] = agent
+        container[agent.id] = agent
     end
-    maxid = getfield(model, :maxid)
-    new_id = agent.id
-    if maxid[] < new_id; maxid[] = new_id; end
-    return
 end
 
-function add_agent_to_container!(agent::AbstractAgent, model::Union{VecABM, StructVecABM})
-    agent.id != nagents(model) + 1 && error(lazy"Cannot add agent of ID $(agent.id) in a vector ABM of $(nagents(model)) agents. Expected ID == $(nagents(model)+1).")
-    push!(agent_container(model), agent)
+function add_agent_to_container!(agent::AbstractAgent, container::AbstractVector)
+    agent.id != length(container) + 1 && error(lazy"Cannot add agent of ID $(agent.id) in a vector container of $(length(container)) agents. Expected ID == $(length(container)+1).")
+    push!(container, agent)
+end
+
+function add_agent_to_container!(agent::AbstractAgent, model::ABM)
+    add_agent_to_container!(agent, agent_container(model))
+    # Update maxid for DictABM
+    if model isa DictABM
+        maxid = getfield(model, :maxid)
+        if maxid[] < agent.id
+            maxid[] = agent.id
+        end
+    end
     return
 end
 
