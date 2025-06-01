@@ -1,13 +1,6 @@
 export SoAType
 
 """
-    ContainerType{A}
-
-Union type representing the possible container types for storing agents.
-"""
-ContainerType{A} = Union{AbstractDict{Int,A},AbstractVector{A}}
-
-"""
     AgentWrapperSoA <: AbstractAgent
 
 Wrapper type for agents in a StructVector container.

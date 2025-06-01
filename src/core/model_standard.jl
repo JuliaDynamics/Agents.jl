@@ -5,7 +5,7 @@ export dummystep
 struct StandardABM{
     S<:SpaceType,
     A<:AbstractAgent,
-    C<:ContainerType{A},
+    C<:Union{AbstractDict{Int,A},AbstractVector{A}},
     T,G,K,F,P,R<:AbstractRNG} <: AgentBasedModel{S}
     agents::C
     agent_step::G
