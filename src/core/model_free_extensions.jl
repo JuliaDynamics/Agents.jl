@@ -4,7 +4,7 @@
 export random_agent, random_id, nagents, allagents, allids
 
 # Utility to extract the agent type from the model type parameter
-agenttype(m::ABM) = Base.unwrap_unionall(typeof(m)).parameters[2]
+agenttype(m::ABM{S, A}) where {S, A} = A
 
 """
     model[id]

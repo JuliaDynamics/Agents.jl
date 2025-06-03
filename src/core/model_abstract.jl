@@ -57,7 +57,7 @@ For example, functions such as [`random_agent`](@ref), [`move_agent!`](@ref) or
 [`add_agent!`](@ref) do not need to be implemented manually but work out of the box
 provided the `AgentBasedModel` interface is followed.
 """
-abstract type AgentBasedModel{S<:SpaceType} end
+abstract type AgentBasedModel{S<:SpaceType, A<:AbstractAgent} end
 const ABM = AgentBasedModel
 
 # To see the internal interface for `AgentBasedModel`, see below the
