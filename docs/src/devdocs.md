@@ -24,18 +24,6 @@ If you wish to do any development work, it is better to use
 git clone https://github.com/JuliaDynamics/Agents.jl.git --single-branch
 ```
 
-## Agent Container Utilities
-
-The functions `agent_container_type` and `construct_agent_container` are internal utilities for handling agent storage containers.
-
-- **`agent_container_type`**:  
-  Returns the appropriate container type for storing agents of type `A` using the specified container type.
-
-- **`construct_agent_container`**:  
-  Constructs and returns an instance of the agent container type for agents of type `A`.
-
-These utilities help standardize how agent collections are created and managed internally.
-
 ## [Creating a new model type](@id make_new_model)
 
 Note that new model types target applications where a fundamentally different
