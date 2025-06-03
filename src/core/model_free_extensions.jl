@@ -4,7 +4,7 @@
 export random_agent, random_id, nagents, allagents, allids
 
 # Utility to extract the agent type from the model type parameter
-agenttype(m::ABM{S, A}) where {S, A} = A
+agenttype(m::ABM) = Union{tuple_agenttype(m)...}
 
 """
     model[id]
