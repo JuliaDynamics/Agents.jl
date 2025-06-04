@@ -11,9 +11,13 @@ struct AgentWrapperSoA{A, C} <: AbstractAgent
 end
 
 """
-`SoAType` is a type alias for `AgentWrapperSoA`.
+    SoAType{A} <: AbstractAgent
 
-This alias is provided for convenience and to improve code readability.
+Wrapper type for agents of type `A` in a model containing a `StructVector` container.
+
+This is needed for specializing signatures involving `A` e.g. instead of writing `agent_step!(agent::A, model)`,
+in the case of a model with a `StructVector` container, you should write `agent_step!(agent::SoaType{A}, model)`
+since `model[id]` is a `SoaType{A}`.
 """
 const SoAType = AgentWrapperSoA
 
