@@ -34,7 +34,7 @@ add_event!
 @agent
 @multiagent
 AbstractAgent
-SoAType{A}
+SoAType
 ```
 
 ### Minimal agent types
