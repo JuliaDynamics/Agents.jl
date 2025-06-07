@@ -5,7 +5,7 @@ export dummystep
 struct StandardABM{
     S<:SpaceType,
     A<:AbstractAgent,
-    C<:ContainerType{A},
+    C<:Union{AbstractDict{Int,A},AbstractVector{A}},
     T,G,K,F,P,R<:AbstractRNG} <: AgentBasedModel{S}
     agents::C
     agent_step::G
@@ -166,7 +166,7 @@ function StandardABM(
 
     !(is_sumtype(A)) && agent_validator(A, space, warn)
     agents = construct_agent_container(container, A)
-    
+
     agents_types = union_types(A)
     T = typeof(agents_types)
     return StandardABM{S,A,typeof(agents),T,G,K,F,P,R}(agents, agent_step!, model_step!, space, scheduler,
@@ -187,10 +187,6 @@ function remove_all_from_space!(model)
     end
 end
 
-function Base.getindex(model::StandardABM{S,A,C}, id::Int) where {S,A,C<:StructVector}
-    return AgentWrapperSoA{A}(agent_container(model), id)
-end
-
 """
     dummystep(model)
 
@@ -207,31 +203,31 @@ dummystep(agent, model) = nothing
 # %% Pretty printing
 #######################################################################################
 function Base.show(io::IO, abm::StandardABM{S,A,C}) where {S,A,C}
-  n = isconcretetype(A) ? nameof(A) : string(A)
-  if C <: AbstractDict
-    typecontainer = "Dict"
-  elseif C <: StructVector
-    typecontainer = "StructVector"
-  elseif C <: AbstractVector
-    typecontainer = "Vector"
-  end
-  s = "StandardABM with $(nagents(abm)) agents of type $(n)"
-  s *= "\n agents container: $(typecontainer)"
-  if abmspace(abm) === nothing
-      s *= "\n space: nothing (no spatial structure)"
-  else
-      s *= "\n space: $(sprint(show, abmspace(abm)))"
-  end
-  s *= "\n scheduler: $(schedulername(abmscheduler(abm)))"
-  print(io, s)
-  if !(isnothing(abmproperties(abm)))
-      if typeof(abmproperties(abm)) <: Dict
-          props = collect(keys(abmproperties(abm)))
-      else
-          props = collect(propertynames(abmproperties(abm)))
-      end
-      print(io, "\n properties: ", join(props, ", "))
-  end
+    n = isconcretetype(A) ? nameof(A) : string(A)
+    if C <: AbstractDict
+        typecontainer = "Dict"
+    elseif C <: StructVector
+        typecontainer = "StructVector"
+    elseif C <: AbstractVector
+        typecontainer = "Vector"
+    end
+    s = "StandardABM with $(nagents(abm)) agents of type $(n)"
+    s *= "\n agents container: $(typecontainer)"
+    if abmspace(abm) === nothing
+        s *= "\n space: nothing (no spatial structure)"
+    else
+        s *= "\n space: $(sprint(show, abmspace(abm)))"
+    end
+    s *= "\n scheduler: $(schedulername(abmscheduler(abm)))"
+    print(io, s)
+    if !(isnothing(abmproperties(abm)))
+        if typeof(abmproperties(abm)) <: Dict
+            props = collect(keys(abmproperties(abm)))
+        else
+            props = collect(propertynames(abmproperties(abm)))
+        end
+        print(io, "\n properties: ", join(props, ", "))
+    end
 end
 
 schedulername(x::Union{Function,DataType}) = nameof(x)

@@ -3,14 +3,16 @@
 # model interface. All these are public (exported) functions.
 export random_agent, random_id, nagents, allagents, allids
 
+# Utility to extract the agent type from the model type parameter
+agenttype(m::ABM) = Union{tuple_agenttype(m)...}
+
 """
     model[id]
     getindex(model::ABM, id::Int)
 
 Return an agent given its ID.
 """
-Base.getindex(m::ABM, id::Integer) = agent_container(m)[id]
-
+Base.getindex(m::ABM, id::Integer) = retrieve_agent(agent_container(m), id, agenttype(m))
 """
     allids(model)
 Return an iterator over all agent IDs of the model.

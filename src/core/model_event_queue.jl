@@ -37,7 +37,7 @@ exp_propensity(agent, model, propensity) = randexp(abmrng(model))/propensity
 struct EventQueueABM{
     S<:SpaceType,
     A<:AbstractAgent,
-    C<:ContainerType{A},
+    C<:Union{AbstractDict{Int,A},AbstractVector{A}},
     P,E,R<:AbstractRNG,TF,ET,PT,FPT,Q} <: AgentBasedModel{S}
     # core ABM stuff
     agents::C
@@ -223,9 +223,6 @@ function EventQueueABM(
     )
 end
 
-function Base.getindex(model::EventQueueABM{S, A, C}, id::Int) where {S,A,C<:StructVector}
-    return AgentWrapperSoA{A}(agent_container(model), id)
-end
 ###########################################################################################
 # %% Adding events to the queue
 ###########################################################################################
