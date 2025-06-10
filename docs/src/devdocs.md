@@ -60,6 +60,7 @@ In principle, the following should be done:
 5. Extend `add_agent_to_space!(agent, model), remove_agent_from_space!(agent, model)`. This already provides access to `add_agent!, kill_agent!` and `move_agent!`.
 6. Extend `nearby_ids(pos, model, r)`.
 7. Create a new "minimal" agent type to be used with [`@agent`](@ref) (see the source code of [`GraphAgent`](@ref) for an example).
+8. If you want to enable plotting with this space out of the box, also extend [`spacesize`](@ref).
 
 And that's it! Every function of the main API will now work. In some situations you might want to explicitly extend other functions such as `move_agent!` or `remove_all_from_space!` for performance reasons.
 
