@@ -1,4 +1,4 @@
-using Agents, Random, CairoMakie, POMDPs, Crux, Flux, Distributions
+using Agents, Random, POMDPs, Crux, Flux, Distributions
 
 ## 1. Agent Definition 
 @agent struct BoltzmannAgent(GridAgent{2})
@@ -387,22 +387,22 @@ as = POMDPs.actions(env_mdp).vals
 O = observations(env_mdp)
 
 
-QS() = DiscreteNetwork(
-    Chain(
-        Dense(Crux.dim(O)[1], 128, relu),
-        Dense(128, 128, relu),
-        Dense(128, output_size)
-    ), as)
-
-solver = DQN(π=QS(), S=O, N=200_000, buffer_size=10000, buffer_init=1000, ΔN=50)
-policy = solve(solver, env_mdp)
-plot_learning(solver)
+#QS() = DiscreteNetwork(
+#    Chain(
+#        Dense(Crux.dim(O)[1], 128, relu),
+#        Dense(128, 128, relu),
+#        Dense(128, output_size)
+#    ), as)
+#
+#solver = DQN(π=QS(), S=O, N=200_000, buffer_size=10000, buffer_init=1000, ΔN=50)
+#policy = solve(solver, env_mdp)
+#plot_learning(solver)
 
 
 V() = ContinuousNetwork(Chain(Dense(Crux.dim(O)..., 64, relu), Dense(64, 64, relu), Dense(64, 1)))
 B() = DiscreteNetwork(Chain(Dense(Crux.dim(O)..., 64, relu), Dense(64, 64, relu), Dense(64, length(as))), as)
 
-𝒮_ppo = PPO(π=ActorCritic(B(), V()), S=O, N=200_000, ΔN=200, log=(period=1000,))
+𝒮_ppo = PPO(π=ActorCritic(B(), V()), S=O, N=200_000, ΔN=500, log=(period=1000,))
 @time π_ppo = solve(𝒮_ppo, env_mdp)
 plot_learning(𝒮_ppo)
 
