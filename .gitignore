@@ -18,3 +18,5 @@ test/mdata.arrow
 *.csv
 *.arrow
 tutorial.md
+log
+examples/rl/log
