@@ -118,7 +118,9 @@ function get_local_observation(model::ABM, agent_id::Int, observation_radius::In
 
     # Get all agents in the neighborhood
     neighbor_ids = nearby_ids(target_agent, model, observation_radius)
-
+    for id in neighbor_ids
+        println(id)
+    end
     for neighbor in [model[id] for id in neighbor_ids]
         if neighbor.id == agent_id
             continue
@@ -233,9 +235,6 @@ function wolfsheep_calculate_reward(env, agent, action, initial_model, final_mod
     end
 end
 
-## Example 3: Using the new ReinforcementLearningABM model type
-println("\n=== ReinforcementLearningABM Example ===")
-
 # Define terminal condition for RL model
 function wolfsheep_is_terminal_rl(env)
     sheep_count = length([a for a in allagents(env) if a isa RLSheep])
@@ -243,45 +242,22 @@ function wolfsheep_is_terminal_rl(env)
     return sheep_count == 0 || wolf_count == 0
 end
 
-# Initialize model function for RL ABM
-function initialize_rl_model(; n_sheep=30, n_wolves=5, dims=(10, 10), regrowth_time=10,
-    Δenergy_sheep=5, Δenergy_wolf=20, sheep_reproduce=0.2,
-    wolf_reproduce=0.05, seed=1234)
+function create_fresh_wolfsheep_model(n_sheeps, n_wolves, dims, regrowth_time, Δenergy_sheep,
+    Δenergy_wolf, sheep_reproduce, wolf_reproduce, seed)
     rng = MersenneTwister(seed)
     space = GridSpace(dims, periodic=true)
-
-    properties = (
-        fully_grown=falses(dims),
-        countdown=zeros(Int, dims),
-        regrowth_time=regrowth_time,
-    )
-
-    # RL configuration for the model
-    rl_config = (
-        observation_fn=wolfsheep_get_observation,
-        observation_to_vector_fn=observation_to_vector_wolfsheep,
-        reward_fn=wolfsheep_calculate_reward,
-        terminal_fn=wolfsheep_is_terminal_rl,
-        agent_step_fn=wolfsheep_rl_step!,
-        action_spaces=Dict(
-            RLSheep => Crux.DiscreteSpace(5),  # Stay, N, S, E, W
-            RLWolf => Crux.DiscreteSpace(5)
-        ),
-        observation_spaces=Dict(
-            RLSheep => Crux.ContinuousSpace((((2 * 3 + 1)^2 * 4) + 3,), Float32),
-            RLWolf => Crux.ContinuousSpace((((2 * 3 + 1)^2 * 4) + 3,), Float32)
-        ),
-        training_agent_types=[RLSheep, RLWolf],
-        max_steps=100,
-        observation_radius=3
+    properties = Dict{Symbol,Any}(
+        :fully_grown => falses(dims),
+        :countdown => zeros(Int, dims),
+        :regrowth_time => regrowth_time,
     )
 
     # Create the ReinforcementLearningABM
-    model = ReinforcementLearningABM(Union{RLSheep,RLWolf}, space, rl_config;
-        properties=properties, rng=rng, scheduler=Schedulers.Randomly())
+    model = ReinforcementLearningABM(Union{RLSheep,RLWolf}, space;
+        properties=properties, rng=rng)
 
     # Add agents
-    for _ in 1:n_sheep
+    for _ in 1:n_sheeps
         energy = rand(abmrng(model), 1:(Δenergy_sheep*2)) - 1
         add_agent!(RLSheep, model, energy, sheep_reproduce, Δenergy_sheep)
     end
@@ -301,6 +277,39 @@ function initialize_rl_model(; n_sheep=30, n_wolves=5, dims=(10, 10), regrowth_t
     return model
 end
 
+# Initialize model function for RL ABM
+function initialize_rl_model(; n_sheeps=30, n_wolves=5, dims=(10, 10), regrowth_time=10,
+    Δenergy_sheep=5, Δenergy_wolf=20, sheep_reproduce=0.2, wolf_reproduce=0.05, seed=1234)
+
+    # RL configuration for the model
+    rl_config = (
+        model_init_fn=() -> create_fresh_wolfsheep_model(n_sheeps, n_wolves, dims, regrowth_time, Δenergy_sheep, Δenergy_wolf, sheep_reproduce, wolf_reproduce, seed),
+        observation_fn=wolfsheep_get_observation,
+        observation_to_vector_fn=observation_to_vector_wolfsheep,
+        reward_fn=wolfsheep_calculate_reward,
+        terminal_fn=wolfsheep_is_terminal_rl,
+        agent_step_fn=wolfsheep_rl_step!,
+        action_spaces=Dict(
+            RLSheep => Crux.DiscreteSpace(5),  # Stay, N, S, E, W
+            RLWolf => Crux.DiscreteSpace(5)
+        ),
+        observation_spaces=Dict(
+            RLSheep => Crux.ContinuousSpace((((2 * 3 + 1)^2 * 4) + 3,), Float32),
+            RLWolf => Crux.ContinuousSpace((((2 * 3 + 1)^2 * 4) + 3,), Float32)
+        ),
+        training_agent_types=[RLSheep, RLWolf],
+        max_steps=100,
+        observation_radius=3
+    )
+
+    model = create_fresh_wolfsheep_model(n_sheeps, n_wolves, dims, regrowth_time, Δenergy_sheep,
+        Δenergy_wolf, sheep_reproduce, wolf_reproduce, seed)
+
+    set_rl_config!(model, rl_config)
+
+    return model
+end
+
 # Create the model
 rl_model = initialize_rl_model()
 
@@ -311,7 +320,7 @@ println("Wolves: $(length([a for a in allagents(rl_model) if a isa RLWolf]))")
 println("\n=== DEBUG: Starting Wolf-Sheep Training ===")
 
 try
-    train_model!(rl_model, [RLSheep, RLWolf]; training_steps=5000)
+    train_model!(rl_model, [RLSheep, RLWolf]; training_steps=50)
     println("DEBUG: Training completed successfully")
 catch e
     println("DEBUG: Training failed with error: $e")
