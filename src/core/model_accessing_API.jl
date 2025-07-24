@@ -1,5 +1,6 @@
 const DictABM = Union{StandardABM{S,A,<:AbstractDict{<:Integer,A}} where {S,A},
-                      EventQueueABM{S,A,<:AbstractDict{<:Integer,A}} where {S,A}}
+                      EventQueueABM{S,A,<:AbstractDict{<:Integer,A}} where {S,A},
+                      ReinforcementLearningABM{S,A,<:AbstractDict{<:Integer,A}} where {S,A}}
 const VecABM = Union{StandardABM{S,A,<:AbstractVector{A}} where {S,A},
                      EventQueueABM{S,A,<:AbstractVector{A}} where {S,A}}
 const StructVecABM = Union{StandardABM{S,A,<:StructVector{A}} where {S,A},
@@ -42,6 +43,7 @@ end
 function extra_actions_after_add!(agent, model::EventQueueABM{S,A,<:StructVector} where {S,A})
     getfield(model, :autogenerate_on_add) && add_event!(model[agent.id], model)
 end
+extra_actions_after_add!(agent, model::ReinforcementLearningABM) = nothing
 
 function remove_agent_from_container!(agent::AbstractAgent, model::DictABM)
     delete!(agent_container(model), agent.id)
