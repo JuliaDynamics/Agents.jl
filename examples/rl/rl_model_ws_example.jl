@@ -89,7 +89,7 @@ function sheepwolf_step_rl!(wolf::RLWolf, model, action::Int)
     end
 
     # Check for sheep to eat
-    sheep_ids = [id for id in ids_in_position(wolf.pos, model) if model[id] isa RLSheep]
+    sheep_ids = [id for id in ids_in_position(wolf.pos, model) if haskey(model.agents, id) && model[id] isa RLSheep]
     if !isempty(sheep_ids)
         dinner = model[sheep_ids[1]]
         remove_agent!(dinner, model)
@@ -118,13 +118,15 @@ function get_local_observation(model::ABM, agent_id::Int, observation_radius::In
 
     # Get all agents in the neighborhood
     neighbor_ids = nearby_ids(target_agent, model, observation_radius)
+    # Filter out IDs that no longer exist in the model (agents that died)
+    valid_neighbors = []
     for id in neighbor_ids
-        println(id)
-    end
-    for neighbor in [model[id] for id in neighbor_ids]
-        if neighbor.id == agent_id
-            continue
+        if haskey(model.agents, id) && id != agent_id
+            push!(valid_neighbors, model[id])
         end
+    end
+
+    for neighbor in valid_neighbors
 
         # Calculate relative position with periodic boundaries
         dx = neighbor.pos[1] - agent_pos[1]
@@ -311,7 +313,7 @@ function initialize_rl_model(; n_sheeps=30, n_wolves=5, dims=(10, 10), regrowth_
 end
 
 # Create the model
-rl_model = initialize_rl_model()
+rl_model = initialize_rl_model(n_sheeps=100, n_wolves=20)
 
 println("Created ReinforcementLearningABM with $(nagents(rl_model)) agents")
 println("Sheep: $(length([a for a in allagents(rl_model) if a isa RLSheep]))")
@@ -320,7 +322,7 @@ println("Wolves: $(length([a for a in allagents(rl_model) if a isa RLWolf]))")
 println("\n=== DEBUG: Starting Wolf-Sheep Training ===")
 
 try
-    train_model!(rl_model, [RLSheep, RLWolf]; training_steps=50)
+    train_model!(rl_model, [RLSheep, RLWolf]; training_steps=50000)
     println("DEBUG: Training completed successfully")
 catch e
     println("DEBUG: Training failed with error: $e")
@@ -328,6 +330,8 @@ catch e
     rethrow(e)
 end
 
+plot_learning(rl_model.training_history[RLSheep])
+plot_learning(rl_model.training_history[RLWolf])
 # Get trained policies
 policies = get_trained_policies(rl_model)
 println("\nDEBUG: Trained policies available for: $(keys(policies))")
@@ -356,5 +360,3 @@ final_wolves = length([a for a in allagents(rl_model) if a isa RLWolf])
 println("Initial -> Final populations:")
 println("Sheep: $initial_sheep -> $final_sheep")
 println("Wolves: $initial_wolves -> $final_wolves")
-
-

@@ -90,7 +90,8 @@ function setup_rl_training(model::ReinforcementLearningABM, agent_type;
             :π => ActorCritic(B(), V()),
             :S => O,
             :N => training_steps,
-            :ΔN => 500,
+            :ΔN => 200,
+            :max_steps => model.rl_config[][:max_steps],
             :log => (period=1000,)
         )
         merged_params = merge(default_params, solver_params)
@@ -111,6 +112,7 @@ function setup_rl_training(model::ReinforcementLearningABM, agent_type;
             :π => QS(),
             :S => O,
             :N => training_steps,
+            :max_steps => model.rl_config[][:max_steps],
             :buffer_size => 10000,
             :buffer_init => 1000,
             :ΔN => 50
@@ -123,6 +125,7 @@ function setup_rl_training(model::ReinforcementLearningABM, agent_type;
             :S => O,
             :N => training_steps,
             :ΔN => 20,
+            :max_steps => model.rl_config[][:max_steps],
             :log => (period=1000,)
         )
         merged_params = merge(default_params, solver_params)
@@ -170,7 +173,7 @@ function train_agent_sequential(model::ReinforcementLearningABM, agent_types;
         policy_net = get(agent_networks, :policy_network, nothing)
         custom_solver = get(custom_solvers, agent_type, nothing)
         solver_type = get(solver_types, agent_type, :PPO)
-        solver_params_agent = get(solver_params, agent_type, Dict())
+        solver_params_agent = process_solver_params(solver_params, agent_type)
 
         # Set up training 
         env, solver = setup_rl_training(
@@ -237,7 +240,7 @@ function train_agent_simultaneous(model::ReinforcementLearningABM, agent_types;
         policy_net = get(agent_networks, :policy_network, nothing)
         custom_solver = get(custom_solvers, agent_type, nothing)
         solver_type = get(solver_types, agent_type, :PPO)
-        solver_params_agent = get(solver_params, agent_type, Dict())
+        solver_params_agent = process_solver_params(solver_params, agent_type)
 
         # Create a separate model instance for each agent type's training
         training_model = create_training_model_copy(model)
@@ -283,6 +286,28 @@ function train_agent_simultaneous(model::ReinforcementLearningABM, agent_types;
 end
 
 ## Helper Functions for Custom Neural Networks
+
+"""
+    process_solver_params(solver_params, agent_type)
+
+Process solver parameters that can be either global or per-agent-type.
+Returns the parameters specific to the given agent type.
+"""
+function process_solver_params(solver_params, agent_type)
+    if isempty(solver_params)
+        return Dict()
+    end
+
+    # Check if solver_params contains agent types as keys
+    if any(k isa Type for k in keys(solver_params))
+        # Per-agent-type parameters
+        return get(solver_params, agent_type, Dict())
+    else
+        # Global parameters
+        return solver_params
+    end
+end
+
 """
     create_value_network(input_dims, hidden_layers=[64, 64], activation=relu)
 
@@ -359,10 +384,30 @@ Train the specified agent types in the model using reinforcement learning.
 - `training_mode`: `:sequential` or `:simultaneous` (default: `:sequential`)
 - `training_steps`: Number of training steps per agent (default: 50_000)
 - `solver_type`: Type of RL solver to use (`:PPO`, `:DQN`, `:A2C`) (default: `:PPO`)
+- `solver_params`: Dict of custom solver parameters for each agent type or global parameters
 - `custom_networks`: Dict of custom neural networks for each agent type
 - `custom_solvers`: Dict of custom solvers for each agent type
-- `solver_params`: Dict of custom solver parameters for each agent type
 - Other arguments passed to the training functions
+
+## Notes
+- `max_steps` is read directly from the RL configuration (`model.rl_config[][:max_steps]`)
+- Episode termination is controlled by the RL environment wrapper using the config value
+- Cannot override `max_steps` during training - it must be set in the RL configuration
+
+## Examples
+```julia
+# Basic training with custom solver parameters
+train_model!(model, MyAgent; 
+    training_steps=10000,
+    solver_params=Dict(:ΔN => 100, :log => (period=500,)))
+
+# Per-agent-type solver parameters
+train_model!(model, [Agent1, Agent2]; 
+    solver_params=Dict(
+        Agent1 => Dict(:ΔN => 100),
+        Agent2 => Dict(:ΔN => 200)
+    ))
+```
 """
 function train_model!(model::ReinforcementLearningABM, agent_types;
     training_mode::Symbol=:sequential,

@@ -256,20 +256,29 @@ println("Initial Gini coefficient: $(boltzmann_rl_model.gini_coefficient)")
 # Train the Boltzmann agents
 println("\nTraining RLBoltzmannAgent...")
 try
-    train_model!(boltzmann_rl_model, RLBoltzmannAgent; training_steps=10000)
+    train_model!(boltzmann_rl_model, RLBoltzmannAgent;
+        training_steps=200000,
+        solver_params=Dict(
+            :ΔN => 200,           # Custom batch size for PPO updates
+            :log => (period=1000,) # Log every 1000 steps
+        ))
     println("DEBUG: Boltzmann RL training completed successfully")
 catch e
     println("DEBUG: Boltzmann RL training failed with error: $e")
     println("DEBUG: Error type: $(typeof(e))")
     rethrow(e)
 end
-
+plot_learning(boltzmann_rl_model.training_history[RLBoltzmannAgent])
 
 # Create a fresh model instance for simulation with the same parameters
 println("\nCreating fresh Boltzmann model for simulation...")
 fresh_boltzmann_model = create_fresh_boltzmann_model(10, (10, 10), 10, 1234)
 set_rl_config!(fresh_boltzmann_model, boltzmann_rl_model.rl_config[])
+
+# Copy the trained policies to the fresh model
+copy_trained_policies!(fresh_boltzmann_model, boltzmann_rl_model)
 println("DEBUG: Applied trained policies to fresh model")
+println("DEBUG: Fresh model has policies for: $(keys(fresh_boltzmann_model.trained_policies))")
 
 # Run simulation with trained agents on the fresh model
 println("\nRunning Boltzmann simulation with trained RL agents...")
@@ -279,7 +288,7 @@ println("DEBUG: Initial wealths: $initial_wealths")
 println("DEBUG: Initial Gini: $initial_gini")
 
 try
-    step_rl!(fresh_boltzmann_model, 15)
+    step_rl!(fresh_boltzmann_model, 5)
     println("DEBUG: Boltzmann step_rl! completed successfully")
 catch e
     println("DEBUG: Boltzmann step_rl! failed with error: $e")

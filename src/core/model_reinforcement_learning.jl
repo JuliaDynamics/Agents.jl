@@ -1,5 +1,5 @@
 export ReinforcementLearningABM, RLAgent
-export train_model!, get_trained_policies, set_rl_config!, step_rl!
+export train_model!, get_trained_policies, set_rl_config!, step_rl!, copy_trained_policies!
 export observation_to_vector, calculate_reward, is_terminal
 export get_current_training_agent_type, get_current_training_agent, reset_model_for_episode!
 
@@ -264,6 +264,18 @@ Get the dictionary of trained policies for each agent type.
 get_trained_policies(model::ReinforcementLearningABM) = model.trained_policies
 
 """
+    copy_trained_policies!(target_model::ReinforcementLearningABM, source_model::ReinforcementLearningABM)
+
+Copy all trained policies from the source model to the target model.
+"""
+function copy_trained_policies!(target_model::ReinforcementLearningABM, source_model::ReinforcementLearningABM)
+    for (agent_type, policy) in source_model.trained_policies
+        target_model.trained_policies[agent_type] = policy
+    end
+    return target_model
+end
+
+"""
     step_rl!(model::ReinforcementLearningABM, n::Int=1)
 
 Step the model forward using trained RL policies for agent behavior.
@@ -402,7 +414,7 @@ function reset_model_for_episode!(model::ReinforcementLearningABM)
         #println("DEBUG RESET: Using model_init_fn")
         new_model = config.model_init_fn()
         # Copy agents and properties from new model
-        empty!(model.agents)
+        remove_all!(model)
         for agent in allagents(new_model)
             add_agent!(agent, model)
         end
