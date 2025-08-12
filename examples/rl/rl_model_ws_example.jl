@@ -37,7 +37,14 @@ function sheepwolf_step_rl!(sheep::RLSheep, model, action::Int)
     if action != 1  # If not staying
         new_x = mod1(current_x + dx, width)
         new_y = mod1(current_y + dy, height)
-        move_agent!(sheep, (new_x, new_y), model)
+        # Check if target position is occupied
+        target_pos = (new_x, new_y)
+        occupied_agents = ids_in_position(target_pos, model)
+
+        # Only move if position is empty or only contains grass
+        if isempty(occupied_agents)
+            move_agent!(sheep, target_pos, model)
+        end
     end
 
     sheep.energy -= 1
@@ -50,6 +57,8 @@ function sheepwolf_step_rl!(sheep::RLSheep, model, action::Int)
     if model.fully_grown[sheep.pos...]
         sheep.energy += sheep.Δenergy
         model.fully_grown[sheep.pos...] = false
+        model.countdown[sheep.pos...] = model.regrowth_time  # Start regrowth timer
+
     end
 
     # Try to reproduce
@@ -59,6 +68,7 @@ function sheepwolf_step_rl!(sheep::RLSheep, model, action::Int)
     end
 end
 
+# WOLF Step
 function sheepwolf_step_rl!(wolf::RLWolf, model, action::Int)
     # Action definitions: 1=stay, 2=north, 3=south, 4=east, 5=west
     current_x, current_y = wolf.pos
@@ -103,22 +113,29 @@ function sheepwolf_step_rl!(wolf::RLWolf, model, action::Int)
     end
 end
 
+function grass_step!(model)
+    @inbounds for p in positions(model)
+        if !(model.fully_grown[p...])  # If grass is not fully grown
+            if model.countdown[p...] ≤ 0
+                model.fully_grown[p...] = true  # Regrow grass
+            else
+                model.countdown[p...] -= 1  # Countdown to regrowth
+            end
+        end
+    end
+end
+
 # Wolf-sheep observation function
 function get_local_observation(model::ABM, agent_id::Int, observation_radius::Int)
-    println("DEBUG: get_local_observation called for agent $agent_id with radius $observation_radius")
     target_agent = model[agent_id]
     agent_pos = target_agent.pos
     width, height = getfield(model, :space).extent
     agent_type = target_agent isa RLSheep ? :sheep : :wolf
-    println("DEBUG: Agent type: $agent_type, position: $agent_pos")
 
     grid_size = 2 * observation_radius + 1
-    # 4 channels: sheep_presence, wolf_presence, grass_state, energy_density
-    neighborhood_grid = zeros(Float32, grid_size, grid_size, 4, 1)
+    neighborhood_grid = zeros(Float32, grid_size, grid_size, 3, 1)
 
-    # Get all agents in the neighborhood
     neighbor_ids = nearby_ids(target_agent, model, observation_radius)
-    # Filter out IDs that no longer exist in the model (agents that died)
     valid_neighbors = []
     for id in neighbor_ids
         if haskey(model.agents, id) && id != agent_id
@@ -127,12 +144,9 @@ function get_local_observation(model::ABM, agent_id::Int, observation_radius::In
     end
 
     for neighbor in valid_neighbors
-
-        # Calculate relative position with periodic boundaries
         dx = neighbor.pos[1] - agent_pos[1]
         dy = neighbor.pos[2] - agent_pos[2]
 
-        # Wrap around for periodic space
         if abs(dx) > width / 2
             dx -= sign(dx) * width
         end
@@ -140,17 +154,16 @@ function get_local_observation(model::ABM, agent_id::Int, observation_radius::In
             dy -= sign(dy) * height
         end
 
-        # Convert to grid coordinates (center is at radius + 1)
         grid_x = dx + observation_radius + 1
         grid_y = dy + observation_radius + 1
 
         if 1 <= grid_x <= grid_size && 1 <= grid_y <= grid_size
             if neighbor isa RLSheep
-                neighborhood_grid[grid_x, grid_y, 1, 1] = 1.0  # Sheep presence
-                neighborhood_grid[grid_x, grid_y, 4, 1] = Float32(neighbor.energy / 20.0)  # Normalized energy
+                neighborhood_grid[grid_x, grid_y, 1, 1] = 1.0
+                #neighborhood_grid[grid_x, grid_y, 4, 1] = Float32(neighbor.energy / 40.0)  # Use consistent scale
             elseif neighbor isa RLWolf
-                neighborhood_grid[grid_x, grid_y, 2, 1] = 1.0  # Wolf presence
-                neighborhood_grid[grid_x, grid_y, 4, 1] = Float32(neighbor.energy / 40.0)  # Normalized energy
+                neighborhood_grid[grid_x, grid_y, 2, 1] = 1.0
+                #neighborhood_grid[grid_x, grid_y, 4, 1] = Float32(neighbor.energy / 40.0)  # Use consistent scale
             end
         end
     end
@@ -165,17 +178,14 @@ function get_local_observation(model::ABM, agent_id::Int, observation_radius::In
             grid_y = dy + observation_radius + 1
 
             if model.fully_grown[pos_x, pos_y]
-                neighborhood_grid[grid_x, grid_y, 3, 1] = 1.0  # Grass available
+                neighborhood_grid[grid_x, grid_y, 3, 1] = 1.0
             end
         end
     end
 
-    # Normalize own agent's data
-    max_energy = agent_type == :sheep ? 20.0 : 40.0
-    normalized_energy = Float32(target_agent.energy / max_energy)
+    # Use consistent normalization for own energy
+    normalized_energy = Float32(target_agent.energy / 40.0)  # Consistent scale
     normalized_pos = (Float32(agent_pos[1] / width), Float32(agent_pos[2] / height))
-
-    println("DEBUG: Observation created - energy: $normalized_energy, pos: $normalized_pos, grid_size: $(size(neighborhood_grid))")
 
     return (
         agent_id=agent_id,
@@ -196,19 +206,25 @@ function observation_to_vector_wolfsheep(obs)
         Float32(obs.own_energy),
         Float32(obs.normalized_pos[1]),
         Float32(obs.normalized_pos[2]),
+        Float32(obs.agent_type == :sheep ? 1.0 : 0.0),  # Add agent type indicator
         flattened_grid
     )
 end
 
 # Define the agent stepping functions for both old and new agent types
 function wolfsheep_rl_step!(agent::Union{RLSheep,RLWolf}, model, action::Int)
-    println("DEBUG: wolfsheep_rl_step! called for agent $(agent.id) ($(typeof(agent))) with action $action")
+    #println("DEBUG: wolfsheep_rl_step! called for agent $(agent.id) ($(typeof(agent))) with action $action")
     if agent isa RLSheep
         sheepwolf_step_rl!(agent, model, action)
     elseif agent isa RLWolf
         sheepwolf_step_rl!(agent, model, action)
     end
-    println("DEBUG: Agent $(agent.id) step completed - energy: $(agent.energy), pos: $(agent.pos)")
+
+    # Regrow grass every few steps
+    if rand(abmrng(model)) < 0.9  # 90% chance per agent step
+        grass_step!(model)
+    end
+    #println("DEBUG: Agent $(agent.id) step completed - energy: $(agent.energy), pos: $(agent.pos)")
 end
 
 # Define observation function
@@ -218,29 +234,29 @@ end
 
 # Define reward function
 function wolfsheep_calculate_reward(env, agent, action, initial_model, final_model)
-    println("DEBUG: wolfsheep_calculate_reward called for agent $(agent.id) with action $action")
     # Check if agent still exists
     if agent.id ∉ [a.id for a in allagents(final_model)]
-        println("DEBUG: Agent $(agent.id) died - penalty -10.0")
-        return -10.0  # Penalty for dying
+        return -20.0
     end
 
-    # Reward based on energy and survival
+    reward = 0.0
+
     if agent isa RLSheep
         reward = min(4.0, agent.energy - 4.0)
-        println("DEBUG: Sheep $(agent.id) reward: $reward (energy: $(agent.energy))")
-        return reward
+        #println("DEBUG: Sheep $(agent.id) reward: $reward (energy: $(agent.energy))")
     else
         reward = min(4.0, agent.energy / 5.0 - 4.0)
-        println("DEBUG: Wolf $(agent.id) reward: $reward (energy: $(agent.energy))")
-        return reward
+        #println("DEBUG: Wolf $(agent.id) reward: $reward (energy: $(agent.energy))")
     end
+
+    return reward
 end
 
 # Define terminal condition for RL model
 function wolfsheep_is_terminal_rl(env)
     sheep_count = length([a for a in allagents(env) if a isa RLSheep])
     wolf_count = length([a for a in allagents(env) if a isa RLWolf])
+    #println("DEBUG: Sheep count: $sheep_count, Wolf count: $wolf_count")
     return sheep_count == 0 || wolf_count == 0
 end
 
@@ -281,7 +297,7 @@ end
 
 # Initialize model function for RL ABM
 function initialize_rl_model(; n_sheeps=30, n_wolves=5, dims=(10, 10), regrowth_time=10,
-    Δenergy_sheep=5, Δenergy_wolf=20, sheep_reproduce=0.2, wolf_reproduce=0.05, seed=1234)
+    Δenergy_sheep=5, Δenergy_wolf=20, sheep_reproduce=0.2, wolf_reproduce=0.05, observation_radius=4, seed=1234)
 
     # RL configuration for the model
     rl_config = (
@@ -296,12 +312,12 @@ function initialize_rl_model(; n_sheeps=30, n_wolves=5, dims=(10, 10), regrowth_
             RLWolf => Crux.DiscreteSpace(5)
         ),
         observation_spaces=Dict(
-            RLSheep => Crux.ContinuousSpace((((2 * 3 + 1)^2 * 4) + 3,), Float32),
-            RLWolf => Crux.ContinuousSpace((((2 * 3 + 1)^2 * 4) + 3,), Float32)
+            RLSheep => Crux.ContinuousSpace((((2 * observation_radius + 1)^2 * 3) + 4,), Float32),
+            RLWolf => Crux.ContinuousSpace((((2 * observation_radius + 1)^2 * 3) + 4,), Float32)
         ),
         training_agent_types=[RLSheep, RLWolf],
-        max_steps=100,
-        observation_radius=3
+        max_steps=300,
+        observation_radius=observation_radius
     )
 
     model = create_fresh_wolfsheep_model(n_sheeps, n_wolves, dims, regrowth_time, Δenergy_sheep,
@@ -313,16 +329,23 @@ function initialize_rl_model(; n_sheeps=30, n_wolves=5, dims=(10, 10), regrowth_
 end
 
 # Create the model
-rl_model = initialize_rl_model(n_sheeps=100, n_wolves=20)
+rl_model = initialize_rl_model(n_sheeps=100, n_wolves=25, dims=(20, 20), regrowth_time=10,
+    Δenergy_sheep=4, Δenergy_wolf=20, sheep_reproduce=0.04, wolf_reproduce=0.05, seed=1234)
 
 println("Created ReinforcementLearningABM with $(nagents(rl_model)) agents")
 println("Sheep: $(length([a for a in allagents(rl_model) if a isa RLSheep]))")
 println("Wolves: $(length([a for a in allagents(rl_model) if a isa RLWolf]))")
 
-println("\n=== DEBUG: Starting Wolf-Sheep Training ===")
-
 try
-    train_model!(rl_model, [RLSheep, RLWolf]; training_steps=50000)
+    train_model!(rl_model, [RLSheep, RLWolf];
+        training_mode=:simultaneous,
+        n_iterations=5,
+        batch_size=200 * nagents(rl_model),
+        solver_params=Dict(
+            :ΔN => 20 * nagents(rl_model),  # Larger batch size for more stable updates
+            :log => (period=20 * nagents(rl_model),),
+            :max_steps => 50 * nagents(rl_model)
+        ))
     println("DEBUG: Training completed successfully")
 catch e
     println("DEBUG: Training failed with error: $e")
@@ -332,31 +355,38 @@ end
 
 plot_learning(rl_model.training_history[RLSheep])
 plot_learning(rl_model.training_history[RLWolf])
-# Get trained policies
-policies = get_trained_policies(rl_model)
-println("\nDEBUG: Trained policies available for: $(keys(policies))")
-println("DEBUG: Policy types: $(typeof.(values(policies)))")
 
-# Run simulation with trained agents
+
+# Create a fresh model instance for simulation with the same parameters
+println("\nCreating fresh Wolf-Sheep model for simulation...")
+fresh_ws_model = create_fresh_wolfsheep_model(100, 25, (20, 20), 10, 4, 20, 0.04, 0.05, 1234)
+set_rl_config!(fresh_ws_model, rl_model.rl_config[])
+
+# Copy the trained policies to the fresh model
+copy_trained_policies!(fresh_ws_model, rl_model)
+println("DEBUG: Applied trained policies to fresh model")
+println("DEBUG: Fresh model has policies for: $(keys(fresh_ws_model.trained_policies))")
+
+# Run simulation with trained agents on the fresh model
 println("\nRunning simulation with trained RL agents...")
-initial_sheep = length([a for a in allagents(rl_model) if a isa RLSheep])
-initial_wolves = length([a for a in allagents(rl_model) if a isa RLWolf])
+initial_sheep = length([a for a in allagents(fresh_ws_model) if a isa RLSheep])
+initial_wolves = length([a for a in allagents(fresh_ws_model) if a isa RLWolf])
 println("DEBUG: Initial populations - Sheep: $initial_sheep, Wolves: $initial_wolves")
 
 # Step using RL policies
 try
-    println("DEBUG: Starting step_rl! with 50 steps")
-    step_rl!(rl_model, 50)
-    println("DEBUG: step_rl! completed successfully")
+    step_rl!(fresh_ws_model, 50)
 catch e
     println("DEBUG: step_rl! failed with error: $e")
     println("DEBUG: Error type: $(typeof(e))")
     rethrow(e)
 end
 
-final_sheep = length([a for a in allagents(rl_model) if a isa RLSheep])
-final_wolves = length([a for a in allagents(rl_model) if a isa RLWolf])
+final_sheep = length([a for a in allagents(fresh_ws_model) if a isa RLSheep])
+final_wolves = length([a for a in allagents(fresh_ws_model) if a isa RLWolf])
 
 println("Initial -> Final populations:")
 println("Sheep: $initial_sheep -> $final_sheep")
 println("Wolves: $initial_wolves -> $final_wolves")
+
+println("\nWolf-Sheep ReinforcementLearningABM example completed!")

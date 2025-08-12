@@ -307,13 +307,13 @@ function advance_simulation!(model::ReinforcementLearningABM)
                                 obs = config.observation_fn(model, other_agent.id, obs_radius)
                                 obs_vec = config.observation_to_vector_fn(obs)
                                 action = Crux.action(model.trained_policies[agent_type], obs_vec)
-                                println("DEBUG ADVANCE: Agent $(other_agent.id) using trained policy, action: $action")
+                                #println("DEBUG ADVANCE: Agent $(other_agent.id) using trained policy, action: $action")
                                 config.agent_step_fn(other_agent, model, action)
                             else
                                 # Fall back to random behavior
                                 if haskey(config.action_spaces, agent_type)
                                     action = rand(config.action_spaces[agent_type].vals)
-                                    println("DEBUG ADVANCE: Agent $(other_agent.id) using random action: $action")
+                                    #println("DEBUG ADVANCE: Agent $(other_agent.id) using random action: $action")
                                     config.agent_step_fn(other_agent, model, action)
                                 end
                             end
@@ -372,10 +372,10 @@ function rl_agent_step!(agent, model)
     if model isa ReinforcementLearningABM
         agent_type = typeof(agent)
 
-        println("DEBUG RL STEP: Agent $(agent.id) type: $agent_type")
-        println("DEBUG RL STEP: Available trained policies: $(keys(model.trained_policies))")
-        println("DEBUG RL STEP: Has policy for agent type: $(haskey(model.trained_policies, agent_type))")
-        println("DEBUG RL STEP: RL config present: $(!isnothing(model.rl_config[]))")
+        #println("DEBUG RL STEP: Agent $(agent.id) type: $agent_type")
+        #println("DEBUG RL STEP: Available trained policies: $(keys(model.trained_policies))")
+        #println("DEBUG RL STEP: Has policy for agent type: $(haskey(model.trained_policies, agent_type))")
+        #println("DEBUG RL STEP: RL config present: $(!isnothing(model.rl_config[]))")
 
         if haskey(model.trained_policies, agent_type) && !isnothing(model.rl_config[])
             # Use trained policy
@@ -384,18 +384,16 @@ function rl_agent_step!(agent, model)
             obs_vec = config.observation_to_vector_fn(obs)
 
             action = Crux.action(model.trained_policies[agent_type], obs_vec)
-            println("DEBUG RL STEP: Using trained policy, raw action: $action")
-
             config.agent_step_fn(agent, model, action[1])
-            println("DEBUG RL STEP: Agent $(agent.id) using trained policy, action: $(action[1])")
+            #println("DEBUG RL STEP: Agent $(agent.id) using trained policy, action: $(action[1])")
         else
             # Fall back to random behavior
-            println("DEBUG RL STEP: Falling back to random behavior for agent $(agent.id)")
+            #println("DEBUG RL STEP: Falling back to random behavior for agent $(agent.id)")
             if !isnothing(model.rl_config[]) && haskey(model.rl_config[].action_spaces, agent_type)
                 action_space = model.rl_config[].action_spaces[agent_type]
                 action = rand(abmrng(model), action_space.vals)
                 model.rl_config[].agent_step_fn(agent, model, action)
-                println("DEBUG RL STEP random: Agent $(agent.id) using random action: $action")
+                #println("DEBUG RL STEP random: Agent $(agent.id) using random action: $action")
             else
                 # Do nothing if no RL configuration available
                 println("DEBUG RL STEP: No RL configuration or action space for agent $(agent.id), skipping step.")

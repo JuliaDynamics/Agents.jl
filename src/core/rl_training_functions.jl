@@ -46,6 +46,7 @@ Returns a wrapped environment compatible with POMDPs training algorithms.
 """
 function setup_rl_training(model::ReinforcementLearningABM, agent_type;
     training_steps=50_000,
+    max_steps=nothing,
     value_network=nothing,
     policy_network=nothing,
     solver=nothing,
@@ -84,6 +85,10 @@ function setup_rl_training(model::ReinforcementLearningABM, agent_type;
         B = policy_network
     end
 
+    if isnothing(max_steps)
+        max_steps = model.rl_config[][:max_steps]
+    end
+
     # Create solver based on type
     if solver_type == :PPO
         default_params = Dict(
@@ -91,7 +96,7 @@ function setup_rl_training(model::ReinforcementLearningABM, agent_type;
             :S => O,
             :N => training_steps,
             :ΔN => 200,
-            :max_steps => model.rl_config[][:max_steps],
+            :max_steps => max_steps,
             :log => (period=1000,)
         )
         merged_params = merge(default_params, solver_params)
@@ -112,7 +117,7 @@ function setup_rl_training(model::ReinforcementLearningABM, agent_type;
             :π => QS(),
             :S => O,
             :N => training_steps,
-            :max_steps => model.rl_config[][:max_steps],
+            :max_steps => max_steps,
             :buffer_size => 10000,
             :buffer_init => 1000,
             :ΔN => 50
@@ -125,7 +130,7 @@ function setup_rl_training(model::ReinforcementLearningABM, agent_type;
             :S => O,
             :N => training_steps,
             :ΔN => 20,
-            :max_steps => model.rl_config[][:max_steps],
+            :max_steps => max_steps,
             :log => (period=1000,)
         )
         merged_params = merge(default_params, solver_params)
@@ -242,11 +247,8 @@ function train_agent_simultaneous(model::ReinforcementLearningABM, agent_types;
         solver_type = get(solver_types, agent_type, :PPO)
         solver_params_agent = process_solver_params(solver_params, agent_type)
 
-        # Create a separate model instance for each agent type's training
-        training_model = create_training_model_copy(model)
-
         env, solver = setup_rl_training(
-            training_model,
+            model,
             agent_type;
             training_steps=batch_size,
             value_network=value_net,
@@ -272,7 +274,7 @@ function train_agent_simultaneous(model::ReinforcementLearningABM, agent_types;
             # Update model with current policies
             for (other_type, policy) in policies
                 if other_type != agent_type
-                    envs[agent_type].model.trained_policies[other_type] = policy
+                    model.trained_policies[other_type] = policy
                 end
             end
 
