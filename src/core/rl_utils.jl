@@ -350,8 +350,9 @@ function step_rl!(model::ReinforcementLearningABM, n::Int=1)
 
     for _ in 1:n
         # Step agents using RL policies
-        for agent in schedule(model)
-            rl_agent_step!(agent, model)
+        for id in Agents.schedule(model)
+            hasid(model, id) || continue
+            rl_agent_step!(model[id], model)
         end
 
         # Step the model

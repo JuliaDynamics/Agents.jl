@@ -360,7 +360,7 @@ plot_learning(rl_model.training_history[RLWolf])
 
 # Create a fresh model instance for simulation with the same parameters
 println("\nCreating fresh Wolf-Sheep model for simulation...")
-fresh_ws_model = create_fresh_wolfsheep_model(100, 25, (20, 20), 10, 4, 20, 0.04, 0.05, 1234)
+fresh_ws_model = create_fresh_wolfsheep_model(100, 25, (20, 20), 30, 4, 20, 0.04, 0.05, 1234)
 set_rl_config!(fresh_ws_model, rl_model.rl_config[])
 
 # Copy the trained policies to the fresh model
@@ -376,7 +376,7 @@ println("DEBUG: Initial populations - Sheep: $initial_sheep, Wolves: $initial_wo
 
 # Step using RL policies
 try
-    step_rl!(fresh_ws_model, 50)
+    step_rl!(fresh_ws_model, 1000)
 catch e
     println("DEBUG: step_rl! failed with error: $e")
     println("DEBUG: Error type: $(typeof(e))")
