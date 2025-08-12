@@ -272,7 +272,8 @@ function create_fresh_wolfsheep_model(n_sheeps, n_wolves, dims, regrowth_time, Î
 
     # Create the ReinforcementLearningABM
     model = ReinforcementLearningABM(Union{RLSheep,RLWolf}, space;
-        properties=properties, rng=rng)
+        properties=properties, rng=rng,
+        scheduler=Schedulers.Randomly())
 
     # Add agents
     for _ in 1:n_sheeps

@@ -350,7 +350,7 @@ function step_rl!(model::ReinforcementLearningABM, n::Int=1)
 
     for _ in 1:n
         # Step agents using RL policies
-        for agent in allagents(model)
+        for agent in schedule(model)
             rl_agent_step!(agent, model)
         end
 
