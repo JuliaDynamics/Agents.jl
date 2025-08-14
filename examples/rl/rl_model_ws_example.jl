@@ -39,12 +39,9 @@ function sheepwolf_step_rl!(sheep::RLSheep, model, action::Int)
         new_y = mod1(current_y + dy, height)
         # Check if target position is occupied
         target_pos = (new_x, new_y)
-        occupied_agents = ids_in_position(target_pos, model)
 
-        # Only move if position is empty or only contains grass
-        if isempty(occupied_agents)
-            move_agent!(sheep, target_pos, model)
-        end
+        move_agent!(sheep, target_pos, model)
+
     end
 
     sheep.energy -= 1
@@ -124,6 +121,23 @@ function grass_step!(model)
         end
     end
 end
+
+# Define the agent stepping functions for both old and new agent types
+function wolfsheep_rl_step!(agent::Union{RLSheep,RLWolf}, model, action::Int)
+    #println("DEBUG: wolfsheep_rl_step! called for agent $(agent.id) ($(typeof(agent))) with action $action")
+    if agent isa RLSheep
+        sheepwolf_step_rl!(agent, model, action)
+    elseif agent isa RLWolf
+        sheepwolf_step_rl!(agent, model, action)
+    end
+
+    # Regrow grass every few steps
+    if rand(abmrng(model)) < 0.5  # 50% chance per agent step
+        grass_step!(model)
+    end
+    #println("DEBUG: Agent $(agent.id) step completed - energy: $(agent.energy), pos: $(agent.pos)")
+end
+
 
 # Wolf-sheep observation function
 function get_local_observation(model::ABM, agent_id::Int, observation_radius::Int)
@@ -211,21 +225,6 @@ function observation_to_vector_wolfsheep(obs)
     )
 end
 
-# Define the agent stepping functions for both old and new agent types
-function wolfsheep_rl_step!(agent::Union{RLSheep,RLWolf}, model, action::Int)
-    #println("DEBUG: wolfsheep_rl_step! called for agent $(agent.id) ($(typeof(agent))) with action $action")
-    if agent isa RLSheep
-        sheepwolf_step_rl!(agent, model, action)
-    elseif agent isa RLWolf
-        sheepwolf_step_rl!(agent, model, action)
-    end
-
-    # Regrow grass every few steps
-    if rand(abmrng(model)) < 0.9  # 90% chance per agent step
-        grass_step!(model)
-    end
-    #println("DEBUG: Agent $(agent.id) step completed - energy: $(agent.energy), pos: $(agent.pos)")
-end
 
 # Define observation function
 function wolfsheep_get_observation(model, agent_id, observation_radius)
@@ -236,20 +235,39 @@ end
 function wolfsheep_calculate_reward(env, agent, action, initial_model, final_model)
     # Check if agent still exists
     if agent.id ∉ [a.id for a in allagents(final_model)]
-        return -20.0
+        return -50.0  # Strong death penalty
     end
-
-    reward = 0.0
 
     if agent isa RLSheep
-        reward = min(4.0, agent.energy - 4.0)
-        #println("DEBUG: Sheep $(agent.id) reward: $reward (energy: $(agent.energy))")
-    else
-        reward = min(4.0, agent.energy / 5.0 - 4.0)
-        #println("DEBUG: Wolf $(agent.id) reward: $reward (energy: $(agent.energy))")
-    end
+        # Reward for staying alive and having energy
+        reward = 1.0  # Survival bonus
+        energy_ratio = agent.energy / 20.0  # Normalize by reasonable max energy
+        reward += energy_ratio * 0.5
 
-    return reward
+        # Bonus for eating grass (if energy increased)
+        if haskey(initial_model.agents, agent.id)
+            initial_energy = initial_model[agent.id].energy
+            if agent.energy > initial_energy
+                reward += 0.5  # Eating bonus
+            end
+        end
+
+        return reward
+    else  # Wolf
+        reward = 1.0  # Survival bonus
+        energy_ratio = agent.energy / 40.0  # Wolves can have higher energy
+        reward += energy_ratio * 0.3
+
+        # Bonus for eating sheep
+        if haskey(initial_model.agents, agent.id)
+            initial_energy = initial_model[agent.id].energy
+            if agent.energy > initial_energy + 10
+                reward += 0.5
+            end
+        end
+
+        return reward
+    end
 end
 
 # Define terminal condition for RL model
@@ -318,7 +336,11 @@ function initialize_rl_model(; n_sheeps=30, n_wolves=5, dims=(10, 10), regrowth_
         ),
         training_agent_types=[RLSheep, RLWolf],
         max_steps=300,
-        observation_radius=observation_radius
+        observation_radius=observation_radius,
+        discount_rates=Dict(
+            RLSheep => 0.99,
+            RLWolf => 0.99
+        )
     )
 
     model = create_fresh_wolfsheep_model(n_sheeps, n_wolves, dims, regrowth_time, Δenergy_sheep,
@@ -330,7 +352,7 @@ function initialize_rl_model(; n_sheeps=30, n_wolves=5, dims=(10, 10), regrowth_
 end
 
 # Create the model
-rl_model = initialize_rl_model(n_sheeps=100, n_wolves=25, dims=(20, 20), regrowth_time=10,
+rl_model = initialize_rl_model(n_sheeps=100, n_wolves=25, dims=(20, 20), regrowth_time=30,
     Δenergy_sheep=4, Δenergy_wolf=20, sheep_reproduce=0.04, wolf_reproduce=0.05, seed=1234)
 
 println("Created ReinforcementLearningABM with $(nagents(rl_model)) agents")
@@ -338,12 +360,20 @@ println("Sheep: $(length([a for a in allagents(rl_model) if a isa RLSheep]))")
 println("Wolves: $(length([a for a in allagents(rl_model) if a isa RLWolf]))")
 
 try
+    #train_model!(rl_model, [RLSheep, RLWolf];
+    #    training_mode=:simultaneous,
+    #    n_iterations=5,
+    #    batch_size=100 * nagents(rl_model),
+    #    solver_params=Dict(
+    #        :ΔN => 10 * nagents(rl_model),
+    #        :log => (period=10 * nagents(rl_model),),
+    #        :max_steps => 25 * nagents(rl_model)
+    #    ))
     train_model!(rl_model, [RLSheep, RLWolf];
-        training_mode=:simultaneous,
-        n_iterations=5,
-        batch_size=200 * nagents(rl_model),
+        training_mode=:sequential,
+        training_steps=500 * nagents(rl_model),
         solver_params=Dict(
-            :ΔN => 20 * nagents(rl_model),  # Larger batch size for more stable updates
+            :ΔN => 20 * nagents(rl_model),
             :log => (period=20 * nagents(rl_model),),
             :max_steps => 50 * nagents(rl_model)
         ))
@@ -376,7 +406,7 @@ println("DEBUG: Initial populations - Sheep: $initial_sheep, Wolves: $initial_wo
 
 # Step using RL policies
 try
-    step_rl!(fresh_ws_model, 1000)
+    step_rl!(fresh_ws_model, 500)
 catch e
     println("DEBUG: step_rl! failed with error: $e")
     println("DEBUG: Error type: $(typeof(e))")

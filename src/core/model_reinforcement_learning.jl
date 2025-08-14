@@ -50,6 +50,7 @@ Where `rl_config` is a named tuple containing:
 - `training_agent_types`: Vector of agent types that should be trained
 - `max_steps`: Maximum steps per episode
 - `observation_radius`: Radius for local observations
+- `discount_rates`: Dictionary mapping agent types to their discount rates (gamma)
 
 ## Usage Example
 
@@ -68,7 +69,8 @@ config = (
     terminal_fn = my_terminal_function,
     observation_spaces = Dict(MyRLAgent => Crux.ContinuousSpace((5,), Float32)),
     action_spaces = Dict(MyRLAgent => Crux.DiscreteSpace(4)),
-    training_agent_types = [MyRLAgent]
+    training_agent_types = [MyRLAgent],
+    discount_rates = Dict(MyRLAgent => 0.95)  # Custom discount rate
 )
 
 # Create model
@@ -193,6 +195,7 @@ The `rl_config` should be a named tuple with the following fields:
 - `training_agent_types`: Vector of agent types to train
 - `max_steps`: Maximum steps per episode
 - `observation_radius`: Radius for local observations
+- `discount_rates`: (Optional) Dict mapping agent types to their discount rates (default: 0.99)
 """
 function ReinforcementLearningABM(
     A::Type,
@@ -319,13 +322,7 @@ function rl_agent_step!(agent, model)
             config = model.rl_config[]
             obs = config.observation_fn(model, agent.id, get(config, :observation_radius, 2))
             obs_vec = config.observation_to_vector_fn(obs)
-
-            # Check if Crux is available before using it
-            if isdefined(Main, :Crux)
-                action = Main.Crux.action(model.trained_policies[agent_type], obs_vec)
-            else
-                error("Crux is not available. Please import Crux before using trained RL policies.")
-            end
+            action = Crux.action(model.trained_policies[agent_type], obs_vec)
 
             config.agent_step_fn(agent, model, action[1])
         else
