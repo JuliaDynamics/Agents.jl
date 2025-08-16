@@ -204,7 +204,7 @@ function create_fresh_boltzmann_model(num_agents, dims, initial_wealth, seed)
     )
 
     model = ReinforcementLearningABM(RLBoltzmannAgent, space;
-        properties=properties, rng=rng)
+        properties=properties, rng=rng, scheduler=Schedulers.fastest)
 
     # Add agents
     for _ in 1:num_agents
@@ -272,8 +272,12 @@ plot_learning(boltzmann_rl_model.training_history[RLBoltzmannAgent])
 
 # Create a fresh model instance for simulation with the same parameters
 println("\nCreating fresh Boltzmann model for simulation...")
-fresh_boltzmann_model = create_fresh_boltzmann_model(10, (10, 10), 10, 1234)
-set_rl_config!(fresh_boltzmann_model, boltzmann_rl_model.rl_config[])
+fresh_boltzmann_model = initialize_boltzmann_rl_model()
+
+using CairoMakie
+CairoMakie.activate!()
+fig, ax = abmplot(fresh_boltzmann_model)
+display(fig)
 
 # Copy the trained policies to the fresh model
 copy_trained_policies!(fresh_boltzmann_model, boltzmann_rl_model)
@@ -302,4 +306,10 @@ final_gini = gini(final_wealths)
 println("Gini coefficient: $initial_gini -> $final_gini")
 println("Wealth distribution changed from $initial_wealths to $final_wealths")
 
+fig, ax = abmplot(fresh_boltzmann_model)
+display(fig)
+
+abmvideo("try.mp4", fresh_boltzmann_model)
+
 println("\nBoltzmann ReinforcementLearningABM example completed!")
+

@@ -18,6 +18,7 @@ LightOSM = "d1922b25-af4e-4ba3-84af-fe9bea896051"
 LightSumTypes = "f56206fc-af4c-5561-a72a-43fe2ca5a923"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 MacroTools = "1914dd2f-81c6-5fcd-8719-6d5c9610ff09"
+Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
 PrecompileTools = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
 ProgressMeter = "92933f4c-e287-5a05-a399-4b506db050ca"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
@@ -31,17 +32,17 @@ StructArrays = "09ab397b-f2b6-538f-b94a-2f83cf4a842a"
 [weakdeps]
 Arrow = "69666777-d1a9-59fb-9406-91d4454c9d45"
 Crux = "e51cc422-768a-4345-bb8e-2246287ae729"
+Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c"
 GraphMakie = "1ecd5474-83a3-4783-bb4f-06765db800d2"
-Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
 OSMMakie = "76b6901f-8821-46bb-9129-841bc9cfe677"
 POMDPs = "a93abf59-7444-517b-a68a-c42f96afdd7d"
-Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c"
 
 [extensions]
 AgentsArrow = "Arrow"
 AgentsGraphVisualizations = ["Makie", "GraphMakie"]
 AgentsOSMVisualizations = ["Makie", "OSMMakie"]
 AgentsVisualizations = "Makie"
+AgentsRL = ["Crux", "POMDPs", "Flux"]
 
 [compat]
 Arrow = "2"

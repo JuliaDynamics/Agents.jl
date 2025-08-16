@@ -406,7 +406,7 @@ println("DEBUG: Initial populations - Sheep: $initial_sheep, Wolves: $initial_wo
 
 # Step using RL policies
 try
-    step_rl!(fresh_ws_model, 500)
+    step_rl!(fresh_ws_model, 50)
 catch e
     println("DEBUG: step_rl! failed with error: $e")
     println("DEBUG: Error type: $(typeof(e))")

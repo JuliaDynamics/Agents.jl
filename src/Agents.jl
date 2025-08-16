@@ -38,12 +38,6 @@ include("core/model_accessing_API.jl")
 include("core/space_interaction_API.jl")
 include("core/higher_order_iteration.jl")
 
-# RL Interface (optional - only loaded if POMDPs and Crux are available)
-if isdefined(Main, :POMDPs) && isdefined(Main, :Crux)
-    include("core/rl_interface.jl")
-    include("core/rl_utils.jl")
-end
-
 # Existing spaces
 include("spaces/nothing.jl")
 include("spaces/graph.jl")
