@@ -1,36 +1,3 @@
-using POMDPs
-using Crux
-
-"""
-    rl_step!(agent, model, action)
-
-Execute an RL action for the given agent in the model.
-This method should be implemented for each agent type that supports RL training.
-"""
-function rl_step! end
-
-"""
-    get_observation(model, agent_id, observation_radius)
-
-Get the local observation for a specific agent in the model.
-Returns an observation structure containing relevant local information.
-"""
-function get_observation end
-
-"""
-    observation_to_vector(observation)
-
-Convert an observation structure to a vector that can be used by neural networks.
-"""
-function observation_to_vector end
-
-"""
-    calculate_reward(env, agent, action, initial_state, final_state)
-
-Calculate the reward for an agent's action based on the environment state change.
-"""
-function calculate_reward end
-
 """
     setup_rl_training(model::ReinforcementLearningABM, agent_type; 
         training_steps=50_000,
@@ -44,7 +11,7 @@ function calculate_reward end
 Set up RL training for a specific agent type using the ReinforcementLearningABM directly.
 Returns a wrapped environment compatible with POMDPs training algorithms.
 """
-function setup_rl_training(model::ReinforcementLearningABM, agent_type;
+function Agents.setup_rl_training(model::ReinforcementLearningABM, agent_type;
     training_steps=50_000,
     max_steps=nothing,
     value_network=nothing,
@@ -154,7 +121,7 @@ end
 Train multiple agent types sequentially using the ReinforcementLearningABM, where each 
 subsequent agent is trained against the previously trained agents.
 """
-function train_agent_sequential(model::ReinforcementLearningABM, agent_types;
+function Agents.train_agent_sequential(model::ReinforcementLearningABM, agent_types;
     training_steps=50_000,
     custom_networks=Dict(),
     custom_solvers=Dict(),
@@ -178,10 +145,10 @@ function train_agent_sequential(model::ReinforcementLearningABM, agent_types;
         policy_net = get(agent_networks, :policy_network, nothing)
         custom_solver = get(custom_solvers, agent_type, nothing)
         solver_type = get(solver_types, agent_type, :PPO)
-        solver_params_agent = process_solver_params(solver_params, agent_type)
+        solver_params_agent = Agents.process_solver_params(solver_params, agent_type)
 
         # Set up training 
-        env, solver = setup_rl_training(
+        env, solver = Agents.setup_rl_training(
             model,
             agent_type;
             training_steps=training_steps,
@@ -221,7 +188,7 @@ end
 Train multiple agent types simultaneously using the ReinforcementLearningABM with 
 alternating batch updates.
 """
-function train_agent_simultaneous(model::ReinforcementLearningABM, agent_types;
+function Agents.train_agent_simultaneous(model::ReinforcementLearningABM, agent_types;
     n_iterations=5,
     batch_size=10_000,
     custom_networks=Dict(),
@@ -245,9 +212,9 @@ function train_agent_simultaneous(model::ReinforcementLearningABM, agent_types;
         policy_net = get(agent_networks, :policy_network, nothing)
         custom_solver = get(custom_solvers, agent_type, nothing)
         solver_type = get(solver_types, agent_type, :PPO)
-        solver_params_agent = process_solver_params(solver_params, agent_type)
+        solver_params_agent = Agents.process_solver_params(solver_params, agent_type)
 
-        env, solver = setup_rl_training(
+        env, solver = Agents.setup_rl_training(
             model,
             agent_type;
             training_steps=batch_size,
@@ -288,34 +255,12 @@ function train_agent_simultaneous(model::ReinforcementLearningABM, agent_types;
 end
 
 ## Helper Functions for Custom Neural Networks
-
-"""
-    process_solver_params(solver_params, agent_type)
-
-Process solver parameters that can be either global or per-agent-type.
-Returns the parameters specific to the given agent type.
-"""
-function process_solver_params(solver_params, agent_type)
-    if isempty(solver_params)
-        return Dict()
-    end
-
-    # Check if solver_params contains agent types as keys
-    if any(k isa Type for k in keys(solver_params))
-        # Per-agent-type parameters
-        return get(solver_params, agent_type, Dict())
-    else
-        # Global parameters
-        return solver_params
-    end
-end
-
 """
     create_value_network(input_dims, hidden_layers=[64, 64], activation=relu)
 
 Create a custom value network with specified architecture.
 """
-function create_value_network(input_dims, hidden_layers=[64, 64], activation=relu)
+function Agents.create_value_network(input_dims, hidden_layers=[64, 64], activation=relu)
     layers = []
 
     # Input layer
@@ -337,7 +282,7 @@ end
 
 Create a custom policy network with specified architecture.
 """
-function create_policy_network(input_dims, output_dims, action_space, hidden_layers=[64, 64], activation=relu)
+function Agents.create_policy_network(input_dims, output_dims, action_space, hidden_layers=[64, 64], activation=relu)
     layers = []
 
     # Input layer
@@ -359,7 +304,7 @@ end
 
 Create a custom solver with specified parameters.
 """
-function create_custom_solver(solver_type, π, S; custom_params...)
+function Agents.create_custom_solver(solver_type, π, S; custom_params...)
     if solver_type == :PPO
         return PPO(π=π, S=S; custom_params...)
     elseif solver_type == :DQN
@@ -411,7 +356,7 @@ train_model!(model, [Agent1, Agent2];
     ))
 ```
 """
-function train_model!(model::ReinforcementLearningABM, agent_types;
+function Agents.train_model!(model::ReinforcementLearningABM, agent_types;
     training_mode::Symbol=:sequential,
     kwargs...)
 
@@ -428,9 +373,9 @@ function train_model!(model::ReinforcementLearningABM, agent_types;
     try
         # Train agents based on mode
         if training_mode == :sequential
-            policies, solvers = train_agent_sequential(model, agent_types_vec; kwargs...)
+            policies, solvers = Agents.train_agent_sequential(model, agent_types_vec; kwargs...)
         elseif training_mode == :simultaneous
-            policies, solvers = train_agent_simultaneous(model, agent_types_vec; kwargs...)
+            policies, solvers = Agents.train_agent_simultaneous(model, agent_types_vec; kwargs...)
         else
             error("Unknown training mode: $training_mode. Use :sequential or :simultaneous.")
         end

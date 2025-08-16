@@ -1,6 +1,6 @@
 using Agents, Random, Statistics, POMDPs, Crux, Flux, Distributions
-include("../../src/core/rl_utils.jl")
-include("../../src/core/rl_training_functions.jl")
+#include("../../src/core/rl_utils.jl")
+#include("../../src/core/rl_training_functions.jl")
 
 ## Example 2: Converting Boltzmann Model to use the General Interface
 # Define Boltzmann agent for ReinforcementLearningABM
@@ -204,6 +204,7 @@ function create_fresh_boltzmann_model(num_agents, dims, initial_wealth, seed)
     )
 
     model = ReinforcementLearningABM(RLBoltzmannAgent, space;
+        agent_step=boltzmann_rl_step!,
         properties=properties, rng=rng, scheduler=Schedulers.fastest)
 
     # Add agents
@@ -273,16 +274,16 @@ plot_learning(boltzmann_rl_model.training_history[RLBoltzmannAgent])
 # Create a fresh model instance for simulation with the same parameters
 println("\nCreating fresh Boltzmann model for simulation...")
 fresh_boltzmann_model = initialize_boltzmann_rl_model()
+# Copy the trained policies to the fresh model
+copy_trained_policies!(fresh_boltzmann_model, boltzmann_rl_model)
+println("DEBUG: Applied trained policies to fresh model")
+println("DEBUG: Fresh model has policies for: $(keys(fresh_boltzmann_model.trained_policies))")
+
 
 using CairoMakie
 CairoMakie.activate!()
 fig, ax = abmplot(fresh_boltzmann_model)
 display(fig)
-
-# Copy the trained policies to the fresh model
-copy_trained_policies!(fresh_boltzmann_model, boltzmann_rl_model)
-println("DEBUG: Applied trained policies to fresh model")
-println("DEBUG: Fresh model has policies for: $(keys(fresh_boltzmann_model.trained_policies))")
 
 # Run simulation with trained agents on the fresh model
 println("\nRunning Boltzmann simulation with trained RL agents...")
@@ -292,7 +293,7 @@ println("DEBUG: Initial wealths: $initial_wealths")
 println("DEBUG: Initial Gini: $initial_gini")
 
 try
-    step_rl!(fresh_boltzmann_model, 5)
+    Agents.step!(fresh_boltzmann_model, 10)
     println("DEBUG: Boltzmann step_rl! completed successfully")
 catch e
     println("DEBUG: Boltzmann step_rl! failed with error: $e")
@@ -309,7 +310,9 @@ println("Wealth distribution changed from $initial_wealths to $final_wealths")
 fig, ax = abmplot(fresh_boltzmann_model)
 display(fig)
 
-abmvideo("try.mp4", fresh_boltzmann_model)
+abmvideo("try.mp4", fresh_boltzmann_model; frames=50,
+    framerate=4,
+    title="Boltzmann Money Model")
 
 println("\nBoltzmann ReinforcementLearningABM example completed!")
 

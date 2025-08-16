@@ -1,7 +1,3 @@
-using POMDPs
-using Crux
-using Distributions: Dirac
-
 """
     RLEnvironmentWrapper{M} <: POMDPs.POMDP{Vector{Float32}, Int, Vector{Float32}}
 
@@ -18,7 +14,6 @@ struct RLEnvironmentWrapper{M<:ReinforcementLearningABM} <: POMDPs.POMDP{Vector{
     model::M
 end
 
-export RLEnvironmentWrapper, wrap_for_rl_training
 
 """
     wrap_for_rl_training(model::ReinforcementLearningABM) → RLEnvironmentWrapper
@@ -405,4 +400,3 @@ if available, otherwise fall back to random actions.
 #        error("rl_agent_step! can only be used with ReinforcementLearningABM models.")
 #    end
 #end
-

@@ -37,6 +37,7 @@ include("core/model_validation.jl")
 include("core/model_accessing_API.jl")
 include("core/space_interaction_API.jl")
 include("core/higher_order_iteration.jl")
+include("core/rl_training_functions.jl")
 
 # Existing spaces
 include("spaces/nothing.jl")

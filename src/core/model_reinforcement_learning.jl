@@ -1,6 +1,5 @@
-export ReinforcementLearningABM, RLAgent
-export train_model!, get_trained_policies, set_rl_config!, step_rl!, copy_trained_policies!
-export observation_to_vector, calculate_reward, is_terminal
+export ReinforcementLearningABM
+export get_trained_policies, set_rl_config!, copy_trained_policies! #step_rl!
 export get_current_training_agent_type, get_current_training_agent, reset_model_for_episode!
 
 
@@ -288,24 +287,24 @@ Note: This function provides explicit RL stepping. You can also use the standard
 `step!(model, n)` which will automatically use RL policies when available through
 the `step_ahead_rl!` infrastructure.
 """
-function step_rl!(model::ReinforcementLearningABM, n::Int=1)
-    if isnothing(model.rl_config[])
-        error("RL configuration not set. Use set_rl_config! first.")
-    end
-
-    for _ in 1:n
-        # Step agents using RL policies
-        for agent in allagents(model)
-            rl_agent_step!(agent, model)
-        end
-
-        # Step the model
-        model.model_step(model)
-
-        # Increment time
-        model.time[] += 1
-    end
-end
+#function step_rl!(model::ReinforcementLearningABM, n::Int=1)
+#    if isnothing(model.rl_config[])
+#        error("RL configuration not set. Use set_rl_config! first.")
+#    end
+#
+#    for _ in 1:n
+#        # Step agents using RL policies
+#        for agent in allagents(model)
+#            rl_agent_step!(agent, model)
+#        end
+#
+#        # Step the model
+#        model.model_step(model)
+#
+#        # Increment time
+#        model.time[] += 1
+#    end
+#end
 
 """
     rl_agent_step!(agent, model)
@@ -313,33 +312,7 @@ end
 Default agent stepping function for RL agents. This will use trained policies
 if available, otherwise fall back to random actions.
 """
-function rl_agent_step!(agent, model)
-    if model isa ReinforcementLearningABM
-        agent_type = typeof(agent)
-
-        if haskey(model.trained_policies, agent_type) && !isnothing(model.rl_config[])
-            # Use trained policy
-            config = model.rl_config[]
-            obs = config.observation_fn(model, agent.id, get(config, :observation_radius, 2))
-            obs_vec = config.observation_to_vector_fn(obs)
-            action = Crux.action(model.trained_policies[agent_type], obs_vec)
-
-            config.agent_step_fn(agent, model, action[1])
-        else
-            # Fall back to random behavior
-            if !isnothing(model.rl_config[]) && haskey(model.rl_config[].action_spaces, agent_type)
-                action_space = model.rl_config[].action_spaces[agent_type]
-                action = rand(abmrng(model), action_space.vals)
-                model.rl_config[].agent_step_fn(agent, model, action)
-            else
-                # Do nothing if no RL configuration available
-                return
-            end
-        end
-    else
-        error("rl_agent_step! can only be used with ReinforcementLearningABM models.")
-    end
-end
+function rl_agent_step! end
 
 """
     get_current_training_agent_type(model::ReinforcementLearningABM)
