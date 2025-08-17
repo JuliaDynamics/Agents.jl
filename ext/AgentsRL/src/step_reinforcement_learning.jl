@@ -49,10 +49,11 @@ function Agents.step_ahead_rl!(model::ReinforcementLearningABM, agent_step!, mod
             # ensure we don't act on agent that doesn't exist
             Agents.agent_not_removed(id, model) || continue
 
-            # Use RL-based stepping if in RL mode and policies are available
+            # Use RL-based stepping
             agent = model[id]
-            if !isnothing(model.rl_config[]) && haskey(model.trained_policies, typeof(agent))
-                # Use trained policy for this agent
+            agent_type = typeof(agent)
+            if !isnothing(model.rl_config[]) && haskey(model.rl_config[].action_spaces, agent_type)
+                # Use trained policy for this agent or fallback to random actions
                 Agents.rl_agent_step!(agent, model)
             else
                 # Use standard agent stepping

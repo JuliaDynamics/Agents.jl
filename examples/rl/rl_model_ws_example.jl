@@ -1,6 +1,4 @@
 using Agents, Random, Statistics, POMDPs, Crux, Flux, Distributions
-include("../../src/core/rl_utils.jl")
-include("../../src/core/rl_training_functions.jl")
 
 ## Example 1: Wolf-Sheep Model using NEW ReinforcementLearningABM Interface
 # Define Wolf-Sheep RL Agent Types
@@ -135,6 +133,17 @@ function wolfsheep_rl_step!(agent::Union{RLSheep,RLWolf}, model, action::Int)
     if rand(abmrng(model)) < 0.5  # 50% chance per agent step
         grass_step!(model)
     end
+    #println("DEBUG: Agent $(agent.id) step completed - energy: $(agent.energy), pos: $(agent.pos)")
+end
+
+function agent_wolfsheep_rl_step!(agent::Union{RLSheep,RLWolf}, model, action::Int)
+    #println("DEBUG: wolfsheep_rl_step! called for agent $(agent.id) ($(typeof(agent))) with action $action")
+    if agent isa RLSheep
+        sheepwolf_step_rl!(agent, model, action)
+    elseif agent isa RLWolf
+        sheepwolf_step_rl!(agent, model, action)
+    end
+
     #println("DEBUG: Agent $(agent.id) step completed - energy: $(agent.energy), pos: $(agent.pos)")
 end
 
@@ -290,8 +299,9 @@ function create_fresh_wolfsheep_model(n_sheeps, n_wolves, dims, regrowth_time, �
 
     # Create the ReinforcementLearningABM
     model = ReinforcementLearningABM(Union{RLSheep,RLWolf}, space;
+        agent_step=agent_wolfsheep_rl_step!, model_step=grass_step!,
         properties=properties, rng=rng,
-        scheduler=Schedulers.Randomly())
+        scheduler=Schedulers.fastest)
 
     # Add agents
     for _ in 1:n_sheeps
@@ -360,22 +370,14 @@ println("Sheep: $(length([a for a in allagents(rl_model) if a isa RLSheep]))")
 println("Wolves: $(length([a for a in allagents(rl_model) if a isa RLWolf]))")
 
 try
-    #train_model!(rl_model, [RLSheep, RLWolf];
-    #    training_mode=:simultaneous,
-    #    n_iterations=5,
-    #    batch_size=100 * nagents(rl_model),
-    #    solver_params=Dict(
-    #        :ΔN => 10 * nagents(rl_model),
-    #        :log => (period=10 * nagents(rl_model),),
-    #        :max_steps => 25 * nagents(rl_model)
-    #    ))
     train_model!(rl_model, [RLSheep, RLWolf];
-        training_mode=:sequential,
-        training_steps=500 * nagents(rl_model),
+        training_mode=:simultaneous,
+        n_iterations=5,
+        batch_size=100 * nagents(rl_model),
         solver_params=Dict(
-            :ΔN => 20 * nagents(rl_model),
-            :log => (period=20 * nagents(rl_model),),
-            :max_steps => 50 * nagents(rl_model)
+            :ΔN => 10 * nagents(rl_model),
+            :log => (period=10 * nagents(rl_model),),
+            :max_steps => 25 * nagents(rl_model)
         ))
     println("DEBUG: Training completed successfully")
 catch e
@@ -384,19 +386,24 @@ catch e
     rethrow(e)
 end
 
-plot_learning(rl_model.training_history[RLSheep])
-plot_learning(rl_model.training_history[RLWolf])
+#plot_learning(rl_model.training_history[RLSheep])
+#plot_learning(rl_model.training_history[RLWolf])
 
 
 # Create a fresh model instance for simulation with the same parameters
 println("\nCreating fresh Wolf-Sheep model for simulation...")
-fresh_ws_model = create_fresh_wolfsheep_model(100, 25, (20, 20), 30, 4, 20, 0.04, 0.05, 1234)
-set_rl_config!(fresh_ws_model, rl_model.rl_config[])
+fresh_ws_model = initialize_rl_model(n_sheeps=100, n_wolves=25, dims=(20, 20), regrowth_time=30,
+    Δenergy_sheep=4, Δenergy_wolf=20, sheep_reproduce=0.04, wolf_reproduce=0.05, seed=1234)
 
 # Copy the trained policies to the fresh model
 copy_trained_policies!(fresh_ws_model, rl_model)
 println("DEBUG: Applied trained policies to fresh model")
 println("DEBUG: Fresh model has policies for: $(keys(fresh_ws_model.trained_policies))")
+
+using CairoMakie
+CairoMakie.activate!()
+fig, ax = abmplot(fresh_ws_model)
+display(fig)
 
 # Run simulation with trained agents on the fresh model
 println("\nRunning simulation with trained RL agents...")
@@ -406,7 +413,7 @@ println("DEBUG: Initial populations - Sheep: $initial_sheep, Wolves: $initial_wo
 
 # Step using RL policies
 try
-    step_rl!(fresh_ws_model, 50)
+    Agents.step!(fresh_ws_model, 100)
 catch e
     println("DEBUG: step_rl! failed with error: $e")
     println("DEBUG: Error type: $(typeof(e))")

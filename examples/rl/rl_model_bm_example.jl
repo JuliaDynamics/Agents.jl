@@ -1,6 +1,4 @@
 using Agents, Random, Statistics, POMDPs, Crux, Flux, Distributions
-#include("../../src/core/rl_utils.jl")
-#include("../../src/core/rl_training_functions.jl")
 
 ## Example 2: Converting Boltzmann Model to use the General Interface
 # Define Boltzmann agent for ReinforcementLearningABM
@@ -250,15 +248,14 @@ end
 
 # Create and train the Boltzmann RL model
 boltzmann_rl_model = initialize_boltzmann_rl_model()
-
 println("Created Boltzmann ReinforcementLearningABM with $(nagents(boltzmann_rl_model)) agents")
-println("Initial Gini coefficient: $(boltzmann_rl_model.gini_coefficient)")
+
 
 # Train the Boltzmann agents
 println("\nTraining RLBoltzmannAgent...")
 try
     train_model!(boltzmann_rl_model, RLBoltzmannAgent;
-        training_steps=200000,
+        training_steps=100000,
         solver_params=Dict(
             :ΔN => 200,           # Custom batch size for PPO updates
             :log => (period=1000,) # Log every 1000 steps
@@ -289,8 +286,8 @@ display(fig)
 println("\nRunning Boltzmann simulation with trained RL agents...")
 initial_wealths = [a.wealth for a in allagents(fresh_boltzmann_model)]
 initial_gini = gini(initial_wealths)
-println("DEBUG: Initial wealths: $initial_wealths")
-println("DEBUG: Initial Gini: $initial_gini")
+println("Initial wealths: $initial_wealths")
+println("Initial Gini: $initial_gini")
 
 try
     Agents.step!(fresh_boltzmann_model, 10)
