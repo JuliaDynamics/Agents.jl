@@ -1,10 +1,6 @@
 export ReinforcementLearningABM
 export get_trained_policies, set_rl_config!, copy_trained_policies!
-export get_current_training_agent_type, get_current_training_agent, reset_model_for_episode!
-export train_model!, setup_rl_training, train_agent_sequential, train_agent_simultaneous
-export create_value_network, create_policy_network, create_custom_solver, process_solver_params
-export rl_agent_step!, step_ahead_rl!
-export has_trained_policy, list_agent_types, list_trained_agent_types, clear_trained_policies!
+export train_model!
 
 """
     ReinforcementLearningABM{S,A,C,T,G,K,F,P,R} <: AgentBasedModel{S}
