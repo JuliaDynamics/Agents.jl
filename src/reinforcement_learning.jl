@@ -595,14 +595,6 @@ Set up RL training for a specific agent type using the ReinforcementLearningABM 
 
 ## Returns
 - `(env, solver)`: A tuple containing the wrapped environment and configured solver
-
-## Example
-```julia
-env, solver = setup_rl_training(model, MyAgent; 
-    training_steps=10000,
-    solver_type=:PPO)
-policy = solve(solver, env)
-```
 """
 function setup_rl_training end
 
@@ -631,13 +623,6 @@ subsequent agent is trained against the previously trained agents.
 
 ## Returns
 - `(policies, solvers)`: Tuple containing dictionaries of trained policies and solvers by agent type
-
-## Example
-```julia
-policies, solvers = train_agent_sequential(model, [Agent1, Agent2];
-    training_steps=20000,
-    solver_types=Dict(Agent1 => :PPO, Agent2 => :DQN))
-```
 """
 function train_agent_sequential end
 
@@ -668,13 +653,6 @@ alternating batch updates.
 
 ## Returns
 - `(policies, solvers)`: Tuple containing dictionaries of trained policies and solvers by agent type
-
-## Example
-```julia
-policies, solvers = train_agent_simultaneous(model, [Agent1, Agent2];
-    n_iterations=10,
-    batch_size=5000)
-```
 """
 function train_agent_simultaneous end
 
@@ -690,15 +668,6 @@ Process solver parameters that can be either global or per-agent-type.
 
 ## Returns
 - `Dict`: Parameters specific to the given agent type
-
-## Example
-```julia
-# Global parameters
-params = process_solver_params(Dict(:ΔN => 100), MyAgent)  # Returns Dict(:ΔN => 100)
-
-# Per-agent-type parameters  
-params = process_solver_params(Dict(Agent1 => Dict(:ΔN => 100)), Agent1)  # Returns Dict(:ΔN => 100)
-```
 """
 function process_solver_params(solver_params, agent_type)
     if isempty(solver_params)
@@ -727,12 +696,6 @@ Create a custom value network with specified architecture.
 
 ## Returns
 - `Function`: A function that creates a ContinuousNetwork when called
-
-## Example
-```julia
-value_net = create_value_network((10,), [32, 32])
-network = value_net()  # Create the actual network
-```
 """
 function create_value_network end
 
@@ -750,12 +713,6 @@ Create a custom policy network with specified architecture.
 
 ## Returns
 - `Function`: A function that creates a DiscreteNetwork when called
-
-## Example
-```julia
-policy_net = create_policy_network((10,), 4, Crux.DiscreteSpace(4), [32, 32])
-network = policy_net()  # Create the actual network
-```
 """
 function create_policy_network end
 
@@ -772,11 +729,6 @@ Create a custom solver with specified parameters.
 
 ## Returns
 - `Solver`: The configured RL solver
-
-## Example
-```julia
-solver = create_custom_solver(:PPO, policy, obs_space; N=10000, ΔN=100)
-```
 """
 function create_custom_solver end
 
