@@ -457,12 +457,6 @@ Get the currently training agent type.
 
 ## Returns
 - `Type`: The agent type currently being trained
-
-## Example
-```julia
-current_type = get_current_training_agent_type(model)
-println("Currently training: $current_type")
-```
 """
 function get_current_training_agent_type(model::ReinforcementLearningABM)
     if isnothing(model.rl_config[])
