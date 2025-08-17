@@ -438,12 +438,6 @@ if available, otherwise fall back to random actions.
 This function automatically selects between trained policies and random actions
 based on what's available for the agent's type. It's used internally by the
 RL stepping infrastructure.
-
-## Example
-```julia
-agent = model[1]
-rl_agent_step!(agent, model)  # Steps the agent using RL policy or random action
-```
 """
 function rl_agent_step! end
 
@@ -491,14 +485,6 @@ Get the current agent being trained.
 ## Notes
 The `current_training_agent_id` is a counter/index that cycles through agents of the training type,
 not the actual agent ID.
-
-## Example
-```julia
-agent = get_current_training_agent(model)
-if !isnothing(agent)
-    println("Training agent ID: $(agent.id)")
-end
-```
 """
 function get_current_training_agent(model::ReinforcementLearningABM)
     current_agent_type = get_current_training_agent_type(model)
@@ -527,12 +513,6 @@ Reset the model to initial state for a new training episode.
 This function resets the model time, agent positions, and other state based on the
 `model_init_fn` in the RL configuration. It's used internally during training
 to reset episodes.
-
-## Example
-```julia
-reset_model_for_episode!(model)
-println("Model reset to time: $(abmtime(model))")
-```
 """
 function reset_model_for_episode!(model::ReinforcementLearningABM)
     if isnothing(model.rl_config[])
