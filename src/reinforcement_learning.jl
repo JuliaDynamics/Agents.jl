@@ -39,8 +39,7 @@ ReinforcementLearningABM(agent_type, space;
 
 Where `rl_config` is a named tuple containing:
 - `model_init_fn`: Function to initialize the model for RL training
-- `observation_fn`: Function to generate observations for agents
-- `observation_to_vector_fn`: Function to convert observations to vectors  
+- `observation_fn`: Function to generate observation vectors for agents
 - `reward_fn`: Function to calculate rewards
 - `terminal_fn`: Function to check terminal conditions
 - `action_spaces`: Dictionary mapping agent types to their action spaces
@@ -62,7 +61,6 @@ end
 config = (
     model_init_fn = my_model_init_function,
     observation_fn = my_observation_function,
-    observation_to_vector_fn = my_vector_function,
     reward_fn = my_reward_function,
     terminal_fn = my_terminal_function,
     observation_spaces = Dict(MyRLAgent => Crux.ContinuousSpace((5,), Float32)),
@@ -187,17 +185,12 @@ The `rl_config` should be a named tuple with the following fields:
 
 ### Required Functions
 
-- **`observation_fn(model::ReinforcementLearningABM, agent_id::Int, observation_radius::Int) → Any`**  
-  Function to generate observations for agents from the model state.
+- **`observation_fn(model::ReinforcementLearningABM, agent_id::Int, observation_radius::Int) → Vector{Float32}`**  
+  Function to generate observation vectors for agents from the model state.
   - `model`: The ReinforcementLearningABM instance
   - `agent_id`: ID of the agent for which to generate observation
   - `observation_radius`: Radius for local neighborhood observations
-  - **Returns**: Any structured observation (typically a NamedTuple with agent state and neighborhood info)
-
-- **`observation_to_vector_fn(observation) → Vector{Float32}`**  
-  Function to convert structured observations into flat vectors for RL algorithms.
-  - `observation`: The structured observation returned by `observation_fn`
-  - **Returns**: `Vector{Float32}` - Flattened feature vector for neural network input
+  - **Returns**: `Vector{Float32}` - Flattened feature vector ready for neural network input
 
 - **`reward_fn(env::ReinforcementLearningABM, agent::AbstractAgent, action::Int, initial_model::ReinforcementLearningABM, final_model::ReinforcementLearningABM) → Float32`**  
   Function to calculate scalar rewards based on agent actions and state transitions.

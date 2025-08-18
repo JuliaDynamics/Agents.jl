@@ -219,25 +219,21 @@ function get_local_observation(model::ABM, agent_id::Int, observation_radius::In
     )
 end
 
-# Wolf-sheep observation to vector function
-function observation_to_vector_wolfsheep(obs)
-    # Flatten the 4D neighborhood grid
-    flattened_grid = vec(obs.neighborhood_grid)
+# Wolf-sheep observation function that returns vectors directly
+function wolfsheep_get_observation(model, agent_id, observation_radius)
+    observation_data = get_local_observation(model, agent_id, observation_radius)
+
+    # Convert observation to vector directly
+    flattened_grid = vec(observation_data.neighborhood_grid)
 
     # Combine all features into a single vector
     return vcat(
-        Float32(obs.own_energy),
-        Float32(obs.normalized_pos[1]),
-        Float32(obs.normalized_pos[2]),
-        Float32(obs.agent_type == :sheep ? 1.0 : 0.0),  # Add agent type indicator
+        Float32(observation_data.own_energy),
+        Float32(observation_data.normalized_pos[1]),
+        Float32(observation_data.normalized_pos[2]),
+        Float32(observation_data.agent_type == :sheep ? 1.0 : 0.0),  # Add agent type indicator
         flattened_grid
     )
-end
-
-
-# Define observation function
-function wolfsheep_get_observation(model, agent_id, observation_radius)
-    return get_local_observation(model, agent_id, observation_radius)
 end
 
 # Define reward function
@@ -332,7 +328,6 @@ function initialize_rl_model(; n_sheeps=30, n_wolves=5, dims=(10, 10), regrowth_
     rl_config = (
         model_init_fn=() -> create_fresh_wolfsheep_model(n_sheeps, n_wolves, dims, regrowth_time, Δenergy_sheep, Δenergy_wolf, sheep_reproduce, wolf_reproduce, seed),
         observation_fn=wolfsheep_get_observation,
-        observation_to_vector_fn=observation_to_vector_wolfsheep,
         reward_fn=wolfsheep_calculate_reward,
         terminal_fn=wolfsheep_is_terminal_rl,
         agent_step_fn=wolfsheep_rl_step!,

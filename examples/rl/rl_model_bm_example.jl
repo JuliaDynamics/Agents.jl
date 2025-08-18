@@ -136,21 +136,18 @@ function get_local_observation_boltzmann(model::ABM, agent_id::Int, observation_
     )
 end
 
-# Define observation function  
-function boltzmann_get_observation(model, agent_id, observation_radius)
-    return get_local_observation_boltzmann(model, agent_id, observation_radius)
-end
+# Define observation function that returns vectors directly
+function boltzmann_get_observation(model::ABM, agent_id::Int, observation_radius::Int)
+    observation_data = get_local_observation_boltzmann(model, agent_id, observation_radius)
 
-# Convert boltzmann observation to vector
-function observation_to_vector_boltzmann(obs)
-    # Flatten the 3D neighborhood grid
-    flattened_grid = vec(obs.neighborhood_grid)
+    # Convert observation to vector directly
+    flattened_grid = vec(observation_data.neighborhood_grid)
 
     # Combine all normalized features into a single vector
     return vcat(
-        Float32(obs.normalized_wealth),
-        Float32(obs.normalized_pos[1]),
-        Float32(obs.normalized_pos[2]),
+        Float32(observation_data.normalized_wealth),
+        Float32(observation_data.normalized_pos[1]),
+        Float32(observation_data.normalized_pos[2]),
         flattened_grid
     )
 end
@@ -203,7 +200,7 @@ function create_fresh_boltzmann_model(num_agents, dims, initial_wealth, seed)
 
     model = ReinforcementLearningABM(RLBoltzmannAgent, space;
         agent_step=boltzmann_rl_step!,
-        properties=properties, rng=rng, scheduler=Schedulers.fastest)
+        properties=properties, rng=rng, scheduler=Schedulers.Randomly())
 
     # Add agents
     for _ in 1:num_agents
@@ -222,7 +219,6 @@ function initialize_boltzmann_rl_model(; num_agents=10, dims=(10, 10), initial_w
     rl_config = (
         model_init_fn=() -> create_fresh_boltzmann_model(num_agents, dims, initial_wealth, seed),
         observation_fn=boltzmann_get_observation,
-        observation_to_vector_fn=observation_to_vector_boltzmann,
         reward_fn=boltzmann_calculate_reward,
         terminal_fn=boltzmann_is_terminal_rl,
         agent_step_fn=boltzmann_rl_step!,
@@ -250,12 +246,11 @@ end
 boltzmann_rl_model = initialize_boltzmann_rl_model()
 println("Created Boltzmann ReinforcementLearningABM with $(nagents(boltzmann_rl_model)) agents")
 
-
 # Train the Boltzmann agents
 println("\nTraining RLBoltzmannAgent...")
 try
     train_model!(boltzmann_rl_model, RLBoltzmannAgent;
-        training_steps=100000,
+        training_steps=200000,
         solver_params=Dict(
             :ΔN => 200,           # Custom batch size for PPO updates
             :log => (period=1000,) # Log every 1000 steps
@@ -275,7 +270,6 @@ fresh_boltzmann_model = initialize_boltzmann_rl_model()
 copy_trained_policies!(fresh_boltzmann_model, boltzmann_rl_model)
 println("DEBUG: Applied trained policies to fresh model")
 println("DEBUG: Fresh model has policies for: $(keys(fresh_boltzmann_model.trained_policies))")
-
 
 using CairoMakie
 CairoMakie.activate!()

@@ -180,9 +180,9 @@ Get the observation for the current training agent.
 - `Vector{Float32}`: The observation vector for the current training agent
 
 ## Notes
-This function uses the configured observation function and observation-to-vector function
-to generate observations for the current training agent. If no agent is currently being
-trained, it returns a zero vector with appropriate dimensions.
+This function uses the configured observation function to generate observation vectors
+for the current training agent. If no agent is currently being trained, it returns a 
+zero vector with appropriate dimensions.
 
 ## Example
 ```julia
@@ -209,9 +209,8 @@ function POMDPs.observation(wrapper::RLEnvironmentWrapper, s::Vector{Float32})
     config = model.rl_config[]
     obs_radius = get(config, :observation_radius, 2)
 
-    # Get observation using the configured function
-    obs = config.observation_fn(model, current_agent.id, obs_radius)
-    return config.observation_to_vector_fn(obs)
+    # Get observation vector directly from the configured function
+    return config.observation_fn(model, current_agent.id, obs_radius)
 end
 
 """
@@ -542,8 +541,7 @@ function advance_simulation!(model::ReinforcementLearningABM)
                             if haskey(model.trained_policies, agent_type)
                                 # Use trained policy
                                 obs_radius = get(config, :observation_radius, 2)
-                                obs = config.observation_fn(model, other_agent.id, obs_radius)
-                                obs_vec = config.observation_to_vector_fn(obs)
+                                obs_vec = config.observation_fn(model, other_agent.id, obs_radius)
                                 action = Crux.action(model.trained_policies[agent_type], obs_vec)
                                 #println("DEBUG ADVANCE: Agent $(other_agent.id) using trained policy, action: $action")
                                 config.agent_step_fn(other_agent, model, action)
