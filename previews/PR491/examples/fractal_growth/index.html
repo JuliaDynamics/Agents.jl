@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Fractal Growth · Agents.jl</title><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script><link href="https://fonts.googleapis.com/css?family=Montserrat|Source+Code+Pro&amp;display=swap" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img src="../../assets/logo.png" alt="Agents.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../../">Agents.jl</a></span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Introduction</a></li><li><a class="tocitem" href="../../tutorial/">Tutorial</a></li><li><input class="collapse-toggle" id="menuitem-3" type="checkbox" checked/><label class="tocitem" for="menuitem-3"><span class="docs-label">Examples</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../">Overview</a></li><li><a class="tocitem" href="../schelling/">Schelling&#39;s segregation model</a></li><li><a class="tocitem" href="../sugarscape/">Sugarscape</a></li><li><a class="tocitem" href="../sir/">SIR model for the spread of COVID-19</a></li><li><a class="tocitem" href="../social_distancing/">Continuous space social distancing for COVID-19</a></li><li><a class="tocitem" href="../wealth_distribution/">Wealth distribution</a></li><li><a class="tocitem" href="../forest_fire/">Forest fire</a></li><li><a class="tocitem" href="../game_of_life_2D_CA/">Conway&#39;s game of life</a></li><li><a class="tocitem" href="../wright-fisher/">Wright-Fisher model of evolution</a></li><li><a class="tocitem" href="../hk/">Hegselmann-Krause opinion dynamics</a></li><li><a class="tocitem" href="../flock/">Flocking</a></li><li><a class="tocitem" href="../daisyworld/">Daisyworld</a></li><li><a class="tocitem" href="../predator_prey_fast/">Predator-Prey</a></li><li><a class="tocitem" href="../maze/">Maze Solver</a></li><li><a class="tocitem" href="../runners/">Mountain Runners</a></li><li><a class="tocitem" href="../growing_bacteria/">Bacteria Growth</a></li><li><a class="tocitem" href="../opinion_spread/">Opinion spread</a></li><li><a class="tocitem" href="../battle/">Battle Royale</a></li><li><a class="tocitem" href="../zombies/">Zombie Outbreak</a></li><li class="is-active"><a class="tocitem" href>Fractal Growth</a><ul class="internal"><li class="toplevel"><a class="tocitem" href="#Running-the-model"><span>Running the model</span></a></li></ul></li></ul></li><li><a class="tocitem" href="../../models/">Predefined Models</a></li><li><a class="tocitem" href="../../api/">API</a></li><li><a class="tocitem" href="../../interact/">Plotting and interactive application</a></li><li><input class="collapse-toggle" id="menuitem-7" type="checkbox"/><label class="tocitem" for="menuitem-7"><span class="docs-label">Ecosystem Integration</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../optim/">BlackBoxOptim.jl</a></li><li><a class="tocitem" href="../diffeq/">DifferentialEquations.jl</a></li><li><a class="tocitem" href="../schoolyard/">LightGraphs.jl</a></li><li><a class="tocitem" href="../measurements/">Measurements.jl</a></li></ul></li><li><a class="tocitem" href="../../performance_tips/">Performance Tips</a></li><li><a class="tocitem" href="../../comparison/">ABM Framework Comparison</a></li><li><a class="tocitem" href="../../devdocs/">Developer Docs</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>Fractal Growth</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Fractal Growth</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/JuliaDynamics/Agents.jl/blob/master/examples/fractal_growth.jl" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Fractal-Growth"><a class="docs-heading-anchor" href="#Fractal-Growth">Fractal Growth</a><a id="Fractal-Growth-1"></a><a class="docs-heading-anchor-permalink" href="#Fractal-Growth" title="Permalink"></a></h1><video width="auto" controls autoplay loop>
+<source src="../fractal.mp4" type="video/mp4">
+</video><p>This model follows the process known as diffusion-limited aggregation to simulate the growth of fractals. It is a kinetic process that consists of randomly diffusing particles giving rise to fractal-like structures resembling those observed naturally. This examplet is based off of <a href="https://www.complexity-explorables.org/explorables/particularly-stuck/">&quot;Particularly Stuck&quot; example</a> in Complexity Explorables.</p><p>The environment is a two dimensional, continuous space world. Agents are particles that diffuse and aggregate to form fractals. Initially, there are particles of random size distributed across the space, and one static particle in the center that forms the seed for the fractal growth. As moving particles collide with the seed or any particle that previously collided with the seed, it gets stuck and contributes to the fractal. As a particle gets stuck, another one is created at a circular border around the center to feed the growth.</p><p>It is also available from the <code>Models</code> module as <a href="../../models/#Agents.Models.fractal_growth-Tuple{}"><code>Models.fractal_growth</code></a>.</p><pre><code class="language-julia">using Agents, LinearAlgebra</code></pre><p>We use the <a href="../../api/#Agents.@agent"><code>@agent</code></a> macro to conveniently define a <code>Particle</code> agent. Each agent has a radius, representing the particle size, a boolean to define whether it is stuck and part of the fractal, and an axis around which it spins (elaborated on later). In addition, since we use the <a href="../../api/#Agents.ContinuousAgent"><code>ContinuousAgent</code></a> type, the <a href="../../api/#Agents.@agent"><code>@agent</code></a> macro also provides each agent with fields for <code>id</code>, <code>pos</code> (its position in space) and <code>vel</code> (its velocity).</p><pre><code class="language-julia">@agent Particle ContinuousAgent{2} begin
+    radius::Float64
+    is_stuck::Bool
+    spin_axis::Array{Float64,1}
+end</code></pre><p>A custom constructor allows convenient creation of agents.</p><pre><code class="language-julia">Particle(
+    id::Int,
+    radius::Float64,
+    spin_clockwise::Bool;
+    pos = (0.0, 0.0),
+    is_stuck = false,
+) = Particle(id, pos, (0.0, 0.0), radius, is_stuck, [0.0, 0.0, spin_clockwise ? -1.0 : 1.0])</code></pre><pre class="documenter-example-output">Main.__atexample__named__fractal_growth.Particle</pre><p>We also define a few utility functions for ease of implementation. <code>rand_circle</code> returns a random point on the unit circle. <code>particle_radius</code> generates a random radius for a particle, within given range defined by <code>min_radius</code> and <code>max_radius</code>. If <code>max_radius &lt; min_radius</code>, it returns <code>min_radius</code>: allowing a fixed particle size to be specified.</p><pre><code class="language-julia">rand_circle(rng) = (θ = rand(rng, 0.0:0.1:359.9); (cos(θ), sin(θ)))
+particle_radius(min_radius::Float64, max_radius::Float64, rng) =
+    min_radius &lt;= max_radius ? rand(rng, min_radius:0.01:max_radius) : min_radius</code></pre><pre class="documenter-example-output">particle_radius (generic function with 1 method)</pre><p>The <code>initialize_model</code> function returns a new model containing particles placed randomly in the given space and one seed particle at the center.</p><pre><code class="language-julia">function initialize_model(;
+    initial_particles::Int = 100, # initial particles in the model, not including the seed
+    # size of the space in which particles exist
+    space_extents::NTuple{2,Float64} = (150.0, 150.0),
+    speed = 0.5, # speed of particle movement
+    vibration = 0.55, # amplitude of particle vibration
+    attraction = 0.45, # velocity of particles towards the center
+    spin = 0.55, # tangential velocity with which particles orbit the center
+    # fraction of particles orbiting clockwise. The rest are anticlockwise
+    clockwise_fraction = 0.0,
+    min_radius = 1.0, # minimum radius of any particle
+    max_radius = 2.0, # maximum radius of any particle
+)
+    properties = Dict(
+        :speed =&gt; speed,
+        :vibration =&gt; vibration,
+        :attraction =&gt; attraction,
+        :spin =&gt; spin,
+        :clockwise_fraction =&gt; clockwise_fraction,
+        :min_radius =&gt; min_radius,
+        :max_radius =&gt; max_radius,
+        :spawn_count =&gt; 0,
+    )
+    # space is periodic to allow particles going off one edge to wrap around to the opposite
+    space = ContinuousSpace(space_extents, 1.0; periodic = true)
+    model = ABM(Particle, space; properties)
+    center = space_extents ./ 2.0
+    for i in 1:initial_particles
+        particle = Particle(
+            i,
+            particle_radius(min_radius, max_radius, model.rng),
+            rand(model.rng) &lt; clockwise_fraction,
+        )
+        # `add_agent!` automatically gives the particle a random position in the space
+        add_agent!(particle, model)
+    end
+    # create the seed particle
+    particle = Particle(
+        initial_particles + 1,
+        particle_radius(min_radius, max_radius, model.rng),
+        true;
+        pos = center,
+        is_stuck = true,
+    )
+    # `add_agent_pos!` will use the position of the agent passed in, instead of assigning it
+    # to a random value
+    add_agent_pos!(particle, model)
+    return model
+end</code></pre><pre class="documenter-example-output">initialize_model (generic function with 1 method)</pre><p>The <code>agent_step!</code> function simulates particle motion for those who are not yet <code>stuck</code>. For each particle, we first perform a crude distance check to all other particles. If the current particle intersects any particle in the fractal, it also becomes part of the fractal and is not simulated further. Agent velocity has a radial component that attracts it towards the center, a tangential component that makes it orbit around the center, and a random component that simulates vibration of the particle. The velocity is scaled to be inversely proportional to the square of the particle&#39;s radius, so that larger particles move slower. The <code>speed</code> parameter is implemented as the time difference between successive steps of the simulation. A larger value causes particles to move more per step, but leads to inaccuracies as particles do not move through the intervening space.</p><pre><code class="language-julia">function agent_step!(agent::Particle, model)
+    agent.is_stuck &amp;&amp; return
+
+    for id in nearby_ids(agent.pos, model, agent.radius)
+        if model[id].is_stuck
+            agent.is_stuck = true
+            # increment count to make sure another particle is spawned as this one gets stuck
+            model.spawn_count += 1
+            return
+        end
+    end
+    # radial vector towards the center of the space
+    radial = model.space.extent ./ 2.0 .- agent.pos
+    radial = radial ./ norm(radial)
+    # tangential vector in the direction of orbit of the particle
+    tangent = Tuple(cross([radial..., 0.0], agent.spin_axis)[1:2])
+    agent.vel =
+        (
+            radial .* model.attraction .+ tangent .* model.spin .+
+            rand_circle(model.rng) .* model.vibration
+        ) ./ (agent.radius^2.0)
+    move_agent!(agent, model, model.speed)
+end</code></pre><pre class="documenter-example-output">agent_step! (generic function with 1 method)</pre><p>The <code>model_step!</code> function serves the sole purpose of spawning additional particles as they get stuck to the growing fractal.</p><pre><code class="language-julia">function model_step!(model)
+    while model.spawn_count &gt; 0
+        particle = Particle(
+            nextid(model),
+            particle_radius(model.min_radius, model.max_radius, model.rng),
+            rand(model.rng) &lt; model.clockwise_fraction;
+            pos = (rand_circle(model.rng) .+ 1.0) .* model.space.extent .* 0.49,
+        )
+        add_agent_pos!(particle, model)
+        model.spawn_count -= 1
+    end
+end</code></pre><pre class="documenter-example-output">model_step! (generic function with 1 method)</pre><h1 id="Running-the-model"><a class="docs-heading-anchor" href="#Running-the-model">Running the model</a><a id="Running-the-model-1"></a><a class="docs-heading-anchor-permalink" href="#Running-the-model" title="Permalink"></a></h1><p>We run the model using the <code>InteractiveDynamics</code> package with <code>GLMakie</code> backend so the fractal growth can be visualised as it happens. <code>InteractiveDynamics</code> provides the <code>abm_video</code> function to easily record a video of the simulation running.</p><pre><code class="language-julia">model = initialize_model()
+
+using InteractiveDynamics
+import CairoMakie
+
+# Particles that are stuck and part of the fractal are shown in red, for visual distinction
+particle_color(a::Particle) = a.is_stuck ? :red : :blue
+# The visual size of particles corresponds to their radius, and has been calculated
+# for the default value of `space_extents` of the `initialize_model` function. It will
+# not look accurate on other values.
+particle_size(a::Particle) = 7.5 * a.radius
+
+abm_video(
+    &quot;fractal.mp4&quot;,
+    model,
+    agent_step!,
+    model_step!;
+    ac = particle_color,
+    as = particle_size,
+    am = &#39;●&#39;,
+    spf = 10,
+    frames = 600,
+    framerate = 25,
+    scatterkwargs = (strokewidth = 0.5, strokecolor = :white),
+)</code></pre><video width="auto" controls autoplay loop>
+<source src="../fractal.mp4" type="video/mp4">
+</video><p>Using <code>InteractiveDynamics</code> simulation parameters can also be tweaked dynamically. This makes use of the <a href="../../interact/#InteractiveDynamics.abm_data_exploration"><code>InteractiveDynamics.abm_data_exploration</code></a> function.</p><pre><code class="language-julia">using InteractiveDynamics
+using GLMakie
+model = initialize_model()</code></pre><p><code>params</code> defines the range in which different parameter values can be adjusted through sliders.</p><pre><code class="language-julia">params = (
+    :attraction =&gt; 0.0:0.01:2.0,
+    :speed =&gt; 0.0:0.01:2.0,
+    :vibration =&gt; 0.0:0.01:2.0,
+    :spin =&gt; 0.0:0.01:2.0,
+    :clockwise_fraction =&gt; 0.0:0.01:1.0,
+    :min_radius =&gt; 0.5:0.01:3.0,
+    :max_radius =&gt; 0.5:0.01:3.0,
+)
+
+particle_size(a::Particle) = 4 * a.radius
+abm_data_exploration(
+    model,
+    agent_step!,
+    model_step!,
+    params;
+    ac = particle_color,
+    as = particle_size,
+    am = &#39;⚪&#39;,
+)</code></pre><video width="auto" controls autoplay loop>
+<source src="https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/videos/agents/fractal_interact.mp4?raw=true" type="video/mp4">
+</video></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../zombies/">« Zombie Outbreak</a><a class="docs-footer-nextpage" href="../../models/">Predefined Models »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Wednesday 21 April 2021 08:00">Wednesday 21 April 2021</span>. Using Julia version 1.6.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
