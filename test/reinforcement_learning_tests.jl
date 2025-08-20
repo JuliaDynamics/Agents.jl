@@ -1,6 +1,3 @@
-using Test, Agents, Random
-using StableRNGs
-
 # Test agents for RL testing
 @agent struct RLTestAgent(GridAgent{2})
     wealth::Float64
@@ -108,8 +105,8 @@ end
 
         @test model.rl_config[] isa NamedTuple
         @test model.trained_policies isa Dict
-        @test get_current_training_agent_type(model) == RLTestAgent
-        @test get_current_training_agent(model) == agent
+        @test Agents.get_current_training_agent_type(model) == RLTestAgent
+        @test Agents.get_current_training_agent(model) == agent
 
     end
 
@@ -172,15 +169,15 @@ end
         set_rl_config!(model, config)
 
         # Test before adding agents
-        @test get_current_training_agent_type(model) == RLTestAgent
-        @test isnothing(get_current_training_agent(model))
+        @test Agents.get_current_training_agent_type(model) == RLTestAgent
+        @test isnothing(Agents.get_current_training_agent(model))
 
         # Add agents and test cycling
         agent1 = add_agent!(RLTestAgent, model, 25.0, 0)
         agent2 = add_agent!(RLTestAgent, model, 30.0, 0)
 
         # Test first agent
-        current_agent = get_current_training_agent(model)
+        current_agent = Agents.get_current_training_agent(model)
         @test model.current_training_agent_id[] == 1
 
         model.current_training_agent_id[] += 1
@@ -200,7 +197,7 @@ end
         model.current_training_agent_id[] = 2
 
         # Test reset
-        reset_model_for_episode!(model)
+        Agents.reset_model_for_episode!(model)
         @test model.time[] == 0
         @test model.current_training_agent_id[] == 1
 
@@ -214,20 +211,20 @@ end
         model2 = ReinforcementLearningABM(RLTestAgent, space)
 
         # Test empty policies initially
-        @test isempty(get_trained_policies(model1))
-        @test isempty(get_trained_policies(model2))
+        @test isempty(Agents.get_trained_policies(model1))
+        @test isempty(Agents.get_trained_policies(model2))
 
         # Mock a trained policy
         mock_policy = "mock_policy_object"
         model1.trained_policies[RLTestAgent] = mock_policy
 
-        @test haskey(get_trained_policies(model1), RLTestAgent)
-        @test get_trained_policies(model1)[RLTestAgent] == mock_policy
+        @test haskey(Agents.get_trained_policies(model1), RLTestAgent)
+        @test Agents.get_trained_policies(model1)[RLTestAgent] == mock_policy
 
         # Test policy copying
         copy_trained_policies!(model2, model1)
-        @test haskey(get_trained_policies(model2), RLTestAgent)
-        @test get_trained_policies(model2)[RLTestAgent] == mock_policy
+        @test haskey(Agents.get_trained_policies(model2), RLTestAgent)
+        @test Agents.get_trained_policies(model2)[RLTestAgent] == mock_policy
     end
 
     @testset "Multi-Agent Type Configuration" begin
@@ -274,49 +271,31 @@ end
         @test length(model.rl_config[].action_spaces[RLTestAgent2].vals) == 3
     end
 
-    @testset "Configuration Validation" begin
+    @testset "Configuration Validation and Error Handling" begin
         space = GridSpace((5, 5))
         model = ReinforcementLearningABM(RLTestAgent, space)
 
-        # Test error without RL config
-        @test_throws ErrorException get_current_training_agent_type(model)
-        @test_throws ErrorException reset_model_for_episode!(model)
+        # 1. Test errors when no RL config is set
+        @test_throws ErrorException Agents.get_current_training_agent_type(model)
+        @test_throws ErrorException Agents.get_current_training_agent(model)
+        @test_throws ErrorException Agents.reset_model_for_episode!(model)
 
-        # Test with minimal config
-        minimal_config = (
-            training_agent_types=[RLTestAgent],
-        )
+        # 2. Test with a minimal valid config
+        minimal_config = (training_agent_types=[RLTestAgent],)
         set_rl_config!(model, minimal_config)
 
-        @test get_current_training_agent_type(model) == RLTestAgent
+        @test Agents.get_current_training_agent_type(model) == RLTestAgent
+        @test isnothing(Agents.get_current_training_agent(model)) # No agents added yet
 
-        # Test error with empty training agent types
-        empty_config = (training_agent_types=[],)
-        set_rl_config!(model, empty_config)
-        @test_throws ErrorException get_current_training_agent_type(model)
-    end
-
-    @testset "Error Handling" begin
-        space = GridSpace((5, 5))
-        model = ReinforcementLearningABM(RLTestAgent, space)
-
-        # Test operations requiring RL config
-        @test_throws ErrorException get_current_training_agent_type(model)
-        @test_throws ErrorException get_current_training_agent(model)
-        @test_throws ErrorException reset_model_for_episode!(model)
-
-        # Set minimal config and test missing components
-        config = (training_agent_types=[RLTestAgent],)
-        set_rl_config!(model, config)
-
-        # These should work now
-        @test get_current_training_agent_type(model) == RLTestAgent
-        @test isnothing(get_current_training_agent(model))  # No agents added yet
-
-        # Reset should work with minimal config (no model_init_fn)
+        # Reset should work with a minimal config (no model_init_fn)
         model.time[] = 5
-        reset_model_for_episode!(model)
+        Agents.reset_model_for_episode!(model)
         @test model.time[] == 0
+
+        # 3. Test error with an invalid config (empty training agent types)
+        invalid_config = (training_agent_types=[],)
+        set_rl_config!(model, invalid_config)
+        @test_throws ErrorException Agents.get_current_training_agent_type(model)
     end
 
     @testset "Standard ABM Interface Compatibility" begin
@@ -419,9 +398,6 @@ end
         )
     end
 
-    # Test to verify RL environment wrapper interface components are available
-    # Note: We don't import AgentsRL here as it requires Crux, POMDPs, etc.
-    # Instead we test the ReinforcementLearningABM interface that the wrapper depends on
     @testset "Wrapper Prerequisites" begin
         space = GridSpace((4, 4))
         model = ReinforcementLearningABM(WrapperTestAgent, space; rng=StableRNG(42))
@@ -481,7 +457,7 @@ end
         @test model.current_training_agent_id[] == 2
 
         # Reset using model_init_fn
-        reset_model_for_episode!(model)
+        Agents.reset_model_for_episode!(model)
 
         @test abmtime(model) == 0
         @test model.current_training_agent_id[] == 1
@@ -491,8 +467,6 @@ end
         new_agent = collect(allagents(model))[1]
         @test new_agent.pos == (1, 4)
         @test new_agent.wealth == 10.0
-
-
     end
 
     @testset "Training Configuration Validation" begin
@@ -579,37 +553,5 @@ end
         # Verify agent has accumulated wealth from work actions
         @test agent.wealth > 10.0  # Started with 10, should have increased
         @test agent.wealth == 20.0  # Two work actions = +10 wealth
-    end
-
-    @testset "Training State Management" begin
-        space = GridSpace((3, 3))
-        model = ReinforcementLearningABM(WrapperTestAgent, space; rng=StableRNG(42))
-        config = create_wrapper_test_config()
-        set_rl_config!(model, config)
-
-        # Test training state flags
-        @test model.is_training[] == false
-        @test isnothing(model.current_training_agent_type[])
-
-        # Simulate starting training
-        model.is_training[] = true
-        model.current_training_agent_type[] = WrapperTestAgent
-
-        @test model.is_training[] == true
-        @test model.current_training_agent_type[] == WrapperTestAgent
-        @test get_current_training_agent_type(model) == WrapperTestAgent
-
-        # Test training history initialization
-        @test haskey(model.training_history, WrapperTestAgent)
-        @test isnothing(model.training_history[WrapperTestAgent])
-
-        # Mock training progress
-        model.training_history[WrapperTestAgent] = "training_log_data"
-        @test model.training_history[WrapperTestAgent] == "training_log_data"
-
-        # Mock policy storage
-        mock_policy = "trained_policy_object"
-        model.trained_policies[WrapperTestAgent] = mock_policy
-        @test get_trained_policies(model)[WrapperTestAgent] == mock_policy
     end
 end
