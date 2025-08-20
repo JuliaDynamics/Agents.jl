@@ -28,15 +28,15 @@ function Agents.setup_rl_training(model::ReinforcementLearningABM, agent_type;
 
     # Define neural network architecture
     if isnothing(value_network)
-        V() = ContinuousNetwork(Chain(Dense(Crux.dim(O)..., 64, relu), Dense(64, 64, relu), Dense(64, 1)))
+        value_net = ContinuousNetwork(Chain(Dense(Crux.dim(O)..., 64, relu), Dense(64, 64, relu), Dense(64, 1)))
     else
-        V = value_network
+        value_net = value_network()
     end
 
     if isnothing(policy_network)
-        B() = DiscreteNetwork(Chain(Dense(Crux.dim(O)..., 64, relu), Dense(64, 64, relu), Dense(64, length(as))), as)
+        policy_net = DiscreteNetwork(Chain(Dense(Crux.dim(O)..., 64, relu), Dense(64, 64, relu), Dense(64, length(as))), as)
     else
-        B = policy_network
+        policy_net = policy_network()
     end
 
     if isnothing(max_steps)
@@ -46,7 +46,7 @@ function Agents.setup_rl_training(model::ReinforcementLearningABM, agent_type;
     # Create solver based on type
     if solver_type == :PPO
         default_params = Dict(
-            :π => ActorCritic(B(), V()),
+            :π => ActorCritic(policy_net, value_net),
             :S => O,
             :N => training_steps,
             :ΔN => 200,
@@ -57,7 +57,7 @@ function Agents.setup_rl_training(model::ReinforcementLearningABM, agent_type;
         solver = PPO(; merged_params...)
     elseif solver_type == :DQN
         if isnothing(policy_network)
-            QS() = DiscreteNetwork(
+            QS_net = DiscreteNetwork(
                 Chain(
                     Dense(Crux.dim(O)[1], 64, relu),
                     Dense(64, 64, relu),
@@ -65,10 +65,10 @@ function Agents.setup_rl_training(model::ReinforcementLearningABM, agent_type;
                 ), as
             )
         else
-            QS = policy_network
+            QS_net = policy_network()
         end
         default_params = Dict(
-            :π => QS(),
+            :π => QS_net,
             :S => O,
             :N => training_steps,
             :max_steps => max_steps,
@@ -80,7 +80,7 @@ function Agents.setup_rl_training(model::ReinforcementLearningABM, agent_type;
         solver = DQN(; merged_params...)
     elseif solver_type == :A2C
         default_params = Dict(
-            :π => ActorCritic(B(), V()),
+            :π => ActorCritic(policy_net, value_net),
             :S => O,
             :N => training_steps,
             :ΔN => 20,
@@ -168,6 +168,8 @@ function Agents.train_agent_simultaneous(model::ReinforcementLearningABM, agent_
     envs = Dict{Type,Any}()
 
     for agent_type in agent_types_vec
+        println("Setting up solver for $(agent_type)...")
+
         # Get custom parameters for this agent type
         agent_networks = get(custom_networks, agent_type, Dict())
         value_net = get(agent_networks, :value_network, nothing)

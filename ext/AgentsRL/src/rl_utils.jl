@@ -117,7 +117,7 @@ function POMDPs.actions(wrapper::RLEnvironmentWrapper)
         error("RL configuration not set. Use set_rl_config! first.")
     end
 
-    current_agent_type = get_current_training_agent_type(model)
+    current_agent_type = Agents.get_current_training_agent_type(model)
     config = model.rl_config[]
 
     if haskey(config.action_spaces, current_agent_type)
@@ -155,7 +155,7 @@ function POMDPs.observations(wrapper::RLEnvironmentWrapper)
         error("RL configuration not set. Use set_rl_config! first.")
     end
 
-    current_agent_type = get_current_training_agent_type(model)
+    current_agent_type = Agents.get_current_training_agent_type(model)
     config = model.rl_config[]
 
     if haskey(config.observation_spaces, current_agent_type)
@@ -198,7 +198,7 @@ function POMDPs.observation(wrapper::RLEnvironmentWrapper, s::Vector{Float32})
         error("RL configuration not set. Use set_rl_config! first.")
     end
 
-    current_agent = get_current_training_agent(model)
+    current_agent = Agents.get_current_training_agent(model)
     if isnothing(current_agent)
         # Return zero observation with correct dimensions
         obs_space = POMDPs.observations(wrapper)
@@ -245,12 +245,12 @@ function POMDPs.initialstate(wrapper::RLEnvironmentWrapper)
     #println("DEBUG RESET: Resetting model for new episode")
 
     # Reset the model to initial state
-    reset_model_for_episode!(model)
+    Agents.reset_model_for_episode!(model)
 
     #println("DEBUG RESET: Model reset complete, time: $(abmtime(model)), training agent ID: $(model.current_training_agent_id[])")
 
     # Return initial state
-    current_agent_type = get_current_training_agent_type(model)
+    current_agent_type = Agents.get_current_training_agent_type(model)
     config = model.rl_config[]
 
     if haskey(config, :state_spaces) && haskey(config.state_spaces, current_agent_type)
@@ -333,7 +333,7 @@ function POMDPs.gen(wrapper::RLEnvironmentWrapper, s, action::Int, rng::Abstract
         error("RL configuration not set. Use set_rl_config! first.")
     end
 
-    current_agent = get_current_training_agent(model)
+    current_agent = Agents.get_current_training_agent(model)
 
     if isnothing(current_agent)
         # Episode terminated
@@ -439,7 +439,7 @@ function POMDPs.discount(wrapper::RLEnvironmentWrapper)
         error("RL configuration not set. Use set_rl_config! first.")
     end
 
-    current_agent_type = get_current_training_agent_type(model)
+    current_agent_type = Agents.get_current_training_agent_type(model)
     config = model.rl_config[]
 
     if haskey(config, :discount_rates) && haskey(config.discount_rates, current_agent_type)
@@ -478,7 +478,7 @@ function Crux.state_space(wrapper::RLEnvironmentWrapper)
         error("RL configuration not set. Use set_rl_config! first.")
     end
 
-    current_agent_type = get_current_training_agent_type(model)
+    current_agent_type = Agents.get_current_training_agent_type(model)
     config = model.rl_config[]
 
     if haskey(config, :state_spaces) && haskey(config.state_spaces, current_agent_type)
@@ -513,7 +513,7 @@ function advance_simulation!(model::ReinforcementLearningABM)
     end
 
     config = model.rl_config[]
-    current_agent_type = get_current_training_agent_type(model)
+    current_agent_type = Agents.get_current_training_agent_type(model)
 
     # Move to next agent of the training type
     agents_of_type = [a for a in allagents(model) if typeof(a) == current_agent_type]

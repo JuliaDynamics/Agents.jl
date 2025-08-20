@@ -15,6 +15,7 @@ pages = [
         "examples/predator_prey.md",
         "examples/rabbit_fox_hawk.md",
         "examples/event_rock_paper_scissors.md",
+        "examples/rl_boltzmann.md",
         "examples.md"
     ],
     "api.md",
