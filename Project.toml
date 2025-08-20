@@ -33,6 +33,7 @@ Arrow = "69666777-d1a9-59fb-9406-91d4454c9d45"
 Crux = "e51cc422-768a-4345-bb8e-2246287ae729"
 Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c"
 GraphMakie = "1ecd5474-83a3-4783-bb4f-06765db800d2"
+Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
 OSMMakie = "76b6901f-8821-46bb-9129-841bc9cfe677"
 POMDPs = "a93abf59-7444-517b-a68a-c42f96afdd7d"
 
