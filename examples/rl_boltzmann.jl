@@ -37,7 +37,7 @@
 # ## Loading packages and defining the agent type
 
 # ```julia
-# using POMDPs, Crux, Flux
+using POMDPs, Crux, Flux
 # ```
 using Agents, Random, Statistics, Distributions
 
@@ -102,11 +102,13 @@ end
 # The observation function provides agents with local neighborhood information.
 # This includes occupancy information and relative wealth of nearby agents.
 
+
 # Boltzmann observation function
-function get_local_observation_boltzmann(model::ABM, agent_id::Int, observation_radius::Int)
+function get_local_observation_boltzmann(model::ABM, agent_id::Int)
     target_agent = model[agent_id]
     agent_pos = target_agent.pos
     width, height = getfield(model, :space).extent
+    observation_radius = model.rl_config[][:observation_radius]
 
     grid_size = 2 * observation_radius + 1
     # 2 channels: occupancy and relative wealth
@@ -162,8 +164,8 @@ function get_local_observation_boltzmann(model::ABM, agent_id::Int, observation_
 end
 
 # Define observation function that returns vectors directly
-function boltzmann_get_observation(model::ABM, agent_id::Int, observation_radius::Int)
-    observation_data = get_local_observation_boltzmann(model, agent_id, observation_radius)
+function boltzmann_get_observation(model::ABM, agent_id::Int)
+    observation_data = get_local_observation_boltzmann(model, agent_id)
 
     # Convert observation to vector directly
     flattened_grid = vec(observation_data.neighborhood_grid)

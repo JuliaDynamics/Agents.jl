@@ -182,12 +182,9 @@ function POMDPs.observation(wrapper::RLEnvironmentWrapper, s::Vector{Float32})
         obs_dims = Crux.dim(obs_space)
         return zeros(Float32, obs_dims...)
     end
-
     config = model.rl_config[]
-    obs_radius = get(config, :observation_radius, 2)
-
     # Get observation vector directly from the configured function
-    return config.observation_fn(model, current_agent.id, obs_radius)
+    return config.observation_fn(model, current_agent.id)
 end
 
 """
@@ -499,8 +496,7 @@ function advance_simulation!(model::ReinforcementLearningABM)
                         try
                             if haskey(model.trained_policies, agent_type)
                                 # Use trained policy
-                                obs_radius = get(config, :observation_radius, 2)
-                                obs_vec = config.observation_fn(model, other_agent.id, obs_radius)
+                                obs_vec = config.observation_fn(model, other_agent.id)
                                 action = Crux.action(model.trained_policies[agent_type], obs_vec)
                                 config.agent_step_fn(other_agent, model, action)
                             else

@@ -184,11 +184,10 @@ The `rl_config` should be a named tuple with the following fields:
 
 ### Required Functions
 
-- **`observation_fn(model::ReinforcementLearningABM, agent_id::Int, observation_radius::Int) → Vector{Float32}`**  
+- **`observation_fn(model::ReinforcementLearningABM, agent_id::Int) → Vector{Float32}`**  
   Function to generate observation vectors for agents from the model state.
   - `model`: The ReinforcementLearningABM instance
   - `agent_id`: ID of the agent for which to generate observation
-  - `observation_radius`: Radius for local neighborhood observations
   - **Returns**: `Vector{Float32}` - Flattened feature vector ready for neural network input
 
 - **`reward_fn(env::ReinforcementLearningABM, agent::AbstractAgent, action::Int, initial_model::ReinforcementLearningABM, final_model::ReinforcementLearningABM) → Float32`**  
@@ -236,10 +235,12 @@ The `rl_config` should be a named tuple with the following fields:
   - Episodes terminate when this limit is reached OR `terminal_fn` returns `true`
   - Typical values: 50-500 depending on model complexity
 
-- **`observation_radius::Int`**  
+- **`observation_radius::Int or Dict{Type, Int}`**  
   Radius for local neighborhood observations in grid-based models.
-  - Used by `observation_fn` to determine neighborhood size
+  - Used in `observation_fn` to determine neighborhood size
   - Example: `4` creates a 9×9 observation grid around each agent
+   - **Multi-agent support**: Can specify different radii per agent type by passing a `Dict{Type, Int}` instead of a single `Int`
+  - **Usage**: `observation_radius=4` (all agents) or `observation_radius=Dict(Wolf => 5, Sheep => 3)` (per-type)
 
 ### Optional Configuration
 

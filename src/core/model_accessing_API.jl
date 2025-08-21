@@ -1,12 +1,12 @@
 const DictABM = Union{StandardABM{S,A,<:AbstractDict{<:Integer,A}} where {S,A},
-                      EventQueueABM{S,A,<:AbstractDict{<:Integer,A}} where {S,A},
-                      ReinforcementLearningABM{S,A,<:AbstractDict{<:Integer,A}} where {S,A}}
+    EventQueueABM{S,A,<:AbstractDict{<:Integer,A}} where {S,A},
+    ReinforcementLearningABM{S,A,<:AbstractDict{<:Integer,A}} where {S,A}}
 const VecABM = Union{StandardABM{S,A,<:AbstractVector{A}} where {S,A},
-                     EventQueueABM{S,A,<:AbstractVector{A}} where {S,A},
-                     ReinforcementLearningABM{S,A,<:AbstractDict{<:Integer,A}} where {S,A}}
+    EventQueueABM{S,A,<:AbstractVector{A}} where {S,A},
+    ReinforcementLearningABM{S,A,<:AbstractVector{A}} where {S,A}}
 const StructVecABM = Union{StandardABM{S,A,<:StructVector{A}} where {S,A},
-                         EventQueueABM{S,A,<:StructVector{A}} where {S,A},
-                         ReinforcementLearningABM{S,A,<:AbstractDict{<:Integer,A}} where {S,A}}
+    EventQueueABM{S,A,<:StructVector{A}} where {S,A},
+    ReinforcementLearningABM{S,A,<:StructVector{A}} where {S,A}}
 
 nextid(model::DictABM) = getfield(model, :maxid)[] + 1
 nextid(model::Union{VecABM, StructVecABM}) = nagents(model) + 1
