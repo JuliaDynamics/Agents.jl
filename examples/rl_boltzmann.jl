@@ -50,7 +50,6 @@ end
 # First, we define the Gini coefficient calculation, which measures wealth inequality.
 # A Gini coefficient of 0 represents perfect equality, while 1 represents maximum inequality.
 
-# Gini coefficient calculation
 function gini(wealths::Vector{Int})
     n, sum_wi = length(wealths), sum(wealths)
     (n <= 1 || sum_wi == 0.0) && return 0.0
@@ -65,11 +64,9 @@ end
 # Unlike traditional ABM where this might contain random movement, here the movement
 # is determined by the RL policy based on the chosen action.
 
-# Define the agent stepping function for Boltzmann agents in RL model
 function boltzmann_rl_step!(agent::RLBoltzmannAgent, model, action::Int)
-    # Action definitions: 1=stay, 2=north, 3=south, 4=east, 5=west
+    ## Action definitions: 1=stay, 2=north, 3=south, 4=east, 5=west
     width, height = getfield(model, :space).extent
-
     dirs = ((0, 0), (0, 1), (0, -1), (1, 0), (-1, 0))
     dx, dy = dirs[action]
     x, y = agent.pos
@@ -77,12 +74,12 @@ function boltzmann_rl_step!(agent::RLBoltzmannAgent, model, action::Int)
 
     move_agent!(agent, target_pos, model)
 
-    # Wealth exchange mechanism
+    ## Wealth exchange mechanism
     others = [a for a in agents_in_position(agent.pos, model) if a.id != agent.id]
 
     if !isempty(others)
         other = rand(others)
-        # Transfer wealth from richer to poorer agent
+        ## Transfer wealth from richer to poorer agent
         if other.wealth > agent.wealth && other.wealth > 0
             agent.wealth += 1
             other.wealth -= 1
@@ -102,8 +99,6 @@ end
 # The observation function provides agents with local neighborhood information.
 # This includes occupancy information and relative wealth of nearby agents.
 
-
-# Boltzmann observation function
 function get_local_observation_boltzmann(model::ABM, agent_id::Int)
     target_agent = model[agent_id]
     agent_pos = target_agent.pos
@@ -111,10 +106,10 @@ function get_local_observation_boltzmann(model::ABM, agent_id::Int)
     observation_radius = model.rl_config[][:observation_radius]
 
     grid_size = 2 * observation_radius + 1
-    # 2 channels: occupancy and relative wealth
+    ## 2 channels: occupancy and relative wealth
     neighborhood_grid = zeros(Float32, grid_size, grid_size, 2)
 
-    # Get all agents in the neighborhood
+    ## Get all agents in the neighborhood
     neighbor_ids = nearby_ids(target_agent, model, observation_radius)
 
     for neighbor in [model[id] for id in neighbor_ids]
@@ -122,10 +117,9 @@ function get_local_observation_boltzmann(model::ABM, agent_id::Int)
             continue
         end
 
-        # Calculate relative position with periodic boundaries
+        ## Calculate relative position with periodic boundaries
         dx = neighbor.pos[1] - agent_pos[1]
         dy = neighbor.pos[2] - agent_pos[2]
-        # Wrap around for periodic space
         if abs(dx) > width / 2
             dx -= sign(dx) * width
         end
@@ -133,15 +127,15 @@ function get_local_observation_boltzmann(model::ABM, agent_id::Int)
             dy -= sign(dy) * height
         end
 
-        # Convert to grid coordinates (center is at radius + 1)
+        ## Convert to grid coordinates (center is at radius + 1)
         grid_x = dx + observation_radius + 1
         grid_y = dy + observation_radius + 1
 
         if 1 <= grid_x <= grid_size && 1 <= grid_y <= grid_size
-            # Channel 1: Occupancy
+            ## Channel 1: Occupancy
             neighborhood_grid[grid_x, grid_y, 1] = 1.0
 
-            # Channel 2: Normalized Relative Wealth
+            ## Channel 2: Normalized Relative Wealth
             wealth_diff = Float32(neighbor.wealth - target_agent.wealth)
             wealth_sum = Float32(neighbor.wealth + target_agent.wealth)
             if wealth_sum > 0
@@ -150,7 +144,6 @@ function get_local_observation_boltzmann(model::ABM, agent_id::Int)
         end
     end
 
-    # Normalize own agent's data
     total_wealth = sum(a.wealth for a in allagents(model))
     normalized_wealth = total_wealth > 0 ? Float32(target_agent.wealth / total_wealth) : 0.0f0
     normalized_pos = (Float32(agent_pos[1] / width), Float32(agent_pos[2] / height))
@@ -163,14 +156,12 @@ function get_local_observation_boltzmann(model::ABM, agent_id::Int)
     )
 end
 
-# Define observation function that returns vectors directly
+## Define observation function that returns vectors directly
 function boltzmann_get_observation(model::ABM, agent_id::Int)
     observation_data = get_local_observation_boltzmann(model, agent_id)
-
-    # Convert observation to vector directly
     flattened_grid = vec(observation_data.neighborhood_grid)
 
-    # Combine all normalized features into a single vector
+    ## Combine all normalized features into a single vector
     return vcat(
         Float32(observation_data.normalized_wealth),
         Float32(observation_data.normalized_pos[1]),
@@ -185,22 +176,20 @@ end
 # decreases in the Gini coefficient. This creates an incentive for agents to learn
 # movement patterns that promote wealth redistribution.
 
-# Define reward function
 function boltzmann_calculate_reward(env, agent, action, initial_model, final_model)
-    # Calculate Gini coefficient change
     initial_wealths = [a.wealth for a in allagents(initial_model)]
     final_wealths = [a.wealth for a in allagents(final_model)]
 
     initial_gini = gini(initial_wealths)
     final_gini = gini(final_wealths)
 
-    # Reward decrease in Gini coefficient
+    ## Reward decrease in Gini coefficient
     reward = (initial_gini - final_gini) * 100
     if reward > 0
         reward = reward / (abmtime(env) + 1)
     end
 
-    # Small penalty for neutral actions to encourage exploration
+    ## Small penalty for neutral actions
     if reward <= 0.0
         reward = -0.1f0
     end
@@ -213,11 +202,10 @@ end
 # Define when an RL episode should end. Here, episodes terminate when wealth
 # inequality (Gini coefficient) drops below a threshold, indicating success.
 
-# Define terminal condition for Boltzmann RL model
 function boltzmann_is_terminal_rl(env)
     wealths = [a.wealth for a in allagents(env)]
     current_gini = gini(wealths)
-    return current_gini < 0.1  # Gini threshold for "success"
+    return current_gini < 0.1
 end
 
 # ## Model initialization
@@ -237,12 +225,12 @@ function create_fresh_boltzmann_model(num_agents, dims, initial_wealth, seed)
         agent_step=boltzmann_rl_step!,
         properties=properties, rng=rng, scheduler=Schedulers.Randomly())
 
-    # Add agents with random initial wealth
+    ## Add agents with random initial wealth
     for _ in 1:num_agents
         add_agent_single!(RLBoltzmannAgent, model, rand(rng, 1:initial_wealth))
     end
 
-    # Calculate initial Gini coefficient
+    ## Calculate initial Gini coefficient
     wealths = [a.wealth for a in allagents(model)]
     model.gini_coefficient = gini(wealths)
 
@@ -250,7 +238,7 @@ function create_fresh_boltzmann_model(num_agents, dims, initial_wealth, seed)
 end
 
 function initialize_boltzmann_rl_model(; num_agents=10, dims=(10, 10), initial_wealth=10, observation_radius=4, seed=1234)
-    # RL configuration specifies the learning environment parameters
+    ## RL configuration specifies the learning environment parameters
     rl_config = (
         model_init_fn=() -> create_fresh_boltzmann_model(num_agents, dims, initial_wealth, seed),
         observation_fn=boltzmann_get_observation,
@@ -258,10 +246,10 @@ function initialize_boltzmann_rl_model(; num_agents=10, dims=(10, 10), initial_w
         terminal_fn=boltzmann_is_terminal_rl,
         agent_step_fn=boltzmann_rl_step!,
         action_spaces=Dict(
-            RLBoltzmannAgent => Crux.DiscreteSpace(5)  # 5 possible actions
+            RLBoltzmannAgent => Crux.DiscreteSpace(5)  ## 5 possible actions
         ),
         observation_spaces=Dict(
-            # Observation space: (2*radius+1)² grid cells * 2 channels + 3 agent features
+            ## Observation space: (2*radius+1)² grid cells * 2 channels + 3 agent features
             RLBoltzmannAgent => Crux.ContinuousSpace((((2 * observation_radius + 1)^2 * 2) + 3,), Float32)
         ),
         training_agent_types=[RLBoltzmannAgent],
@@ -269,10 +257,10 @@ function initialize_boltzmann_rl_model(; num_agents=10, dims=(10, 10), initial_w
         observation_radius=observation_radius
     )
 
-    # Create the main model using the initialization function
+    ## Create the main model using the initialization function
     model = create_fresh_boltzmann_model(num_agents, dims, initial_wealth, seed)
 
-    # Set the RL configuration
+    ## Set the RL configuration
     set_rl_config!(model, rl_config)
 
     return model
