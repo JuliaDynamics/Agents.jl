@@ -32,14 +32,10 @@ include("core/model_free_extensions.jl")
 include("core/agent_containers.jl")
 include("core/model_standard.jl")
 include("core/model_event_queue.jl")
-#include("core/model_reinforcement_learning.jl")
 include("core/model_validation.jl")
-# Reinforcement Learning
-include("reinforcement_learning.jl")
 include("core/model_accessing_API.jl")
 include("core/space_interaction_API.jl")
 include("core/higher_order_iteration.jl")
-#include("core/rl_training_functions.jl")
 
 # Existing spaces
 include("spaces/nothing.jl")
@@ -57,7 +53,6 @@ include("spaces/walk.jl")
 include("simulations/step.jl")
 include("simulations/step_standard.jl")
 include("simulations/step_eventqueue.jl")
-#include("simulations/step_reinforcement_learning.jl")
 include("simulations/collect.jl")
 include("simulations/paramscan.jl")
 include("simulations/sample.jl")
@@ -73,6 +68,9 @@ include("deprecations.jl")
 
 # visualizations (singleton methods for package extension)
 include("visualizations.jl")
+
+# reinforcement learning (singleton methods for package extension)
+include("reinforcement_learning.jl")
 
 include("ambiguities.jl")
 
