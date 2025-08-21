@@ -308,7 +308,7 @@ Set the RL configuration for the model.
 - `config`: Named tuple containing RL configuration parameters
 
 ## Returns
-- `ReinforcementLearningABM`: The configured model (for chaining)
+- `ReinforcementLearningABM`: The configured model
 
 ## Example
 ```julia
