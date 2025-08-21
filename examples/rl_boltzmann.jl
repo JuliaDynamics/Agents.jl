@@ -37,7 +37,7 @@
 # ## Loading packages and defining the agent type
 
 # ```julia
-using POMDPs, Crux, Flux
+# using POMDPs, Crux, Flux
 # ```
 using Agents, Random, Statistics, Distributions
 
