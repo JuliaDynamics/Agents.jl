@@ -117,7 +117,6 @@ function Base.getproperty(m::ReinforcementLearningABM, s::Symbol)
     # Handle RL-specific fields directly
     if s in (:rl_config, :trained_policies, :training_history, :is_training, :current_training_agent_type, :current_training_agent_id)
         return getfield(m, s)
-        # Handle standard ABM fields directly
     elseif s in (:agents, :agent_step, :model_step, :space, :scheduler, :rng,
         :agents_types, :agents_first, :maxid, :time, :properties)
         return getfield(m, s)
@@ -126,7 +125,7 @@ function Base.getproperty(m::ReinforcementLearningABM, s::Symbol)
         p = abmproperties(m)
         if p isa Dict
             return getindex(p, s)
-        else # properties is assumed to be a struct
+        else
             return getproperty(p, s)
         end
     end
@@ -385,35 +384,6 @@ function copy_trained_policies!(target_model::ReinforcementLearningABM, source_m
 end
 
 """
-    step_rl!(model::ReinforcementLearningABM, n::Int=1)
-
-Step the model forward using trained RL policies for agent behavior.
-If policies are not available for some agent types, they will use random actions.
-
-Note: This function provides explicit RL stepping. You can also use the standard 
-`step!(model, n)` which will automatically use RL policies when available through
-the `step_ahead_rl!` infrastructure.
-"""
-#function step_rl!(model::ReinforcementLearningABM, n::Int=1)
-#    if isnothing(model.rl_config[])
-#        error("RL configuration not set. Use set_rl_config! first.")
-#    end
-#
-#    for _ in 1:n
-#        # Step agents using RL policies
-#        for agent in allagents(model)
-#            rl_agent_step!(agent, model)
-#        end
-#
-#        # Step the model
-#        model.model_step(model)
-#
-#        # Increment time
-#        model.time[] += 1
-#    end
-#end
-
-"""
     rl_agent_step!(agent, model)
 
 Default agent stepping function for RL agents. This will use trained policies
@@ -508,7 +478,6 @@ function reset_model_for_episode!(model::ReinforcementLearningABM)
         error("RL configuration not set. Use set_rl_config! first.")
     end
 
-    #println("DEBUG RESET: Starting model reset")
     # Reset time
     model.time[] = 0
 
@@ -519,7 +488,6 @@ function reset_model_for_episode!(model::ReinforcementLearningABM)
 
     # If there's a model initialization function, use it
     if haskey(config, :model_init_fn)
-        #println("DEBUG RESET: Using model_init_fn")
         new_model = config.model_init_fn()
         # Copy agents and properties from new model
         remove_all!(model)

@@ -64,29 +64,6 @@ This wrapper enables the use of standard RL algorithms (PPO, DQN, A2C) with ABMs
 
 The wrapper automatically handles agent cycling, multi-agent coordination, and
 integrates with the configured observation, reward, and terminal functions.
-
-## Example
-```julia
-# Set up RL configuration
-config = (
-    observation_fn = my_obs_function,
-    reward_fn = my_reward_function,
-    terminal_fn = my_terminal_function,
-    action_spaces = Dict(MyAgent => Crux.DiscreteSpace(4)),
-    observation_spaces = Dict(MyAgent => Crux.ContinuousSpace((10,), Float32)),
-    # ... other config
-)
-
-# Create and configure model
-model = ReinforcementLearningABM(MyAgent, GridSpace((5, 5)))
-set_rl_config!(model, config)
-
-# Wrap for training
-env = wrap_for_rl_training(model)
-
-# Use with standard RL algorithms
-solver = PPO(π=policy, S=observations(env), N=1000)
-trained_policy = solve(solver, env)
 ```
 """
 function wrap_for_rl_training(model::ReinforcementLearningABM)
@@ -242,12 +219,8 @@ function POMDPs.initialstate(wrapper::RLEnvironmentWrapper)
         error("RL configuration not set. Use set_rl_config! first.")
     end
 
-    #println("DEBUG RESET: Resetting model for new episode")
-
     # Reset the model to initial state
     Agents.reset_model_for_episode!(model)
-
-    #println("DEBUG RESET: Model reset complete, time: $(abmtime(model)), training agent ID: $(model.current_training_agent_id[])")
 
     # Return initial state
     current_agent_type = Agents.get_current_training_agent_type(model)
@@ -353,14 +326,8 @@ function POMDPs.gen(wrapper::RLEnvironmentWrapper, s, action::Int, rng::Abstract
     # Calculate reward using the configured function
     reward = config.reward_fn(model, current_agent, action, initial_state, model)
 
-    #println("DEBUG ENV: Current training agent: $(current_agent.id)")
-    #println("DEBUG ENV: About to advance simulation")
-
     # Advance simulation
     advance_simulation!(model)
-
-    #println("DEBUG ENV: After advance - model time: $(abmtime(model))")
-    #println("DEBUG ENV: All agent wealths: $([a.wealth for a in allagents(model)])")
 
     # Return next state and observation
     sp = s  # Dummy state
@@ -405,9 +372,6 @@ function POMDPs.isterminal(wrapper::RLEnvironmentWrapper, s)
     config = model.rl_config[]
     max_steps = get(config, :max_steps, 100)
 
-    #println("Terminal: ", config.terminal_fn(model))
-    #println("Max steps reached: ", abmtime(model) >= max_steps)
-
     return config.terminal_fn(model) || abmtime(model) >= max_steps
 end
 
@@ -445,7 +409,7 @@ function POMDPs.discount(wrapper::RLEnvironmentWrapper)
     if haskey(config, :discount_rates) && haskey(config.discount_rates, current_agent_type)
         return config.discount_rates[current_agent_type]
     else
-        return 0.99  # Default discount rate
+        return 0.99
     end
 end
 
@@ -484,7 +448,7 @@ function Crux.state_space(wrapper::RLEnvironmentWrapper)
     if haskey(config, :state_spaces) && haskey(config.state_spaces, current_agent_type)
         return config.state_spaces[current_agent_type]
     else
-        return Crux.ContinuousSpace((10,))  # Default state space
+        return Crux.ContinuousSpace((10,))
     end
 end
 
@@ -504,7 +468,7 @@ This function implements the core simulation advancement logic:
 3. **Policy Application**: Uses trained policies for other agents when available, falls back to random actions
 4. **Environment Step**: Executes the model stepping function and increments time
 
-The function handles agent removal (agents that die during actions) and ensures
+The function handles agent removal and ensures
 proper coordination between different agent types during training.
 """
 function advance_simulation!(model::ReinforcementLearningABM)
@@ -517,14 +481,9 @@ function advance_simulation!(model::ReinforcementLearningABM)
 
     # Move to next agent of the training type
     agents_of_type = [a for a in allagents(model) if typeof(a) == current_agent_type]
-    #println("Current training agent type: $current_agent_type, agents: $(length(agents_of_type))")
 
     if !isempty(agents_of_type)
         model.current_training_agent_id[] += 1
-        #current_agent_idx = model.current_training_agent_id[]
-        #agent_idx = ((current_agent_idx - 1) % length(agents_of_type)) + 1
-        #actual_agent = agents_of_type[agent_idx]
-        #println("Current training agent index: $current_agent_idx (cycling through agent ID $(actual_agent.id))")
 
         # If we've cycled through all agents of this type, run other agents and environment step
         if model.current_training_agent_id[] > length(agents_of_type)
@@ -543,13 +502,11 @@ function advance_simulation!(model::ReinforcementLearningABM)
                                 obs_radius = get(config, :observation_radius, 2)
                                 obs_vec = config.observation_fn(model, other_agent.id, obs_radius)
                                 action = Crux.action(model.trained_policies[agent_type], obs_vec)
-                                #println("DEBUG ADVANCE: Agent $(other_agent.id) using trained policy, action: $action")
                                 config.agent_step_fn(other_agent, model, action)
                             else
                                 # Fall back to random behavior
                                 if haskey(config.action_spaces, agent_type)
                                     action = rand(config.action_spaces[agent_type].vals)
-                                    #println("DEBUG ADVANCE: Agent $(other_agent.id) using random action: $action")
                                     config.agent_step_fn(other_agent, model, action)
                                 end
                             end
