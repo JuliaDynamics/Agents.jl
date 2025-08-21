@@ -693,23 +693,111 @@ function create_custom_solver end
     train_model!(model::ReinforcementLearningABM, agent_types; 
                 training_mode=:sequential, kwargs...) → ReinforcementLearningABM
 
-Train the specified agent types in the model using reinforcement learning.
+Train the specified agent types in the model using reinforcement learning. This is the main 
+function for RL training in Agents.jl, supporting both single-agent and multi-agent 
+learning scenarios.
+
+## Training Modes
+
+### Sequential Training (`:sequential`)
+Agents are trained one at a time in sequence. Each subsequent agent type is trained against 
+the previously trained agents.
+
+**Process:**
+1. Train first agent type against random agents
+2. Train second agent type against the trained first agent
+3. Continue until all agent types are trained
+
+### Simultaneous Training (`:simultaneous`)  
+All agent types are trained at the same time with alternating batch updates. This creates 
+a co-evolutionary dynamic where agents adapt to each other simultaneously.
+
+**Process:**
+1. Initialize solvers for all agent types
+2. Alternate training batches between agent types
+3. Each agent learns against the evolving policies of others
 
 ## Arguments
-- `model::ReinforcementLearningABM`: The model to train
-- `agent_types`: Agent type or vector of agent types to train
+- `model::ReinforcementLearningABM`: The model containing agents to train. Must have RL 
+  configuration set via `set_rl_config!` before training.
+- `agent_types`: Single agent type (e.g., `MyAgent`) or vector of agent types (e.g., 
+  `[Predator, Prey]`) to train. All specified types must exist in the model and be 
+  listed in the RL configuration's `training_agent_types`.
 
 ## Keyword Arguments  
-- `training_mode::Symbol`: `:sequential` or `:simultaneous` (default: `:sequential`)
-- `training_steps::Int`: Number of training steps per agent (default: 50_000)
-- `solver_type::Symbol`: Type of RL solver to use (`:PPO`, `:DQN`, `:A2C`) (default: `:PPO`)
-- `solver_params::Dict`: Dict of custom solver parameters for each agent type or global parameters
-- `custom_networks::Dict`: Dict of custom neural networks for each agent type
-- `custom_solvers::Dict`: Dict of custom solvers for each agent type
-- Other arguments passed to the training functions
+
+### Core Training Parameters
+
+- **`training_mode::Symbol`**: Training strategy (default: `:sequential`)
+  - `:sequential` - Train agent types one after another
+  - `:simultaneous` - Train all agent types together with alternating updates
+
+#### Sequential Training Steps
+This applies only when `training_mode=:sequential`:
+
+- **`training_steps::Int`**: Number of environment steps for training each agent type 
+  (default: 50,000). In sequential mode, this is per agent type. In simultaneous mode, 
+  this determines the batch size for each alternating update.
+
+#### Simultaneous Training Steps
+These apply only when `training_mode=:simultaneous`:
+
+- **`n_iterations::Int`**: Number of alternating training rounds (default: 5)
+- **`batch_size::Int`**: Size of training batches for each iteration (default: 10,000)
+
+## Algorithm Configuration
+
+- **`solver_params::Dict`**: Algorithm-specific hyperparameters. Can be:
+  - **Global parameters**: Applied to all agent types
+    ```julia
+    solver_params = Dict(
+        :ΔN => 200,              
+        :log => (period=1000,),
+    )
+    ```
+  - **Per-agent-type parameters**: Different settings for each agent type
+    ```julia
+    solver_params = Dict(
+        Predator => Dict(:ΔN => 100),
+        Prey => Dict(:ΔN => 200)
+    )
+    ```
+
+- **`solver_types::Dict{Type, Symbol}`**: Different RL algorithms for different agent types.
+  ```julia
+  solver_types = Dict(
+      FastAgent => :DQN,    
+      SmartAgent => :PPO      
+  )
+  ```
+
+## Network Architecture Customization
+
+- **`custom_networks::Dict{Type, Dict{Symbol, Function}}`**: Custom neural network 
+  architectures for specific agent types. Each entry maps an agent type to a dictionary 
+  containing `:value_network` and/or `:policy_network` functions.
+  ```julia
+  custom_networks = Dict(
+      MyAgent => Dict(
+          :value_network => () -> create_value_network((84,), [128, 64]),
+          :policy_network => () -> create_policy_network((84,), 5, action_space, [128, 64])
+      )
+  )
+  ```
+
+- **`custom_solvers::Dict{Type, Any}`**: Pre-configured complete solvers for specific 
+  agent types. Bypasses automatic solver creation.
+  ```julia
+  custom_solvers = Dict(
+      MyAgent => my_preconfigured_ppo_solver
+  )
+  ```
+
 
 ## Returns
-- `ReinforcementLearningABM`: The model with trained policies stored
+- `ReinforcementLearningABM`: The input model with trained policies stored in 
+  `model.trained_policies`. The trained policies can be accessed via `get_trained_policies(model)` 
+  or copied to other models using `copy_trained_policies!(target, source)`.
 
 ## Notes
 - `max_steps` is read directly from the RL configuration (`model.rl_config[][:max_steps]`)
@@ -717,18 +805,45 @@ Train the specified agent types in the model using reinforcement learning.
 - Cannot override `max_steps` during training - it must be set in the RL configuration
 
 ## Examples
+
+### Basic training with custom solver parameters
 ```julia
-# Basic training with custom solver parameters
 train_model!(model, MyAgent; 
     training_steps=10000,
     solver_params=Dict(:ΔN => 100, :log => (period=500,)))
+```
 
-# Per-agent-type solver parameters
-train_model!(model, [Agent1, Agent2]; 
+### Multi-Agent Sequential Training
+```julia
+# Train predator and prey sequentially
+train_model!(model, [Predator, Prey]; 
+    training_mode=:sequential,
+    training_steps=20000,
     solver_params=Dict(
-        Agent1 => Dict(:ΔN => 100),
-        Agent2 => Dict(:ΔN => 200)
+        :ΔN => 100,
+        :log => (period=500,)
     ))
 ```
+
+# Multi-Agent Simultaneous Training
+```julia
+# Co-evolutionary training
+train_model!(model, [PlayerA, PlayerB]; 
+    training_mode=:simultaneous,
+    n_iterations=10,
+    batch_size=5000,
+    solver_params=Dict(
+        PlayerA => Dict(:ΔN => 100),
+        PlayerB => Dict(:ΔN => 200)   
+    ))
+```
+
+## See Also
+
+- [`ReinforcementLearningABM`](@ref): The model type used for RL training
+- [`set_rl_config!`](@ref): Setting up RL configuration
+- [`copy_trained_policies!`](@ref): Copying policies between models
+- [`setup_rl_training`](@ref): Lower-level training setup
+- [Crux.jl documentation](https://github.com/sisl/Crux.jl) for solver details
 """
 function train_model! end

@@ -1,7 +1,7 @@
 # # Predator-Prey Model with Reinforcement Learning
 
 # This example demonstrates how to integrate reinforcement learning (RL) with 
-# the classic predator-prey model. Building on the traditional [Wolf-Sheep model](@ref),
+# the classic predator-prey model. Building on the traditional Wolf-Sheep model,
 # this version replaces random movement with learned behavior, where agents use
 # reinforcement learning to optimize their survival and reproduction strategies.
 
