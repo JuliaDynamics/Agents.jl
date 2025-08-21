@@ -33,6 +33,8 @@ include("core/agent_containers.jl")
 include("core/model_standard.jl")
 include("core/model_event_queue.jl")
 include("core/model_validation.jl")
+# reinforcement learning (singleton methods for package extension)
+include("reinforcement_learning.jl")
 include("core/model_accessing_API.jl")
 include("core/space_interaction_API.jl")
 include("core/higher_order_iteration.jl")
@@ -68,9 +70,6 @@ include("deprecations.jl")
 
 # visualizations (singleton methods for package extension)
 include("visualizations.jl")
-
-# reinforcement learning (singleton methods for package extension)
-include("reinforcement_learning.jl")
 
 include("ambiguities.jl")
 
