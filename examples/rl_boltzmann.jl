@@ -356,7 +356,6 @@
 # Let's visualize the initial state and run a simulation to see the trained behavior.
 # ```julia
 # using CairoMakie, ColorSchemes
-# CairoMakie.activate!()
 #
 # # Custom color function based on wealth
 # function agent_color(agent)
