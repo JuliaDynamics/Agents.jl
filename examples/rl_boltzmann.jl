@@ -1,11 +1,5 @@
 # # Boltzmann Wealth Model with Reinforcement Learning
 
-# ```@raw html
-# <video width="auto" controls autoplay loop>
-# <source src="../assets/rl_boltzmann.mp4" type="video/mp4">
-# </video>
-# ```
-
 # This example demonstrates how to integrate reinforcement learning (RL) with 
 # agent-based modeling using the Boltzmann wealth distribution model. In this model,
 # agents move around a grid and exchange wealth when they encounter other agents,
@@ -36,10 +30,8 @@
 
 # ## Loading packages and defining the agent type
 
-# ```julia
-# using POMDPs, Crux, Flux
-# ```
 using Agents, Random, Statistics, Distributions
+using POMDPs, Crux, Flux
 
 @agent struct RLBoltzmannAgent(GridAgent{2})
     wealth::Int
@@ -237,136 +229,95 @@ end
 # Now we create and train our model. The agents will learn through trial and error
 # which movement patterns best achieve the goal of reducing wealth inequality.
 
-# ```julia
 # # Create and train the Boltzmann RL model
-# boltzmann_rl_model = initialize_boltzmann_rl_model()
-# println("Created Boltzmann ReinforcementLearningABM with $(nagents(boltzmann_rl_model)) agents")
-# ```
+boltzmann_rl_model = initialize_boltzmann_rl_model()
 
 # Train the Boltzmann agents
-# ```julia
-# println("\nTraining RLBoltzmannAgent...")
-# train_model!(boltzmann_rl_model, RLBoltzmannAgent;
-#     training_steps=200000,
-#     solver_params=Dict(
-#         :ΔN => 200,            # Custom batch size for PPO updates
-#         :log => (period=1000,) # Log every 1000 steps
-#     ))
-# println("Boltzmann RL training completed successfully")
-# ```
+train_model!(
+    boltzmann_rl_model, RLBoltzmannAgent;
+    training_steps=200000,
+    solver_params=Dict(
+        :ΔN => 200,            # Custom batch size for PPO updates
+        :log => (period=1000,) # Log every 1000 steps
+))
+
 # Plot the learning curve to see how agents improved over training
-# ```julia
-# fig = plot_learning(boltzmann_rl_model.training_history[RLBoltzmannAgent])
-# display(fig)
-# ```
+fig = plot_learning(boltzmann_rl_model.training_history[RLBoltzmannAgent])
+display(fig)
+
 # ## Running the trained model
 # After training, we create a fresh model instance and apply the learned policies
 # to see how well the agents perform.
 
-# Create a fresh model instance for simulation with the same parameters
-# ```julia
-# println("\nCreating fresh Boltzmann model for simulation...")
-# fresh_boltzmann_model = initialize_boltzmann_rl_model()
-# ```
-# Copy the trained policies to the fresh model
-# ```julia
-# copy_trained_policies!(fresh_boltzmann_model, boltzmann_rl_model)
-# println("Applied trained policies to fresh model")
-# ```
-# ## Visualization
+#First, create a fresh model instance for simulation with the same parameters
+fresh_boltzmann_model = initialize_boltzmann_rl_model()
+
+# And copy the trained policies to the fresh model
+copy_trained_policies!(fresh_boltzmann_model, boltzmann_rl_model)
+
 # Let's visualize the initial state and run a simulation to see the trained behavior.
-# ```julia
-# using CairoMakie, ColorSchemes
-# # Custom color function based on wealth
-# function agent_color(agent)
-#     max_expected_wealth = 10
-#     clamped_wealth = clamp(agent.wealth, 0, max_expected_wealth)
-#     normalized_wealth = clamped_wealth / max_expected_wealth
-#     # Color scheme: red (poor) to green (rich)
-#     return ColorSchemes.RdYlGn_4[normalized_wealth]
-# end
-# 
-# # Custom size function based on wealth
-# function agent_size(agent)
-#     max_expected_wealth = 10
-#     clamped_wealth = clamp(agent.wealth, 0, max_expected_wealth)
-#     size_factor = clamped_wealth / max_expected_wealth
-#     return 10 + size_factor * 15
-# end
-# 
-# fig, ax = abmplot(fresh_boltzmann_model;
-#     agent_color=agent_color,
-#     agent_size=agent_size,
-#     agent_marker=:circle
-# )
-# 
-# # Add title and labels
-# ax.title = "Boltzmann Wealth Distribution (Initial State)"
-# ax.xlabel = "X Position"
-# ax.ylabel = "Y Position"
-# 
-# display(fig)
-# ```
-# ![Boltzmann Wealth Distribution (Initial State)](../docs/src/assets/boltzmann_rl_initial_state.png)
-#
+using CairoMakie, ColorSchemes
+
+function agent_color(agent) # Custom color function based on wealth
+    max_expected_wealth = 10
+    clamped_wealth = clamp(agent.wealth, 0, max_expected_wealth)
+    normalized_wealth = clamped_wealth / max_expected_wealth
+    # Color scheme: red (poor) to green (rich)
+    return ColorSchemes.RdYlGn_4[normalized_wealth]
+end
+function agent_size(agent) # Custom size function based on wealth
+    max_expected_wealth = 10
+    clamped_wealth = clamp(agent.wealth, 0, max_expected_wealth)
+    size_factor = clamped_wealth / max_expected_wealth
+    return 10 + size_factor * 15
+end
+ 
+fig, ax = abmplot(fresh_boltzmann_model;
+    agent_color=agent_color,
+    agent_size=agent_size,
+    agent_marker=:circle
+)
+ax.title = "Boltzmann Wealth Distribution (Initial State)"
+ax.xlabel = "X Position"
+ax.ylabel = "Y Position"
+display(fig)
+
 # Run simulation with trained agents on the fresh model
-# ```julia
-# println("\nRunning Boltzmann simulation with trained RL agents...")
-# initial_wealths = [a.wealth for a in allagents(fresh_boltzmann_model)]
-# initial_gini = gini(initial_wealths)
-# println("Initial wealth distribution: $initial_wealths")
-# println("Initial Gini coefficient: $initial_gini")
-# 
-# # Step the model forward to see the trained behavior
-# Agents.step!(fresh_boltzmann_model, 10)
-# println("Simulation completed successfully")
-# 
-# # Check the results after simulation
-# final_wealths = [a.wealth for a in allagents(fresh_boltzmann_model)]
-# final_gini = gini(final_wealths)
-# 
-# println("Final wealth distribution: $final_wealths")
-# println("Gini coefficient change: $initial_gini → $final_gini")
-# ```
+initial_wealths = [a.wealth for a in allagents(fresh_boltzmann_model)]
+initial_gini = gini(initial_wealths)
+"Initial wealth distribution anf Gini coefficient: $initial_wealths, $initial_gini"
+
+# Step the model forward to see the trained behavior
+Agents.step!(fresh_boltzmann_model, 10)
+
+# Check the results after simulation
+final_wealths = [a.wealth for a in allagents(fresh_boltzmann_model)]
+final_gini = gini(final_wealths) 
+"Final wealth distribution and Gini coefficient: $final_wealths, $final_gini"
+
 # Plot the final state
-# ```julia
-# fig, ax = abmplot(fresh_boltzmann_model;
-#     agent_color=agent_color,
-#     agent_size=agent_size,
-#     agent_marker=:circle
-# )
-# 
-# # Add title and labels
-# ax.title = "Boltzmann Wealth Distribution (After 10 RL Steps)"
-# ax.xlabel = "X Position"
-# ax.ylabel = "Y Position"
-# 
-# display(fig)
-# ```
-# ![Boltzmann Wealth Distribution (After 10 RL Steps)](../assets/boltzmann_rl_final_state.png)
-#
-# ## Creating an animation
+fig, ax = abmplot(fresh_boltzmann_model;
+    agent_color=agent_color,
+    agent_size=agent_size,
+    agent_marker=:circle
+)
+ax.title = "Boltzmann Wealth Distribution (After 10 RL Steps)"
+ax.xlabel = "X Position"
+ax.ylabel = "Y Position"
+display(fig)
 
 # Finally, let's create a video showing the trained agents in action over multiple steps.
-# ```julia
-# fresh_boltzmann_model = initialize_boltzmann_rl_model()
-# copy_trained_policies!(fresh_boltzmann_model, boltzmann_rl_model)
-# plotkwargs = (;
-#     agent_color=agent_color,
-#     agent_size=agent_size,
-#     agent_marker=:circle
-# )
-# abmvideo("rl_boltzmann.mp4", fresh_boltzmann_model; frames=50,
-#     framerate=4,
-#     title="Boltzmann Money Model with RL Agents",
-#     plotkwargs...)
-# ```
-
-# ```@raw html
-# <video width="auto" controls autoplay loop>
-# <source src="../assets/rl_boltzmann.mp4" type="video/mp4">
-# </video>
-# ```
+fresh_boltzmann_model = initialize_boltzmann_rl_model()
+copy_trained_policies!(fresh_boltzmann_model, boltzmann_rl_model)
+plotkwargs = (;
+    agent_color=agent_color,
+    agent_size=agent_size,
+    agent_marker=:circle
+)
+abmvideo("rl_boltzmann.mp4", fresh_boltzmann_model; frames=50,
+    framerate=4,
+    title="Boltzmann Money Model with RL Agents",
+    plotkwargs...)
 
 # ## Key takeaways
 
