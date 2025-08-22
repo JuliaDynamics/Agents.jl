@@ -185,14 +185,9 @@ function boltzmann_calculate_reward(env, agent, action, initial_model, final_mod
 
     ## Reward decrease in Gini coefficient
     reward = (initial_gini - final_gini) * 100
-    if reward > 0
-        reward = reward / (abmtime(env) + 1)
-    end
-
+    reward > 0 && (reward = reward / (abmtime(env) + 1))
     ## Small penalty for neutral actions
-    if reward <= 0.0
-        reward = -0.1f0
-    end
+    reward <= 0.0 && (reward = -0.1f0)
 
     return reward
 end
