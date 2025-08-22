@@ -1,85 +1,7 @@
 export ReinforcementLearningABM
 export get_trained_policies, set_rl_config!, copy_trained_policies!
-export train_model!
+export train_model!, create_policy_network, create_value_network
 
-"""
-    ReinforcementLearningABM{S,A,C,T,G,K,F,P,R} <: AgentBasedModel{S}
-
-A concrete implementation of an [`AgentBasedModel`](@ref) that extends [`StandardABM`](@ref)
-with built-in reinforcement learning capabilities. This model type integrates RL training
-into the ABM framework, allowing agents to learn and adapt their behavior
-through interaction with the environment.
-
-## Key Features
-
-- **Integrated RL Training**: Built-in support for training agents using various RL algorithms
-- **Multi-Agent Learning**: Support for training multiple agent types simultaneously or sequentially  
-- **Flexible Observation Models**: Customizable observation functions for different agent types
-- **Reward Engineering**: User-defined reward functions for different learning objectives
-- **Policy Management**: Automatic management of trained policies and their deployment
-
-## Structure
-
-The `ReinforcementLearningABM` contains all the components of a `StandardABM` plus additional
-RL-specific components:
-
-- `rl_config`: Configuration for RL training including observation functions, reward functions, etc.
-- `trained_policies`: Storage for trained policies for each agent type
-- `training_history`: Record of training progress and metrics
-- `is_training`: Flag indicating whether the model is currently in training mode
-
-## Constructor
-
-```julia
-ReinforcementLearningABM(agent_type, space; 
-    agent_step!, model_step!, 
-    rl_config=nothing,
-    kwargs...)
-```
-
-Where `rl_config` is a named tuple containing:
-- `model_init_fn`: Function to initialize the model for RL training
-- `observation_fn`: Function to generate observation vectors for agents
-- `reward_fn`: Function to calculate rewards
-- `terminal_fn`: Function to check terminal conditions
-- `action_spaces`: Dictionary mapping agent types to their action spaces
-- `observation_spaces`: Dictionary mapping agent types to their observation spaces
-- `training_agent_types`: Vector of agent types that should be trained
-- `max_steps`: Maximum steps per episode
-- `observation_radius`: Radius for local observations
-- `discount_rates`: Dictionary mapping agent types to their discount rates (gamma)
-
-## Usage Example
-
-```julia
-# Define agent type
-@agent struct MyRLAgent(GridAgent{2})
-    energy::Float64
-end
-
-# Define RL configuration
-config = (
-    model_init_fn = my_model_init_function,
-    observation_fn = my_observation_function,
-    reward_fn = my_reward_function,
-    terminal_fn = my_terminal_function,
-    observation_spaces = Dict(MyRLAgent => Crux.ContinuousSpace((5,), Float32)),
-    action_spaces = Dict(MyRLAgent => Crux.DiscreteSpace(4)),
-    training_agent_types = [MyRLAgent],
-    discount_rates = Dict(MyRLAgent => 0.95)  # Custom discount rate
-)
-
-# Create model
-model = ReinforcementLearningABM(MyRLAgent, GridSpace((10, 10)); 
-                                rl_config=config)
-
-# Train agents
-train_model!(model, MyRLAgent; training_steps=10000)
-
-# Run with trained policies
-step_rl!(model, 100)
-```
-"""
 struct ReinforcementLearningABM{
     S<:SpaceType,
     A<:AbstractAgent,
@@ -161,9 +83,24 @@ function Base.setproperty!(m::ReinforcementLearningABM, s::Symbol, x)
 end
 
 """
-    ReinforcementLearningABM(AgentType(s), space [, rl_config]; kwargs...)
+    ReinforcementLearningABM <: AgentBasedModel
 
-Create a `ReinforcementLearningABM` with built-in RL capabilities.
+A concrete implementation of an [`AgentBasedModel`](@ref) that extends [`StandardABM`](@ref)
+with built-in reinforcement learning capabilities. This model type integrates RL training
+into the ABM framework, allowing agents to learn and adapt their behavior
+through interaction with the environment.
+
+## Key Features
+
+- **Integrated RL Training**: Built-in support for training agents using various RL algorithms
+- **Multi-Agent Learning**: Support for training multiple agent types simultaneously or sequentially  
+- **Flexible Observation Models**: Customizable observation functions for different agent types
+- **Reward Engineering**: User-defined reward functions for different learning objectives
+- **Policy Management**: Automatic management of trained policies and their deployment
+
+Here is how to construct a `ReinforcementLearningABM`:
+
+    ReinforcementLearningABM(AgentType(s), space [, rl_config]; kwargs...)
 
 ## Arguments
 
@@ -658,14 +595,14 @@ Create a custom value network with specified architecture.
 function create_value_network end
 
 """
-    create_policy_network(input_dims, output_dims, action_space, hidden_layers=[64, 64], activation=relu) → Function
+    create_policy_network(input_dims, output_dims, action_space_values, hidden_layers=[64, 64], activation=relu) → Function
 
 Create a custom policy network with specified architecture.
 
 ## Arguments
 - `input_dims`: Tuple specifying the input dimensions
 - `output_dims::Int`: Number of output neurons (action space size)
-- `action_space`: The action space for the policy
+- `action_space_values`: The action space values for the policy (e.g. Crux.DiscreteSpace(5).vals)
 - `hidden_layers::Vector{Int}`: Sizes of hidden layers (default: [64, 64])
 - `activation`: Activation function (default: relu)
 

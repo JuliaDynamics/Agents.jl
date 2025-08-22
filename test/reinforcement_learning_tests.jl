@@ -339,7 +339,7 @@ end
         last_action::Int = 0
     end
 
-    function wrapper_test_observation_fn(model::ReinforcementLearningABM, agent_id::Int, observation_radius::Int)
+    function wrapper_test_observation_fn(model::ReinforcementLearningABM, agent_id::Int)
         agent = model[agent_id]
         # Return position and wealth as observation
         return Float32[agent.pos[1], agent.pos[2], agent.wealth/100.0]
@@ -408,7 +408,7 @@ end
         agent = add_agent!(WrapperTestAgent, model, 15.0, 0)
 
         # Test observation function works
-        obs = config.observation_fn(model, agent.id, 2)
+        obs = config.observation_fn(model, agent.id)
         @test obs isa Vector{Float32}
         @test length(obs) == 3
         @test obs[1] == 2.0f0  # x position
@@ -527,7 +527,7 @@ end
             reward = config.reward_fn(model, agent, action, initial_model, model)
 
             # Get new observation  
-            new_obs = config.observation_fn(model, agent.id, 2)
+            new_obs = config.observation_fn(model, agent.id)
 
             # Check terminal condition
             is_terminal = config.terminal_fn(model)

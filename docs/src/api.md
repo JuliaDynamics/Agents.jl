@@ -34,6 +34,8 @@ add_event!
 ```@docs
 ReinforcementLearningABM
 set_rl_config!
+create_policy_network
+create_value_network
 train_model!
 get_trained_policies
 copy_trained_policies!
