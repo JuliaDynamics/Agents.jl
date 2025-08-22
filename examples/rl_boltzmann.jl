@@ -142,7 +142,6 @@ function get_local_observation_boltzmann(model::ABM, agent_id::Int)
     normalized_pos = (Float32(agent_pos[1] / width), Float32(agent_pos[2] / height))
 
     return (
-        agent_id=agent_id,
         normalized_wealth=normalized_wealth,
         normalized_pos=normalized_pos,
         neighborhood_grid=neighborhood_grid
