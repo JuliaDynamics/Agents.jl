@@ -66,13 +66,8 @@ end
 
 function boltzmann_rl_step!(agent::RLBoltzmannAgent, model, action::Int)
     ## Action definitions: 1=stay, 2=north, 3=south, 4=east, 5=west
-    width, height = getfield(model, :space).extent
     dirs = ((0, 0), (0, 1), (0, -1), (1, 0), (-1, 0))
-    dx, dy = dirs[action]
-    x, y = agent.pos
-    target_pos = (mod1(x + dx, width), mod1(y + dy, height))
-
-    move_agent!(agent, target_pos, model)
+    walk!(agent, dirs[action], model)
 
     ## Wealth exchange mechanism
     other = random_agent_in_position(agent.pos, model, a -> a.id != agent.id)
