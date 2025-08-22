@@ -100,7 +100,7 @@ end
 function get_local_observation_boltzmann(model::ABM, agent_id::Int)
     target_agent = model[agent_id]
     agent_pos = target_agent.pos
-    width, height = getfield(model, :space).extent
+    width, height = size(abmspace(model))
     observation_radius = model.rl_config[][:observation_radius]
 
     grid_size = 2 * observation_radius + 1
