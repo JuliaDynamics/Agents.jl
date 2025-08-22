@@ -102,40 +102,19 @@ function get_local_observation_boltzmann(model::ABM, agent_id::Int)
     ## 2 channels: occupancy and relative wealth
     neighborhood_grid = zeros(Float32, grid_size, grid_size, 2)
 
-    ## Get all agents in the neighborhood
-    neighbor_ids = nearby_ids(target_agent, model, observation_radius)
-
-    for neighbor in [model[id] for id in neighbor_ids]
-        if neighbor.id == agent_id
-            continue
-        end
-
-        ## Calculate relative position with periodic boundaries
-        dx = neighbor.pos[1] - agent_pos[1]
-        dy = neighbor.pos[2] - agent_pos[2]
-        if abs(dx) > width / 2
-            dx -= sign(dx) * width
-        end
-        if abs(dy) > height / 2
-            dy -= sign(dy) * height
-        end
-
-        ## Convert to grid coordinates (center is at radius + 1)
-        grid_x = dx + observation_radius + 1
-        grid_y = dy + observation_radius + 1
-
-        if 1 <= grid_x <= grid_size && 1 <= grid_y <= grid_size
-            ## Channel 1: Occupancy
-            neighborhood_grid[grid_x, grid_y, 1] = 1.0
-
-            ## Channel 2: Normalized Relative Wealth
+    for pos in nearby_positions(agent.pos, model, observation_radius)
+        for neighbor in agents_in_position(pos, model)
+            spos = pos .- agent.pos .+ observation_radius + 1
+            neighbor.id == agent_id && continue
+            neighborhood_grid[spos..., 1] = 1.0
             wealth_diff = Float32(neighbor.wealth - target_agent.wealth)
             wealth_sum = Float32(neighbor.wealth + target_agent.wealth)
             if wealth_sum > 0
-                neighborhood_grid[grid_x, grid_y, 2] = wealth_diff / wealth_sum
+                neighborhood_grid[spos..., 2] = wealth_diff / wealth_sum
             end
         end
     end
+        
 
     total_wealth = sum(a.wealth for a in allagents(model))
     normalized_wealth = total_wealth > 0 ? Float32(target_agent.wealth / total_wealth) : 0.0f0
