@@ -75,10 +75,8 @@ function boltzmann_rl_step!(agent::RLBoltzmannAgent, model, action::Int)
     move_agent!(agent, target_pos, model)
 
     ## Wealth exchange mechanism
-    others = [a for a in agents_in_position(agent.pos, model) if a.id != agent.id]
-
-    if !isempty(others)
-        other = rand(others)
+    other = random_agent_in_position(agent.pos, model, a -> a.id != agent.id)
+    if !isnothing(other)
         ## Transfer wealth from richer to poorer agent
         if other.wealth > agent.wealth && other.wealth > 0
             agent.wealth += 1
