@@ -1,7 +1,4 @@
-using Test, Agents
 using POMDPs, Crux, Flux
-using StableRNGs, Random
-using Statistics
 
 # Test agents for RL extension testing
 @agent struct RLExtensionTestAgent(GridAgent{2})

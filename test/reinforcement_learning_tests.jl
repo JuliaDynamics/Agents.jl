@@ -10,7 +10,7 @@ end
 end
 
 # Helper functions for testing
-function test_observation_fn(model::ReinforcementLearningABM, agent_id::Int, observation_radius::Int)
+function test_observation_fn(model::ReinforcementLearningABM, agent_id::Int)
 end
 
 function test_reward_fn(env::ReinforcementLearningABM, agent::AbstractAgent, action::Int,
@@ -233,7 +233,7 @@ end
 
         # Create config for multiple agent types
         config = (
-            observation_fn=(model, agent_id, radius) -> Float32[model[agent_id].pos...],
+            observation_fn=(model, agent_id) -> Float32[model[agent_id].pos...],
             reward_fn=(env, agent, action, init, final) -> 1.0f0,
             terminal_fn=(env) -> false,
             agent_step_fn=(agent, model, action) -> nothing,
@@ -518,7 +518,7 @@ end
         for action in actions
             # Record initial state
             initial_model = deepcopy(model)
-            initial_obs = config.observation_fn(model, agent.id, 2)
+            initial_obs = config.observation_fn(model, agent.id)
 
             # Execute action
             config.agent_step_fn(agent, model, action)
