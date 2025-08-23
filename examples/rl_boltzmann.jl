@@ -103,7 +103,7 @@ function get_local_observation_boltzmann(model::ABM, agent_id::Int)
     observation_radius = model.rl_config[][:observation_radius]
 
     grid_size = 2 * observation_radius + 1
-    # 2 channels: occupancy and relative wealth
+    ## 2 channels: occupancy and relative wealth
     neighborhood_grid = zeros(Float32, grid_size, grid_size, 2)
 
     for pos in nearby_positions(target_agent.pos, model, observation_radius)
@@ -139,7 +139,7 @@ function boltzmann_get_observation(model::ABM, agent_id::Int)
     observation_data = get_local_observation_boltzmann(model, agent_id)
     flattened_grid = vec(observation_data.neighborhood_grid)
 
-    # Combine all normalized features into a single vector
+    ## Combine all normalized features into a single vector
     return vcat(
         Float32(observation_data.normalized_wealth),
         Float32(observation_data.normalized_pos[1]),
@@ -161,10 +161,10 @@ function boltzmann_calculate_reward(env, agent, action, initial_model, final_mod
     initial_gini = gini(initial_wealths)
     final_gini = gini(final_wealths)
 
-    # Reward decrease in Gini coefficient
+    ## Reward decrease in Gini coefficient
     reward = (initial_gini - final_gini) * 100
     reward > 0 && (reward = reward / (abmtime(env) + 1))
-    # Small penalty for neutral actions
+    ## Small penalty for neutral actions
     reward <= 0.0 && (reward = -0.1f0)
 
     return reward
@@ -198,12 +198,12 @@ function create_fresh_boltzmann_model(num_agents, dims, initial_wealth, seed=ran
         agent_step=boltzmann_rl_step!,
         properties=properties, rng=rng, scheduler=Schedulers.Randomly())
 
-    # Add agents with random initial wealth
+    ## Add agents with random initial wealth
     for _ in 1:num_agents
         add_agent_single!(RLBoltzmannAgent, model, rand(rng, 1:initial_wealth))
     end
 
-    # Calculate initial Gini coefficient
+    ## Calculate initial Gini coefficient
     wealths = [a.wealth for a in allagents(model)]
     model.gini_coefficient = gini(wealths)
 
@@ -211,7 +211,7 @@ function create_fresh_boltzmann_model(num_agents, dims, initial_wealth, seed=ran
 end
 
 function initialize_boltzmann_rl_model(; num_agents=10, dims=(10, 10), initial_wealth=10, observation_radius=4)
-    # RL configuration specifies the learning environment parameters
+    ## RL configuration specifies the learning environment parameters
     rl_config = (
         model_init_fn=() -> create_fresh_boltzmann_model(num_agents, dims, initial_wealth),
         observation_fn=boltzmann_get_observation,
@@ -230,10 +230,10 @@ function initialize_boltzmann_rl_model(; num_agents=10, dims=(10, 10), initial_w
         observation_radius=observation_radius
     )
 
-    # Create the main model using the initialization function
+    ## Create the main model using the initialization function
     model = create_fresh_boltzmann_model(num_agents, dims, initial_wealth)
 
-    # Set the RL configuration
+    ## Set the RL configuration
     set_rl_config!(model, rl_config)
 
     return model
@@ -277,7 +277,7 @@ function agent_color(agent) # Custom color function based on wealth
     max_expected_wealth = 10
     clamped_wealth = clamp(agent.wealth, 0, max_expected_wealth)
     normalized_wealth = clamped_wealth / max_expected_wealth
-    # Color scheme: red (poor) to green (rich)
+    ## Color scheme: red (poor) to green (rich)
     return ColorSchemes.RdYlGn_4[normalized_wealth]
 end
 function agent_size(agent) # Custom size function based on wealth
