@@ -257,8 +257,7 @@ train_model!(
 ))
 
 # Plot the learning curve to see how agents improved over training
-fig = plot_learning(boltzmann_rl_model.training_history[RLBoltzmannAgent])
-display(fig)
+plot_learning(boltzmann_rl_model.training_history[RLBoltzmannAgent])
 
 # ## Running the trained model
 # After training, we create a fresh model instance and apply the learned policies
@@ -295,7 +294,7 @@ fig, ax = abmplot(fresh_boltzmann_model;
 ax.title = "Boltzmann Wealth Distribution (Initial State)"
 ax.xlabel = "X Position"
 ax.ylabel = "Y Position"
-display(fig)
+fig
 
 # Run simulation with trained agents on the fresh model
 initial_wealths = [a.wealth for a in allagents(fresh_boltzmann_model)]
@@ -319,7 +318,7 @@ fig, ax = abmplot(fresh_boltzmann_model;
 ax.title = "Boltzmann Wealth Distribution (After 10 RL Steps)"
 ax.xlabel = "X Position"
 ax.ylabel = "Y Position"
-display(fig)
+fig
 
 # Finally, let's create a video showing the trained agents in action over multiple steps
 # on a bigger scale, and compare visually with a random policy
