@@ -19,7 +19,7 @@ function Agents.rl_agent_step!(agent, model)
         if haskey(model.trained_policies, agent_type) && !isnothing(model.rl_config[])
             # Use trained policy
             config = model.rl_config[]
-            obs_vec = config.observation_fn(model, agent.id, get(config, :observation_radius, 2))
+            obs_vec = config.observation_fn(model, agent.id)
             action = Crux.action(model.trained_policies[agent_type], obs_vec)
             config.agent_step_fn(agent, model, action[1])
         else
