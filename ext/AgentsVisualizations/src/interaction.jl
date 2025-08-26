@@ -93,7 +93,7 @@ function update_offsets!(model, offsets, df)
     offsets[1][] += abmtime(model)
 end
 
-_default_dts_from_model(::Union{StandardABM,ReinforcementLearningABM}) = 1:50
+_default_dts_from_model(::AgentBasedModel) = 1:50
 _default_dts_from_model(::EventQueueABM) = 0.1:0.1:10.0
 
 "reinitialize agent and model dataframes."
