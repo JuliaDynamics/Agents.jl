@@ -118,6 +118,7 @@ This is the internal recipe for creating an `_ABMPlot`.
         heatarray=nothing,
         heatkwargs=NamedTuple(),
         add_colorbar=true,
+        colorbar_label="",
         adjust_aspect=true,
 
         # Interactive application
@@ -182,7 +183,7 @@ function heatmap!(ax, p::_ABMPlot)
     isnothing(heatobs[]) && return nothing
     hmap = Makie.heatmap!(p, heatobs;
         colormap=JULIADYNAMICS_CMAP, p.heatkwargs...)
-    p.add_colorbar[] && Colorbar(ax.parent[1, 1][1, 2], hmap, width=20)
+    p.add_colorbar[] && Colorbar(ax.parent[1, 1][1, 2], hmap, width=20, label = p.colorbar_label[])  #(...,(1)label = p.colorbar_label[])
     # TODO: Set colorbar to be "glued" to axis
     # Problem with the following code, which comes from the tutorial
     # https://makie.juliaplots.org/stable/tutorials/aspect-tutorial/ ,
