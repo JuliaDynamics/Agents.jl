@@ -147,7 +147,7 @@ Return `true` if the `model` has an agent with given `id` or has the given `agen
 """
 hasid(model, id::Int) = haskey(agent_container(model), id)
 # vector version is extended in the model_accessing_API.jl
-hasid(model, a::AbstractAgent) = hasid(model, a.id)
+hasid(model, a::AbstractAgent) = hasid(model, getid(a))
 
 ###########################################################################################
 # %% Mandatory methods - internal

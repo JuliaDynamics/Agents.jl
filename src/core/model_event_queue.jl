@@ -264,7 +264,7 @@ function add_event!(agent, model) # TODO: Study type stability of this function
 end
 
 function add_event!(agent::AbstractAgent, event_idx, t::Real, model::EventQueueABM)
-    push!(abmqueue(model), (agent.id, event_idx) => t + abmtime(model))
+    push!(abmqueue(model), (getid(agent), event_idx) => t + abmtime(model))
     return
 end
 

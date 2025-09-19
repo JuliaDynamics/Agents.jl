@@ -129,7 +129,7 @@ end
 
 function add_agent_to_space!(
     a::AbstractAgent, model::ABM{<:ContinuousSpace}, cell_index = pos2cell(a, model))
-    push!(abmspace(model).grid.stored_ids[cell_index...], a.id)
+    push!(abmspace(model).grid.stored_ids[cell_index...], getid(a))
     return a
 end
 
@@ -139,8 +139,8 @@ function remove_agent_from_space!(
     cell_index = pos2cell(a, model),
 )
     prev = abmspace(model).grid.stored_ids[cell_index...]
-    ai = findfirst(i -> i == a.id, prev)
-    isnothing(ai) && error(lazy"Tried to remove agent with ID $(a.id) from the space, but that agent is not on the space")
+    ai = findfirst(i -> i == getid(a), prev)
+    isnothing(ai) && error(lazy"Tried to remove agent with ID $(getid(a)) from the space, but that agent is not on the space")
     # we change the order, but this doesn't matter because we don't guarantee any
     # particular ordering for agents in a certain position
     prev[ai], prev[end] = prev[end], prev[ai]
@@ -439,7 +439,7 @@ function all_pairs!(
     for a in allagents(model)
         for nid in nearby_ids(a, model, r; search)
             # Sort the pair to overcome any uniqueness issues
-            new_pair = isless(a.id, nid) ? (a.id, nid) : (nid, a.id)
+            new_pair = isless(getid(a), nid) ? (getid(a), nid) : (nid, getid(a))
             new_pair ∉ pairs && push!(pairs, new_pair)
         end
     end
@@ -451,7 +451,7 @@ function true_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM{<:ContinuousSpace
         nn = nearest_neighbor(a, model, r)
         nn === nothing && continue
         # Sort the pair to overcome any uniqueness issues
-        new_pair = isless(a.id, nn.id) ? (a.id, nn.id) : (nn.id, a.id)
+        new_pair = isless(getid(a), getid(nn)) ? (getid(a), getid(nn)) : (getid(nn), getid(a))
         if new_pair ∉ pairs
             # We also need to check if our current pair is closer to each
             # other than any pair using our first id already in the list,

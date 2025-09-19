@@ -69,7 +69,7 @@ function Agents.plan_route!(
 ) where {D,P,M}
     path = find_continuous_path(pathfinder, agent.pos, dest)
     isnothing(path) && return
-    pathfinder.agent_paths[agent.id] = path
+    pathfinder.agent_paths[getid(agent)] = path
 end
 
 function Agents.plan_best_route!(
@@ -92,7 +92,7 @@ function Agents.plan_best_route!(
     end
 
     isnothing(best_target) && return
-    pathfinder.agent_paths[agent.id] = best_path
+    pathfinder.agent_paths[getid(agent)] = best_path
     return best_target
 end
 
@@ -112,19 +112,19 @@ function Agents.move_along_route!(
     speed::Float64,
     dt::Real = 1.0,
 ) where {D}
-    isempty(agent.id, pathfinder) && return
+    isempty(getid(agent), pathfinder) && return
     from = agent.pos
     next_pos = agent.pos
     T = typeof(agent.pos)
     while true
-        next_waypoint = T(first(pathfinder.agent_paths[agent.id]))
+        next_waypoint = T(first(pathfinder.agent_paths[getid(agent)]))
         dir = get_direction(from, next_waypoint, model)
         dist_to_target = norm(dir)
         # edge case
         if dist_to_target ≈ 0.
             from = next_waypoint
-            popfirst!(pathfinder.agent_paths[agent.id])
-            if isempty(agent.id, pathfinder)
+            popfirst!(pathfinder.agent_paths[getid(agent)])
+            if isempty(getid(agent), pathfinder)
                 next_pos = next_waypoint
                 break
             end
@@ -145,9 +145,9 @@ function Agents.move_along_route!(
             # without this, agent would end up at (0.85, 0.85) instead of (1, 0.2)
             from = next_waypoint
             dt -= dist_to_target / speed
-            popfirst!(pathfinder.agent_paths[agent.id])
+            popfirst!(pathfinder.agent_paths[getid(agent)])
             # if the path is now empty, go directly to the end
-            if isempty(agent.id, pathfinder)
+            if isempty(getid(agent), pathfinder)
                 next_pos = next_waypoint
                 break
             end

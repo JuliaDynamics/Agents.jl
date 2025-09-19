@@ -248,9 +248,9 @@ function (sched::ByKind)(model::ABM)
         curr_idx = n_agents[cont_idx]
         ids_kind = sched.ids[cont_idx]
         if curr_idx <= length(ids_kind)
-            ids_kind[curr_idx] = agent.id
+            ids_kind[curr_idx] = getid(agent)
         else
-            push!(ids_kind, agent.id)
+            push!(ids_kind, getid(agent))
         end
     end
 

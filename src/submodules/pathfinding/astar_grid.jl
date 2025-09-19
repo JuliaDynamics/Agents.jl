@@ -12,7 +12,7 @@ function Agents.plan_route!(
 ) where {D}
     path = find_path(pathfinder, agent.pos, dest)
     isnothing(path) && return
-    pathfinder.agent_paths[agent.id] = path
+    pathfinder.agent_paths[getid(agent)] = path
 end
 
 """
@@ -46,7 +46,7 @@ function Agents.plan_best_route!(
     end
 
     isnothing(best_target) && return
-    pathfinder.agent_paths[agent.id] = best_path
+    pathfinder.agent_paths[getid(agent)] = best_path
     return best_target
 end
 
@@ -63,9 +63,9 @@ function Agents.move_along_route!(
     model::ABM{<:GridSpace{D}},
     pathfinder::AStar{D}
 ) where {D}
-    isempty(agent.id, pathfinder) && return
-    move_agent!(agent, first(pathfinder.agent_paths[agent.id]), model)
-    popfirst!(pathfinder.agent_paths[agent.id])
+    isempty(getid(agent), pathfinder) && return
+    move_agent!(agent, first(pathfinder.agent_paths[getid(agent)]), model)
+    popfirst!(pathfinder.agent_paths[getid(agent)])
 end
 
 """

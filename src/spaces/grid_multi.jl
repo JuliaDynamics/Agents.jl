@@ -89,13 +89,13 @@ end
 # %% Implementation of space API
 #######################################################################################
 function add_agent_to_space!(a::AbstractAgent, model::ABM{<:GridSpace})
-    push!(abmspace(model).stored_ids[a.pos...], a.id)
+    push!(abmspace(model).stored_ids[a.pos...], getid(a))
     return a
 end
 
 function remove_agent_from_space!(a::AbstractAgent, model::ABM{<:GridSpace})
     prev = abmspace(model).stored_ids[a.pos...]
-    ai = findfirst(i -> i == a.id, prev)
+    ai = findfirst(i -> i == getid(a), prev)
     isnothing(ai) && error(lazy"Tried to remove $(a) from the space, but that agent is not on the space")
     # we change the order, but this doesn't matter because we don't guarantee any
     # particular ordering for agents in a certain position

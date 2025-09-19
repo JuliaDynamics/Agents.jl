@@ -77,14 +77,14 @@ random_position(model::ABM{<:GraphSpace}) = rand(abmrng(model), 1:nv(model))
 function remove_agent_from_space!(a::AbstractAgent, model::ABM{<:GraphSpace})
     agentpos = a.pos
     ids = ids_in_position(agentpos, model)
-    ai = findfirst(id -> id == a.id, ids)
-    isnothing(ai) && error(lazy"Tried to remove agent with ID $(a.id) from the space, but that agent is not on the space")
+    ai = findfirst(id -> id == getid(a), ids)
+    isnothing(ai) && error(lazy"Tried to remove agent with ID $(getid(a)) from the space, but that agent is not on the space")
     deleteat!(ids, ai)
     return a
 end
 
 function add_agent_to_space!(agent::AbstractAgent, model::ABM{<:GraphSpace})
-    push!(ids_in_position(agent.pos, model), agent.id)
+    push!(ids_in_position(agent.pos, model), getid(agent))
     return agent
 end
 
@@ -107,7 +107,7 @@ end
 # This function is here purely because of performance reasons
 function nearby_ids(agent::AbstractAgent, model::ABM{<:GraphSpace}, r = 1; kwargs...)
     all = nearby_ids(agent.pos, model, r; kwargs...)
-    filter!(i -> i ≠ agent.id, all)
+    filter!(i -> i ≠ getid(agent), all)
 end
 
 function nearby_positions(
