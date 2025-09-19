@@ -219,7 +219,7 @@ Same, but for pathfinding with A*.
 Agents.is_stationary(
     agent::AbstractAgent,
     pathfinder::AStar,
-) = isempty(getid(agent), pathfinder)
+) = isempty(Agents.getid(agent), pathfinder)
 
 """
     Pathfinding.penaltymap(pathfinder)
@@ -246,7 +246,7 @@ The same as `remove_agent!(agent, model)`, but also removes the agent's path dat
 from `pathfinder`.
 """
 function Agents.remove_agent!(agent::AbstractAgent, model::ABM, pathfinder::AStar)
-    delete!(pathfinder.agent_paths, getid(agent))
+    delete!(pathfinder.agent_paths, Agents.getid(agent))
     Agents.remove_agent_from_container!(agent, model)
     Agents.remove_agent_from_space!(agent, model)
 end
