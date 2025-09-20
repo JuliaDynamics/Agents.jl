@@ -460,10 +460,10 @@ function collect_agent_data!(df, model, properties::Vector, step::Int = 0; kwarg
         @warn "Passing the `step` argument to `collect_agent_data!` is deprecated,
              now `abmtime(model)` is used automatically" maxlog=1
     end
-    alla = sort!(collect(allagents(model)), by = a -> a.id)
+    alla = sort!(collect(allagents(model)), by = a -> getid(a))
     dd = DataFrame()
     dd[!, :time] = fill(abmtime(model), length(alla))
-    dd[!, :id] = map(a -> a.id, alla)
+    dd[!, :id] = map(a -> getid(a), alla)
     if :agent_type ∈ propertynames(df)
         dd[!, :agent_type] = map(a -> Symbol(typeof(a)), alla)
     end

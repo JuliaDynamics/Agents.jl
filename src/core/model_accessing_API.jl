@@ -10,15 +10,15 @@ nextid(model::Union{VecABM, StructVecABM}) = nagents(model) + 1
 hasid(model::Union{VecABM, StructVecABM}, id::Int) = id ≤ nagents(model)
 
 function add_agent_to_container!(agent::AbstractAgent, container::AbstractDict)
-    if haskey(container, agent.id)
-        error(lazy"Can't add agent to container. There is already an agent with id=$(agent.id)")
+    if haskey(container, getid(agent))
+        error(lazy"Can't add agent to container. There is already an agent with id=$(getid(agent))")
     else
-        container[agent.id] = agent
+        container[getid(agent)] = agent
     end
 end
 
 function add_agent_to_container!(agent::AbstractAgent, container::AbstractVector)
-    agent.id != length(container) + 1 && error(lazy"Cannot add agent of ID $(agent.id) in a vector container of $(length(container)) agents. Expected ID == $(length(container)+1).")
+    getid(agent) != length(container) + 1 && error(lazy"Cannot add agent of ID $(getid(agent)) in a vector container of $(length(container)) agents. Expected ID == $(length(container)+1).")
     push!(container, agent)
 end
 
@@ -27,8 +27,8 @@ function add_agent_to_container!(agent::AbstractAgent, model::ABM)
     # Update maxid for DictABM
     if model isa DictABM
         maxid = getfield(model, :maxid)
-        if maxid[] < agent.id
-            maxid[] = agent.id
+        if maxid[] < getid(agent)
+            maxid[] = getid(agent)
         end
     end
     return
@@ -40,11 +40,11 @@ function extra_actions_after_add!(agent, model::EventQueueABM{S,A,<:Union{Abstra
     getfield(model, :autogenerate_on_add) && add_event!(agent, model)
 end
 function extra_actions_after_add!(agent, model::EventQueueABM{S,A,<:StructVector} where {S,A})
-    getfield(model, :autogenerate_on_add) && add_event!(model[agent.id], model)
+    getfield(model, :autogenerate_on_add) && add_event!(model[getid(agent)], model)
 end
 
 function remove_agent_from_container!(agent::AbstractAgent, model::DictABM)
-    delete!(agent_container(model), agent.id)
+    delete!(agent_container(model), getid(agent))
     return
 end
 function remove_agent_from_container!(agent::AbstractAgent, model::Union{VecABM, StructVecABM})
@@ -57,3 +57,5 @@ retrieve_agent(container, id::Int, ::Type) = container[id]
 
 random_id(model::DictABM) = rand(abmrng(model), agent_container(model)).first
 random_agent(model::DictABM) = rand(abmrng(model), agent_container(model)).second
+
+getid(agent) = agent.id

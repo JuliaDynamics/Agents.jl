@@ -45,7 +45,7 @@ end
 function add_agent_to_space!(a::AbstractAgent, model::ABM{<:GridSpaceSingle})
     pos = a.pos
     !isempty(pos, model) && error(lazy"Cannot add agent $(a) to occupied position $(pos)")
-    abmspace(model).stored_ids[pos...] = a.id
+    abmspace(model).stored_ids[pos...] = getid(a)
     return a
 end
 

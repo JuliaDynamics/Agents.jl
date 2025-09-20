@@ -306,7 +306,7 @@ Same as `nearby_ids(agent.pos, model, r)` but the iterable *excludes* the given
 """
 function nearby_ids(agent::AbstractAgent, model::ABM, r = 1; kwargs...)
     all = nearby_ids(agent.pos, model, r; kwargs...)
-    Iterators.filter(i -> i ≠ agent.id, all)
+    Iterators.filter(i -> i ≠ getid(agent), all)
 end
 
 """

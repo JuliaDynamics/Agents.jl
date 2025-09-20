@@ -246,7 +246,7 @@ function Agents.plan_route!(
     )
 
     isa_valid_position(dest, model) || return false
-    delete!(abmspace(model).routes, agent.id) # clear old route
+    delete!(abmspace(model).routes, Agents.getid(agent)) # clear old route
     same_position(agent.pos, dest, model) && return true
 
     if same_road(agent.pos, dest)
@@ -257,7 +257,7 @@ function Agents.plan_route!(
             move_agent!(agent, get_reverse_direction(agent.pos, model), model)
             dest = get_reverse_direction(dest, model)
         end
-        abmspace(model).routes[agent.id] = OpenStreetMapPath(
+        abmspace(model).routes[Agents.getid(agent)] = OpenStreetMapPath(
             Int[],
             agent.pos,
             dest,
@@ -275,7 +275,7 @@ function Agents.plan_route!(
         if agent.pos[1] == agent.pos[2] # start at node
             end_node == dest[2] && (dest = get_reverse_direction(dest, model))
             move_agent!(agent, (dest[1], dest[2], 0.0), model)
-            abmspace(model).routes[agent.id] = OpenStreetMapPath(
+            abmspace(model).routes[Agents.getid(agent)] = OpenStreetMapPath(
                 Int[],
                 agent.pos,
                 dest,
@@ -287,7 +287,7 @@ function Agents.plan_route!(
         if dest[1] == dest[2] # end at node
             start_node == agent.pos[1] && move_agent!(agent, get_reverse_direction(agent.pos, model), model)
             dest = (agent.pos[1], agent.pos[2], road_length(agent.pos, model))
-            abmspace(model).routes[agent.id] = OpenStreetMapPath(
+            abmspace(model).routes[Agents.getid(agent)] = OpenStreetMapPath(
                 Int[],
                 agent.pos,
                 dest,
@@ -301,7 +301,7 @@ function Agents.plan_route!(
             move_agent!(agent, get_reverse_direction(agent.pos, model), model)
         end_node == dest[2] &&
             (dest = get_reverse_direction(dest, model))
-        abmspace(model).routes[agent.id] = OpenStreetMapPath(
+        abmspace(model).routes[Agents.getid(agent)] = OpenStreetMapPath(
             Int[start_node],
             agent.pos,
             dest,
@@ -363,7 +363,7 @@ function Agents.plan_route!(
         end
     end
 
-    abmspace(model).routes[agent.id] = OpenStreetMapPath(
+    abmspace(model).routes[Agents.getid(agent)] = OpenStreetMapPath(
         route,
         agent.pos,
         dest,
@@ -592,7 +592,7 @@ function road_length(p1::Int, p2::Int, model::ABM{<:OpenStreetMapSpace})
 end
 
 function Agents.is_stationary(agent::AbstractAgent, model::ABM{<:OpenStreetMapSpace})
-    return !haskey(abmspace(model).routes, agent.id)
+    return !haskey(abmspace(model).routes, Agents.getid(agent))
 end
 
 """
@@ -605,7 +605,7 @@ function route_length(agent::AbstractAgent, model::ABM{<:OpenStreetMapSpace})
     is_stationary(agent, model) && return 0.0
     prev_node, next_node = agent.pos
     length = road_length(prev_node, next_node, model)
-    for node in reverse(abmspace(model).routes[agent.id].route)
+    for node in reverse(abmspace(model).routes[Agents.getid(agent)].route)
         prev_node = next_node
         next_node = node
         length += road_length(prev_node, next_node, model)
@@ -731,7 +731,7 @@ function Agents.add_agent_to_space!(
         agent::AbstractAgent,
         model::ABM{<:OpenStreetMapSpace},
     )
-    push!(abmspace(model).s[agent.pos[1]], agent.id)
+    push!(abmspace(model).s[agent.pos[1]], Agents.getid(agent))
     return agent
 end
 
@@ -740,7 +740,7 @@ function Agents.remove_agent_from_space!(
         model::ABM{<:OpenStreetMapSpace},
     )
     prev = abmspace(model).s[agent.pos[1]]
-    ai = findfirst(i -> i == agent.id, prev)
+    ai = findfirst(i -> i == Agents.getid(agent), prev)
     deleteat!(prev, ai)
     return agent
 end
@@ -790,7 +790,7 @@ function Agents.move_along_route!(
     # It might be easier to formulate this as a recursive structure, so recursive calls are annotated where necessary
     # instead of the loop this currently runs in. These annotations are marked with `##` just to make it clear.
 
-    osmpath = abmspace(model).routes[agent.id]
+    osmpath = abmspace(model).routes[Agents.getid(agent)]
     while distance > 0.0
         # check if reached end
         if same_position(agent.pos, osmpath.dest, model)
@@ -802,7 +802,7 @@ function Agents.move_along_route!(
                 elseif osmpath.return_route[end] == agent.pos[1]
                     move_agent!(agent, get_reverse_direction(agent.pos, model), model)
                 end
-                osmpath = abmspace(model).routes[agent.id] = OpenStreetMapPath(
+                osmpath = abmspace(model).routes[Agents.getid(agent)] = OpenStreetMapPath(
                     osmpath.return_route,
                     agent.pos,
                     osmpath.start,
@@ -812,7 +812,7 @@ function Agents.move_along_route!(
                 continue
             end
 
-            delete!(abmspace(model).routes, agent.id)
+            delete!(abmspace(model).routes, Agents.getid(agent))
             break
         end
 
