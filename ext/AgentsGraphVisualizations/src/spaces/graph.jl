@@ -74,6 +74,9 @@ function Makie.show_data(inspector::DataInspector,
     gp = p.plots[findfirst(x -> isa(x, GraphMakie.GraphPlot), p.plots)]
     # get position (Int) matching currently hovered node position (Point2f/Point3f)
     node_pos = findfirst(==(pos), gp.node_pos[])
+    if isnothing(node_pos)
+        return false
+    end
 
     model = p.abmobs[].model[]
     a = inspector.plot.attributes
