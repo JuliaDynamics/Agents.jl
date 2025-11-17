@@ -132,17 +132,40 @@ function Makie.show_data(inspector::DataInspector,
     Makie.update_tooltip_alignment!(inspector, proj_pos)
 
     model = p.abmobs[].model[]
-    a = inspector.plot.attributes
-    a.text[] = Agents.agent2string(model, convert_element_pos(abmspace(model), pos))
-    a.visible[] = true
+    
+    # BUGFIX: In 3D plots, position_on_plot returns coordinates in view/camera space,
+    # not world space. This causes position-based agent lookup to fail after camera
+    # manipulation. Instead, we use the index to get the agent's actual position.    
+    agent_ids = collect(allids(model))
+    agent_idx = Int(idx)
 
-    return true
+    # Safety check to prevent index errors when hovering near plot boundaries
+    if agent_idx <= length(agent_ids)
+        agent_id = agent_ids[agent_idx]
+        agent_pos = model[agent_id].pos
+        
+        # Use the agent's actual position (in world coordinates) instead of
+        # the transformed position from position_on_plot. This ensures we
+        # find all agents at the same position correctly.
+        a = inspector.plot.attributes
+        a.text[] = Agents.agent2string(model, agent_pos)
+        a.visible[] = true
+        
+        return true
+    end
+    
+    # If index is invalid, hide the tooltip
+    a = inspector.plot.attributes
+    a.text[] = ""
+    a.visible[] = false
+    
+    return false
 end
 
 function Agents.agent2string(model::ABM, pos)
     ids = Agents.ids_to_inspect(model, pos)
     s = ""
-
+    
     for (i, id) in enumerate(ids)
         if i > 1
             s *= "\n"
@@ -183,6 +206,6 @@ function Agents.agent2string(agent::A) where {A<:AbstractAgent}
     return agentstring
 end
 
-Agents.convert_element_pos(::S, pos) where {S<:Agents.AbstractSpace} = Tuple(pos)
+Agents.convert_element_pos(s::S, pos) where {S<:Agents.AbstractSpace} = Tuple(pos[1:length(spacesize(s))])
 
 Agents.ids_to_inspect(model::ABM, pos) = ids_in_position(pos, model)
