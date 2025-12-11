@@ -1,4 +1,4 @@
-export euclidean_distance, manhattan_distance, get_direction, spacesize
+export chebyshev_distance, euclidean_distance, manhattan_distance, get_direction, spacesize
 
 
 """
@@ -12,6 +12,62 @@ spacesize(model::ABM) = spacesize(abmspace(model))
 #######################################################################################
 # %% Distances and directions in Grid/Continuous space
 #######################################################################################
+"""
+    chebyshev_distance(a, b, model::ABM)
+
+Return the Chebyshev distance between `a` and `b` (either agents or agent positions),
+respecting periodic boundary conditions (if in use). Works with any space where it makes
+sense: currently `AbstractGridSpace` and `ContinuousSpace`.
+"""
+chebyshev_distance(a::AbstractAgent, b::AbstractAgent, model::ABM) =
+    chebyshev_distance(a.pos, b.pos, abmspace(model))
+
+chebyshev_distance(p1, p2, model::ABM) =
+    chebyshev_distance(p1, p2, abmspace(model))
+
+function chebyshev_distance(
+    p1::Any,
+    p2::Any,
+    space::Union{ContinuousSpace{D,false}, AbstractGridSpace{D,false}},
+) where {D}
+    maximum(chebyshev_distance_direct.(p1, p2))
+end
+
+function chebyshev_distance(
+    p1::Any,
+    p2::Any,
+    space::Union{ContinuousSpace{D,true}, AbstractGridSpace{D,true}},
+) where {D}
+    s = spacesize(space)
+    maximum(chebyshev_distance_periodic.(p1, p2, s))
+end
+
+function chebyshev_distance(
+    p1::Any,
+    p2::Any,
+    space::Union{ContinuousSpace{D,P}, AbstractGridSpace{D,P}},
+) where {D,P}
+    s = spacesize(space)
+    distance = zero(eltype(p1))
+    for i in eachindex(p1)
+        if P[i]
+            distance = max(distance, chebyshev_distance_periodic(p1[i], p2[i], s[i]))
+        else
+            distance = max(distance, chebyshev_distance_direct(p1[i], p2[i]))
+        end
+    end
+    return distance
+end
+
+function chebyshev_distance_direct(x1::Real, x2::Real)
+    abs(x1 - x2)
+end
+
+function chebyshev_distance_periodic(x1::Real, x2::Real, s::Real)
+    direct = abs(x1 - x2)
+    min(direct, s - direct)
+end
+
 """
     euclidean_distance(a, b, model::ABM)
 

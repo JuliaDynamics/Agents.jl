@@ -115,6 +115,22 @@ using StableRNGs
     end
 
     @testset "Distances" begin
+    @testset "Chebyshev Distance" begin
+        model = StandardABM(GridAgent{2}, SpaceType((12, 10); metric = :chebyshev, periodic = true), warn_deprecation = false)
+        a = add_agent!((1, 6), model)
+        b = add_agent!((11, 4), model)
+        @test chebyshev_distance(a, b, model) ≈ 2
+
+        model = StandardABM(GridAgent{2}, SpaceType((12, 10); metric = :chebyshev, periodic = false), warn_deprecation = false)
+        a = add_agent!((1, 6), model)
+        b = add_agent!((11, 4), model)
+        @test chebyshev_distance(a, b, model) ≈ 10
+
+        model = StandardABM(GridAgent{2}, SpaceType((10, 10); periodic = (false, true)), warn_deprecation = false)
+        a = add_agent!((1, 1), model)
+        b = add_agent!((9, 9), model)
+        @test chebyshev_distance(a, b, model) ≈ 8
+    end
     @testset "Euclidean distance" begin
         model = StandardABM(GridAgent{2}, SpaceType((12, 10); periodic = true), warn_deprecation = false)
         a = add_agent!((1, 6), model)
