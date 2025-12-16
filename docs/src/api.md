@@ -168,6 +168,7 @@ get_spatial_property
 get_spatial_index
 interacting_pairs
 elastic_collision!
+chebyshev_distance
 euclidean_distance
 manhattan_distance
 ```
