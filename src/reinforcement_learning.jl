@@ -98,7 +98,21 @@ through interaction with the environment.
 - **Reward Engineering**: User-defined reward functions for different learning objectives
 - **Policy Management**: Automatic management of trained policies and their deployment
 
-Here is how to construct a `ReinforcementLearningABM`:
+## Usage Overview
+
+For a complete tutorial on using `ReinforcementLearningABM`, see the 
+[Boltzmann Wealth Model with Reinforcement Learning](@ref) example in the documentation.
+
+The typical workflow is:
+
+1. **Define your agent type** using `@agent` (standard Agents.jl)
+2. **Create the model** using `ReinforcementLearningABM` constructor
+3. **Configure RL settings** using [`set_rl_config!`](@ref) (or pass config to constructor)
+4. **Train agents** using [`train_model!`](@ref)
+Optional: **Transfer policies** to fresh models using [`copy_trained_policies!`](@ref)
+
+
+## Construction
 
     ReinforcementLearningABM(AgentType(s), space [, rl_config]; kwargs...)
 
@@ -107,7 +121,7 @@ Here is how to construct a `ReinforcementLearningABM`:
 - `AgentType(s)`: The result of `@agent` or `@multiagent` or a `Union` of agent types.
   Any agent type can be used - they don't need to inherit from `RLAgent`.
 - `space`: A subtype of `AbstractSpace`. See [Space](@ref available_spaces) for all available spaces.
-- `rl_config`: (Optional) A named tuple containing RL configuration. Can be set later with `set_rl_config!`.
+- `rl_config`: (Optional) A named tuple containing RL configuration. Can be set later with [`set_rl_config!`](@ref).
 
 ## Keyword Arguments
 
@@ -121,19 +135,18 @@ The `rl_config` should be a named tuple with the following fields:
 
 ### Required Functions
 
-- **`observation_fn(model::ReinforcementLearningABM, agent_id::Int) → Vector{Float32}`**  
+- **`observation_fn(model::ReinforcementLearningABM, agent::AbstractAgent) → Vector{Float32}`**  
   Function to generate observation vectors for agents from the model state.
   - `model`: The ReinforcementLearningABM instance
-  - `agent_id`: ID of the agent for which to generate observation
+  - `agent`: The agent for which to generate observation
   - **Returns**: `Vector{Float32}` - Flattened feature vector ready for neural network input
 
 - **`reward_fn(env::ReinforcementLearningABM, agent::AbstractAgent, action::Int, initial_model::ReinforcementLearningABM, final_model::ReinforcementLearningABM) → Float32`**  
   Function to calculate scalar rewards based on agent actions and state transitions.
-  - `env`: Current model state (typically same as `final_model`)
   - `agent`: The agent that took the action
   - `action`: Integer action that was taken
-  - `initial_model`: Model state before the action
-  - `final_model`: Model state after the action
+  - `previous_model`: Model state before the action
+  - `current_model`: Model state after the action
   - **Returns**: `Float32` - Scalar reward signal for the action
 
 - **`terminal_fn(env::ReinforcementLearningABM) → Bool`**  
@@ -148,7 +161,7 @@ The `rl_config` should be a named tuple with the following fields:
   - `action`: Integer action to execute
   - **Returns**: `Nothing` - Modifies agent and model state in-place
 
-### Required Spaces
+### Required Action and Observation Spaces
 
 - **`action_spaces::Dict{Type, ActionSpace}`**  
   Dictionary mapping agent types to their available actions.
@@ -160,26 +173,14 @@ The `rl_config` should be a named tuple with the following fields:
   - Keys: Agent types (e.g., `MyAgent`)  
   - Values: Observation spaces (e.g., `Crux.ContinuousSpace((84,), Float32)` for 84-dim vectors)
 
-### Required Configuration
+### Other Required Arguments
 
 - **`training_agent_types::Vector{Type}`**  
   Vector of agent types that should undergo RL training.
   - Must be a subset of agent types present in the model
   - Example: `[MyAgent1, MyAgent2]`
 
-- **`max_steps::Int`**  
-  Maximum number of simulation steps per training episode.
-  - Episodes terminate when this limit is reached OR `terminal_fn` returns `true`
-  - Typical values: 50-500 depending on model complexity
-
-- **`observation_radius::Int or Dict{Type, Int}`**  
-  Radius for local neighborhood observations in grid-based models.
-  - Used in `observation_fn` to determine neighborhood size
-  - Example: `4` creates a 9×9 observation grid around each agent
-   - **Multi-agent support**: Can specify different radii per agent type by passing a `Dict{Type, Int}` instead of a single `Int`
-  - **Usage**: `observation_radius=4` (all agents) or `observation_radius=Dict(Wolf => 5, Sheep => 3)` (per-type)
-
-### Optional Configuration
+### Optional Arguments
 
 - **`discount_rates::Dict{Type, Float64}`** *(Optional)*  
   Dictionary mapping agent types to their reward discount factors (γ).
@@ -191,6 +192,23 @@ The `rl_config` should be a named tuple with the following fields:
   Function to create fresh model instances for episode resets during training.
   - **Returns**: New ReinforcementLearningABM instance with reset state
   - If not provided, uses basic model reset without full reinitialization
+
+## Related Functions
+
+- [`set_rl_config!`](@ref): Set or update RL configuration after model creation
+- [`train_model!`](@ref): Train agents using reinforcement learning
+- [`get_trained_policies`](@ref): Retrieve trained policies from the model
+- [`copy_trained_policies!`](@ref): Transfer trained policies between models
+- [`create_policy_network`](@ref): Create custom policy neural networks
+- [`create_value_network`](@ref): Create custom value neural networks
+
+
+## See Also
+
+- [Boltzmann Wealth Model with Reinforcement Learning](@ref): Complete tutorial example
+- [`StandardABM`](@ref): The standard ABM type this extends
+- [Crux.jl documentation](https://github.com/sisl/Crux.jl): Underlying RL framework
+
 """
 function ReinforcementLearningABM(
     A::Type,
@@ -296,23 +314,6 @@ get_trained_policies(model::ReinforcementLearningABM) = model.trained_policies
     copy_trained_policies!(target_model::ReinforcementLearningABM, source_model::ReinforcementLearningABM) → ReinforcementLearningABM
 
 Copy all trained policies from the source model to the target model.
-
-## Arguments
-- `target_model::ReinforcementLearningABM`: The model to copy policies to
-- `source_model::ReinforcementLearningABM`: The model to copy policies from
-
-## Returns
-- `ReinforcementLearningABM`: The target model with copied policies (for chaining)
-
-## Example
-```julia
-# Train policies in one model
-train_model!(training_model, MyAgent)
-
-# Copy to a fresh simulation model
-fresh_model = initialize_model()
-copy_trained_policies!(fresh_model, training_model)
-```
 """
 function copy_trained_policies!(target_model::ReinforcementLearningABM, source_model::ReinforcementLearningABM)
     for (agent_type, policy) in source_model.trained_policies
@@ -322,16 +323,11 @@ function copy_trained_policies!(target_model::ReinforcementLearningABM, source_m
 end
 
 """
-    rl_agent_step!(agent, model)
+    rl_agent_step!(agent, modelmodel::ReinforcementLearningABM)
 
 Default agent stepping function for RL agents. This will use trained policies
 if available, otherwise fall back to random actions.
 
-## Arguments
-- `agent`: The agent to step
-- `model::ReinforcementLearningABM`: The model containing the agent
-
-## Notes
 This function automatically selects between trained policies and random actions
 based on what's available for the agent's type. It's used internally by the
 RL stepping infrastructure.
@@ -342,12 +338,6 @@ function rl_agent_step! end
     get_current_training_agent_type(model::ReinforcementLearningABM) → Type
     
 Get the currently training agent type.
-
-## Arguments
-- `model::ReinforcementLearningABM`: The RL model
-
-## Returns
-- `Type`: The agent type currently being trained
 """
 function get_current_training_agent_type(model::ReinforcementLearningABM)
     if isnothing(model.rl_config[])
@@ -373,12 +363,6 @@ end
 
 Get the current agent being trained.
 
-## Arguments
-- `model::ReinforcementLearningABM`: The RL model
-
-## Returns
-- `Union{AbstractAgent, Nothing}`: The current agent being trained, or `nothing` if no agents of the training type exist
-
 ## Notes
 The `current_training_agent_id` is a counter/index that cycles through agents of the training type,
 not the actual agent ID.
@@ -402,9 +386,6 @@ end
     reset_model_for_episode!(model::ReinforcementLearningABM)
 
 Reset the model to initial state for a new training episode.
-
-## Arguments
-- `model::ReinforcementLearningABM`: The model to reset
 
 ## Notes
 This function resets the model time, agent positions, and other state based on the
@@ -447,7 +428,6 @@ end
 Steps the model forward using RL policies for a specified number of steps.
 
 ## Arguments
-- `model::ReinforcementLearningABM`: The model to step
 - `agent_step!`: Agent stepping function (fallback for non-RL agents)
 - `model_step!`: Model stepping function
 - `n`: Number of steps or stepping condition
@@ -476,10 +456,6 @@ function step_ahead_rl! end
 
 Set up RL training for a specific agent type using the ReinforcementLearningABM directly.
 
-## Arguments
-- `model::ReinforcementLearningABM`: The model to train
-- `agent_type::Type`: The agent type to train
-
 ## Keyword Arguments  
 - `training_steps::Int`: Number of training steps (default: 50_000)
 - `value_network`: Custom value network function (default: auto-generated)
@@ -504,10 +480,6 @@ function setup_rl_training end
 
 Train multiple agent types sequentially using the ReinforcementLearningABM, where each 
 subsequent agent is trained against the previously trained agents.
-
-## Arguments
-- `model::ReinforcementLearningABM`: The model to train
-- `agent_types`: Agent type or vector of agent types to train sequentially
 
 ## Keyword Arguments
 - `training_steps::Int`: Number of training steps per agent (default: 50_000)
@@ -534,10 +506,6 @@ function train_agent_sequential end
 Train multiple agent types simultaneously using the ReinforcementLearningABM with 
 alternating batch updates.
 
-## Arguments
-- `model::ReinforcementLearningABM`: The model to train
-- `agent_types`: Agent type or vector of agent types to train simultaneously
-
 ## Keyword Arguments
 - `n_iterations::Int`: Number of alternating training iterations (default: 5)
 - `batch_size::Int`: Size of training batches for each iteration (default: 10_000)
@@ -553,16 +521,9 @@ function train_agent_simultaneous end
 
 ## Helper Functions for Custom Neural Networks
 """
-    process_solver_params(solver_params, agent_type) → Dict
+    process_solver_params(solver_params::Dict, agent_type::Type) → Dict
 
 Process solver parameters that can be either global or per-agent-type.
-
-## Arguments
-- `solver_params::Dict`: Dictionary of solver parameters, either global or per-agent-type
-- `agent_type::Type`: The agent type to get parameters for
-
-## Returns
-- `Dict`: Parameters specific to the given agent type
 """
 function process_solver_params(solver_params, agent_type)
     if isempty(solver_params)
@@ -628,11 +589,13 @@ Create a custom solver with specified parameters.
 function create_custom_solver end
 
 """
-    train_model!(model::ReinforcementLearningABM, agent_types; 
-                training_mode=:sequential, kwargs...) → ReinforcementLearningABM
+    train_model!(model::ReinforcementLearningABM 
+                training_mode::Symbol=:sequential; kwargs...)
 
-Train the specified agent types in the model using reinforcement learning. This is the main 
-function for RL training in Agents.jl, supporting both single-agent and multi-agent 
+Train the agents in the model using reinforcement learning. Agent types to train are read 
+from `model.rl_config[:training_agent_types]`. Trained policies are stored in the model 
+and can be accessed via [`get_trained_policies`](@ref) or copied to other models using 
+[`copy_trained_policies!`](@ref). This is the main function for RL training in Agents.jl, supporting both single-agent and multi-agent 
 learning scenarios.
 
 ## Training Modes
@@ -655,29 +618,20 @@ a co-evolutionary dynamic where agents adapt to each other simultaneously.
 2. Alternate training batches between agent types
 3. Each agent learns against the evolving policies of others
 
-## Arguments
-- `model::ReinforcementLearningABM`: The model containing agents to train. Must have RL 
-  configuration set via `set_rl_config!` before training.
-- `agent_types`: Single agent type (e.g., `MyAgent`) or vector of agent types (e.g., 
-  `[Predator, Prey]`) to train. All specified types must exist in the model and be 
-  listed in the RL configuration's `training_agent_types`.
-
 ## Keyword Arguments  
 
-### Core Training Parameters
+### General Training Parameters
 
-- **`training_mode::Symbol`**: Training strategy (default: `:sequential`)
-  - `:sequential` - Train agent types one after another
-  - `:simultaneous` - Train all agent types together with alternating updates
+- **`max_steps::Int`**: Maximum number of simulation steps per training episode 
+  (default: 50). Episodes terminate when this limit is reached OR `terminal_fn` returns `true`.
 
-#### Sequential Training Steps
+### Sequential Training Parameters
 This applies only when `training_mode=:sequential`:
 
 - **`training_steps::Int`**: Number of environment steps for training each agent type 
-  (default: 50,000). In sequential mode, this is per agent type. In simultaneous mode, 
-  this determines the batch size for each alternating update.
+  (default: 50,000).
 
-#### Simultaneous Training Steps
+### Simultaneous Training Parameters
 These apply only when `training_mode=:simultaneous`:
 
 - **`n_iterations::Int`**: Number of alternating training rounds (default: 5)
@@ -731,15 +685,8 @@ These apply only when `training_mode=:simultaneous`:
   )
   ```
 
-
-## Returns
-- `ReinforcementLearningABM`: The input model with trained policies stored in 
-  `model.trained_policies`. The trained policies can be accessed via `get_trained_policies(model)` 
-  or copied to other models using `copy_trained_policies!(target, source)`.
-
 ## Notes
 - `max_steps` is read directly from the RL configuration (`model.rl_config[][:max_steps]`)
-- Episode termination is controlled by the RL environment wrapper using the config value
 - Cannot override `max_steps` during training - it must be set in the RL configuration
 
 ## Examples

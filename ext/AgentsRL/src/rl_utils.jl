@@ -27,16 +27,6 @@ The wrapper implements the complete POMDPs interface including:
 - `initialstate(env)`: Episode initialization
 - `isterminal(env, state)`: Termination conditions
 - `discount(env)`: Discount factor
-
-## Example
-```julia
-# Create wrapper
-env = wrap_for_rl_training(model)
-
-# Use with RL algorithms
-solver = PPO(π=policy, S=observations(env), N=10000)
-policy = solve(solver, env)
-```
 """
 struct RLEnvironmentWrapper{M<:ReinforcementLearningABM} <: POMDPs.POMDP{Vector{Float32},Int,Vector{Float32}}
     model::M
@@ -48,13 +38,6 @@ end
 
 Wrap a ReinforcementLearningABM in an RLEnvironmentWrapper to make it compatible
 with POMDPs-based RL training algorithms.
-
-## Arguments
-- `model::ReinforcementLearningABM`: The ReinforcementLearningABM to wrap
-
-## Returns
-- `RLEnvironmentWrapper`: A wrapper that implements the POMDPs.POMDP interface
-
 ## Notes
 This wrapper enables the use of standard RL algorithms (PPO, DQN, A2C) with ABMs by:
 - Translating ABM states to RL observations
@@ -74,15 +57,6 @@ end
     POMDPs.actions(wrapper::RLEnvironmentWrapper) → ActionSpace
 
 Get the action space for the currently training agent type.
-
-## Arguments
-- `wrapper::RLEnvironmentWrapper`: The wrapped RL environment
-
-## Returns
-- `ActionSpace`: The action space (e.g., Crux.DiscreteSpace) for the current agent type
-
-## Throws
-- `ErrorException`: If RL configuration is not set or no action space is defined for the agent type
 
 ## Notes
 This function is part of the POMDPs interface and is called automatically during training
@@ -109,22 +83,9 @@ end
 
 Get the observation space for the currently training agent type.
 
-## Arguments
-- `wrapper::RLEnvironmentWrapper`: The wrapped RL environment
-
-## Returns
-- `ObservationSpace`: The observation space (e.g., Crux.ContinuousSpace) for the current agent type
-
 ## Notes
 This function is part of the POMDPs interface. If no observation space is defined for the
 agent type, it returns a default ContinuousSpace with 10 dimensions and issues a warning.
-
-## Example
-```julia
-env = wrap_for_rl_training(model)
-obs_space = POMDPs.observations(env)
-println("Observation dimensions: ", Crux.dim(obs_space))
-```
 """
 function POMDPs.observations(wrapper::RLEnvironmentWrapper)
     model = wrapper.model
@@ -149,25 +110,10 @@ end
 
 Get the observation for the current training agent.
 
-## Arguments
-- `wrapper::RLEnvironmentWrapper`: The wrapped RL environment
-- `s::Vector{Float32}`: The current state (typically unused in ABM context)
-
-## Returns
-- `Vector{Float32}`: The observation vector for the current training agent
-
 ## Notes
 This function uses the configured observation function to generate observation vectors
 for the current training agent. If no agent is currently being trained, it returns a 
 zero vector with appropriate dimensions.
-
-## Example
-```julia
-env = wrap_for_rl_training(model)
-state = zeros(Float32, 10)
-obs = POMDPs.observation(env, state)
-println("Observation: ", obs)
-```
 """
 function POMDPs.observation(wrapper::RLEnvironmentWrapper, s::Vector{Float32})
     model = wrapper.model
@@ -184,7 +130,7 @@ function POMDPs.observation(wrapper::RLEnvironmentWrapper, s::Vector{Float32})
     end
     config = model.rl_config[]
     # Get observation vector directly from the configured function
-    return config.observation_fn(model, current_agent.id)
+    return config.observation_fn(model, current_agent)
 end
 
 """
@@ -192,23 +138,10 @@ end
 
 Initialize the state for a new episode.
 
-## Arguments
-- `wrapper::RLEnvironmentWrapper`: The wrapped RL environment
-
-## Returns
-- `Dirac{Vector{Float32}}`: A deterministic distribution over initial states
-
 ## Notes
 This function resets the model to its initial state using `reset_model_for_episode!`
 and returns a deterministic initial state distribution. The state dimensions are
 determined from the RL configuration or default to 10 dimensions.
-
-## Example
-```julia
-env = wrap_for_rl_training(model)
-initial_state_dist = POMDPs.initialstate(env)
-initial_state = rand(initial_state_dist)
-```
 """
 function POMDPs.initialstate(wrapper::RLEnvironmentWrapper)
     model = wrapper.model
@@ -237,25 +170,10 @@ end
 
 Get the initial observation for a new episode.
 
-## Arguments
-- `wrapper::RLEnvironmentWrapper`: The wrapped RL environment
-- `initial_state::Vector{Float32}`: The initial state vector
-
-## Returns
-- `Dirac{Vector{Float32}}`: A deterministic distribution over initial observations
-
 ## Notes
 This function generates the initial observation for a new episode by calling
 `POMDPs.observation` with the initial state and wrapping the result in a
 deterministic distribution.
-
-## Example
-```julia
-env = wrap_for_rl_training(model)
-initial_state = zeros(Float32, 10)
-initial_obs_dist = POMDPs.initialobs(env, initial_state)
-initial_obs = rand(initial_obs_dist)
-```
 """
 function POMDPs.initialobs(wrapper::RLEnvironmentWrapper, initial_state::Vector{Float32})
     obs = POMDPs.observation(wrapper, initial_state)
@@ -285,17 +203,6 @@ This is the core POMDPs interface function that:
 2. Calculates the reward using the configured reward function
 3. Advances the simulation to handle other agents and environment updates
 4. Returns the next observation
-
-If no current training agent exists, returns a terminal state with -10.0 reward.
-
-## Example
-```julia
-env = wrap_for_rl_training(model)
-state = zeros(Float32, 10)
-action = 1
-result = POMDPs.gen(env, state, action, Random.default_rng())
-println("Reward: ", result.r)
-```
 """
 function POMDPs.gen(wrapper::RLEnvironmentWrapper, s, action::Int, rng::AbstractRNG)
     model = wrapper.model
@@ -321,7 +228,7 @@ function POMDPs.gen(wrapper::RLEnvironmentWrapper, s, action::Int, rng::Abstract
     config.agent_step_fn(current_agent, model, action)
 
     # Calculate reward using the configured function
-    reward = config.reward_fn(model, current_agent, action, initial_state, model)
+    reward = config.reward_fn(current_agent, action, initial_state, model)
 
     # Advance simulation
     advance_simulation!(model)
@@ -338,27 +245,10 @@ end
 
 Check if the current state is terminal.
 
-## Arguments
-- `wrapper::RLEnvironmentWrapper`: The wrapped RL environment
-- `s`: The current state
-
-## Returns
-- `Bool`: `true` if the episode should terminate, `false` otherwise
-
 ## Notes
 An episode terminates if:
 1. The configured terminal function returns `true`, OR
-2. The model time has reached the maximum steps configured in RL config
-
-The maximum steps default to 100 if not specified in the configuration.
-
-## Example
-```julia
-env = wrap_for_rl_training(model)
-state = zeros(Float32, 10)
-is_done = POMDPs.isterminal(env, state)
-println("Episode terminated: ", is_done)
-```
+2. The model time has reached the maximum steps
 """
 function POMDPs.isterminal(wrapper::RLEnvironmentWrapper, s)
     model = wrapper.model
@@ -377,22 +267,9 @@ end
 
 Get the discount factor for the current agent type.
 
-## Arguments
-- `wrapper::RLEnvironmentWrapper`: The wrapped RL environment
-
-## Returns
-- `Float64`: The discount factor (gamma) for the current training agent type
-
 ## Notes
 The discount factor is looked up from the RL configuration's `discount_rates` dictionary
 using the current training agent type as the key. If not found, defaults to 0.99.
-
-## Example
-```julia
-env = wrap_for_rl_training(model)
-γ = POMDPs.discount(env)
-println("Discount factor: ", γ)
-```
 """
 function POMDPs.discount(wrapper::RLEnvironmentWrapper)
     model = wrapper.model
@@ -415,23 +292,10 @@ end
 
 Get the state space for the current agent type.
 
-## Arguments
-- `wrapper::RLEnvironmentWrapper`: The wrapped RL environment
-
-## Returns
-- `StateSpace`: The state space (e.g., Crux.ContinuousSpace) for the current agent type
-
 ## Notes
 This function looks up the state space from the RL configuration's `state_spaces` dictionary.
 If not found, defaults to a ContinuousSpace with 10 dimensions. This is part of the
 Crux.jl interface extension.
-
-## Example
-```julia
-env = wrap_for_rl_training(model)
-state_space = Crux.state_space(env)
-println("State dimensions: ", Crux.dim(state_space))
-```
 """
 function Crux.state_space(wrapper::RLEnvironmentWrapper)
     model = wrapper.model
@@ -453,9 +317,6 @@ end
     advance_simulation!(model::ReinforcementLearningABM)
 
 Advance the simulation by one step, handling other agents and environment updates.
-
-## Arguments
-- `model::ReinforcementLearningABM`: The RL model to advance
 
 ## Notes
 This function implements the core simulation advancement logic:
@@ -496,7 +357,7 @@ function advance_simulation!(model::ReinforcementLearningABM)
                         try
                             if haskey(model.trained_policies, agent_type)
                                 # Use trained policy
-                                obs_vec = config.observation_fn(model, other_agent.id)
+                                obs_vec = config.observation_fn(model, other_agent)
                                 action = Crux.action(model.trained_policies[agent_type], obs_vec)
                                 config.agent_step_fn(other_agent, model, action)
                             else

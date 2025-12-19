@@ -18,11 +18,15 @@ end
 end
 
 # Helper functions for RL extension testing
-function create_simple_rl_model(; n_agents=5, dims=(8, 8), seed=42)
+function create_simple_rl_model(; n_agents=5, dims=(8, 8), seed=42, observation_radius=2)
     rng = StableRNG(seed)
     space = GridSpace(dims; periodic=true)
 
-    model = ReinforcementLearningABM(RLExtensionTestAgent, space; rng=rng)
+    properties = Dict{Symbol,Any}(
+        :observation_radius => observation_radius
+    )
+
+    model = ReinforcementLearningABM(RLExtensionTestAgent, space; rng=rng, properties=properties)
 
     for _ in 1:n_agents
         add_agent!(RLExtensionTestAgent, model, rand(rng) * 50.0, rand(rng) * 100.0, 0)
@@ -31,11 +35,15 @@ function create_simple_rl_model(; n_agents=5, dims=(8, 8), seed=42)
     return model
 end
 
-function create_multi_agent_rl_model(; n_predators=3, n_prey=7, dims=(10, 10), seed=42)
+function create_multi_agent_rl_model(; n_predators=3, n_prey=7, dims=(10, 10), seed=42, observation_radius=3)
     rng = StableRNG(seed)
     space = GridSpace(dims; periodic=true)
 
-    model = ReinforcementLearningABM(Union{RLExtensionTestPredator,RLExtensionTestPrey}, space; rng=rng)
+    properties = Dict{Symbol,Any}(
+        :observation_radius => observation_radius
+    )
+
+    model = ReinforcementLearningABM(Union{RLExtensionTestPredator,RLExtensionTestPrey}, space; rng=rng, properties=properties)
 
     for _ in 1:n_predators
         add_agent!(RLExtensionTestPredator, model, rand(rng) * 30.0, 0)
@@ -49,17 +57,16 @@ function create_multi_agent_rl_model(; n_predators=3, n_prey=7, dims=(10, 10), s
 end
 
 
-function simple_observation_fn(model, agent_id)
-    observation_radius = model.rl_config[][:observation_radius]
-    agent = model[agent_id]
+function simple_observation_fn(model, agent)
+    observation_radius = model.observation_radius
     # Simple observation: agent position, energy, wealth, and neighbor count
     neighbor_count = length([a for a in nearby_agents(agent, model, observation_radius)])
     return Float32[agent.pos[1], agent.pos[2], agent.energy/50.0, agent.wealth/100.0, neighbor_count/10.0]
 end
 
-function simple_reward_fn(env, agent, action, initial_model, final_model)
+function simple_reward_fn(agent, action, previous_model, current_model)
     # Death penalty
-    if agent.id ∉ [a.id for a in allagents(final_model)]
+    if agent.id ∉ [a.id for a in allagents(current_model)]
         return -100.0f0
     end
 
@@ -67,8 +74,8 @@ function simple_reward_fn(env, agent, action, initial_model, final_model)
     reward = 1.0f0 + agent.energy / 100.0f0
 
     # Bonus for wealth increase
-    if haskey(initial_model.agents, agent.id)
-        initial_wealth = initial_model[agent.id].wealth
+    if agent.id ∈ [a.id for a in allagents(previous_model)]
+        initial_wealth = previous_model[agent.id].wealth
         if agent.wealth > initial_wealth
             reward += (agent.wealth - initial_wealth) / 10.0f0
         end
@@ -77,9 +84,9 @@ function simple_reward_fn(env, agent, action, initial_model, final_model)
     return Float32(reward)
 end
 
-function simple_terminal_fn(env)
+function simple_terminal_fn(model)
     # Terminal if less than 2 agents remain or time exceeds limit
-    return length(allagents(env)) < 2 || abmtime(env) >= 50
+    return length(allagents(model)) < 2 || abmtime(model) >= 50
 end
 
 function simple_agent_step_fn(agent, model, action)
@@ -120,9 +127,8 @@ function simple_agent_step_fn(agent, model, action)
     end
 end
 
-function multi_agent_observation_fn(model, agent_id)
-    observation_radius = model.rl_config[][:observation_radius]
-    agent = model[agent_id]
+function multi_agent_observation_fn(model, agent)
+    observation_radius = model.observation_radius
 
     # Different observations for different agent types
     if agent isa RLExtensionTestPredator
@@ -138,25 +144,25 @@ function multi_agent_observation_fn(model, agent_id)
     end
 end
 
-function multi_agent_reward_fn(env, agent, action, initial_model, final_model)
+function multi_agent_reward_fn(agent, action, previous_model, current_model)
     # Death penalty
-    if agent.id ∉ [a.id for a in allagents(final_model)]
+    if agent.id ∉ [a.id for a in allagents(current_model)]
         return -50.0f0
     end
 
     if agent isa RLExtensionTestPredator
         # Predator rewards: hunt success
         reward = 0.5f0  # Base survival
-        if haskey(initial_model.agents, agent.id)
-            if agent.hunt_success > initial_model[agent.id].hunt_success
+        if agent.id ∈ [a.id for a in allagents(previous_model)]
+            if agent.hunt_success > previous_model[agent.id].hunt_success
                 reward += 10.0f0  # Hunt success bonus
             end
         end
     else  # Prey
         # Prey rewards: survival and escape
         reward = 1.0f0  # Base survival
-        if haskey(initial_model.agents, agent.id)
-            if agent.escape_count > initial_model[agent.id].escape_count
+        if agent.id ∈ [a.id for a in allagents(previous_model)]
+            if agent.escape_count > previous_model[agent.id].escape_count
                 reward += 5.0f0  # Escape bonus
             end
         end
@@ -240,9 +246,7 @@ end
             observation_spaces=Dict(
                 RLExtensionTestAgent => Crux.ContinuousSpace((5,), Float32)
             ),
-            training_agent_types=[RLExtensionTestAgent],
-            max_steps=20,
-            observation_radius=2
+            training_agent_types=[RLExtensionTestAgent]
         )
 
         set_rl_config!(model, rl_config)
@@ -274,9 +278,7 @@ end
             observation_spaces=Dict(
                 RLExtensionTestAgent => Crux.ContinuousSpace((5,), Float32)
             ),
-            training_agent_types=[RLExtensionTestAgent],
-            max_steps=20,
-            observation_radius=2
+            training_agent_types=[RLExtensionTestAgent]
         )
 
         set_rl_config!(model, rl_config)
@@ -314,7 +316,7 @@ end
             model_init_fn=() -> create_multi_agent_rl_model(),
             observation_fn=multi_agent_observation_fn,
             reward_fn=multi_agent_reward_fn,
-            terminal_fn=(env) -> length(allagents(env)) < 3 || abmtime(env) >= 30,
+            terminal_fn=(model) -> length(allagents(model)) < 3 || abmtime(model) >= 30,
             agent_step_fn=multi_agent_agent_step_fn,
             action_spaces=Dict(
                 RLExtensionTestPredator => Crux.DiscreteSpace(5),
@@ -324,9 +326,7 @@ end
                 RLExtensionTestPredator => Crux.ContinuousSpace((4,), Float32),
                 RLExtensionTestPrey => Crux.ContinuousSpace((4,), Float32)
             ),
-            training_agent_types=[RLExtensionTestPredator, RLExtensionTestPrey],
-            max_steps=30,
-            observation_radius=3
+            training_agent_types=[RLExtensionTestPredator, RLExtensionTestPrey]
         )
 
         set_rl_config!(model, rl_config)
@@ -350,7 +350,8 @@ end
         @test solvers[RLExtensionTestPredator] !== solvers[RLExtensionTestPrey]
 
         # Test that trained policies are stored in model
-        @test haskey(model.trained_policies, RLExtensionTestPredator)
+        stored_policies = get_trained_policies(model)
+        @test haskey(stored_policies, RLExtensionTestPredator)
     end
 
     @testset "Simultaneous Training" begin
@@ -360,7 +361,7 @@ end
             model_init_fn=() -> create_multi_agent_rl_model(n_predators=2, n_prey=3),
             observation_fn=multi_agent_observation_fn,
             reward_fn=multi_agent_reward_fn,
-            terminal_fn=(env) -> length(allagents(env)) < 2 || abmtime(env) >= 25,
+            terminal_fn=(model) -> length(allagents(model)) < 2 || abmtime(model) >= 25,
             agent_step_fn=multi_agent_agent_step_fn,
             action_spaces=Dict(
                 RLExtensionTestPredator => Crux.DiscreteSpace(5),
@@ -370,9 +371,7 @@ end
                 RLExtensionTestPredator => Crux.ContinuousSpace((4,), Float32),
                 RLExtensionTestPrey => Crux.ContinuousSpace((4,), Float32)
             ),
-            training_agent_types=[RLExtensionTestPredator, RLExtensionTestPrey],
-            max_steps=25,
-            observation_radius=2
+            training_agent_types=[RLExtensionTestPredator, RLExtensionTestPrey]
         )
 
         set_rl_config!(model, rl_config)
@@ -394,8 +393,9 @@ end
         @test policies[RLExtensionTestPredator] !== policies[RLExtensionTestPrey]
 
         # Test that model has been updated with trained policies
-        @test haskey(model.trained_policies, RLExtensionTestPredator)
-        @test haskey(model.trained_policies, RLExtensionTestPrey)
+        stored_policies = get_trained_policies(model)
+        @test haskey(stored_policies, RLExtensionTestPredator)
+        @test haskey(stored_policies, RLExtensionTestPrey)
     end
 
     @testset "Train Model Function Integration" begin
@@ -413,34 +413,34 @@ end
             observation_spaces=Dict(
                 RLExtensionTestAgent => Crux.ContinuousSpace((5,), Float32)
             ),
-            training_agent_types=[RLExtensionTestAgent],
-            max_steps=15,
-            observation_radius=1
+            training_agent_types=[RLExtensionTestAgent]
         )
 
         set_rl_config!(model, rl_config)
 
         # Test single agent training via train_model!
-        train_model!(model, RLExtensionTestAgent;
+        train_model!(model;
             training_steps=10,
             solver_params=Dict(:ΔN => 5)
         )
 
-        @test haskey(model.trained_policies, RLExtensionTestAgent)
-        @test model.trained_policies[RLExtensionTestAgent] isa Crux.ActorCritic
+        policies = get_trained_policies(model)
+        @test haskey(policies, RLExtensionTestAgent)
+        @test policies[RLExtensionTestAgent] isa Crux.ActorCritic
 
         # Test with different solver types
         model2 = create_simple_rl_model(n_agents=3)
         set_rl_config!(model2, rl_config)
 
-        train_model!(model2, RLExtensionTestAgent;
+        train_model!(model2;
             solver_types=Dict(RLExtensionTestAgent => :A2C),
             training_steps=10,
             solver_params=Dict(:ΔN => 5)
         )
 
-        @test haskey(model2.trained_policies, RLExtensionTestAgent)
-        @test model2.trained_policies[RLExtensionTestAgent] isa Crux.ActorCritic
+        policies2 = get_trained_policies(model2)
+        @test haskey(policies2, RLExtensionTestAgent)
+        @test policies2[RLExtensionTestAgent] isa Crux.ActorCritic
     end
 
     @testset "Solver Parameter Processing" begin
@@ -483,33 +483,27 @@ end
             observation_spaces=Dict(
                 RLExtensionTestAgent => Crux.ContinuousSpace((5,), Float32)
             ),
-            training_agent_types=[RLExtensionTestAgent],
-            max_steps=10,
-            observation_radius=1
+            training_agent_types=[RLExtensionTestAgent]
         )
 
         set_rl_config!(source_model, rl_config)
 
         # Train source model
-        train_model!(source_model, RLExtensionTestAgent; training_steps=10,
+        train_model!(source_model; training_steps=10,
             solver_params=Dict(:ΔN => 5))
 
         # Create target model and copy policies
         target_model = create_simple_rl_model()
         set_rl_config!(target_model, rl_config)
 
-        @test isempty(target_model.trained_policies)
+        @test isempty(get_trained_policies(target_model))
 
         copy_trained_policies!(target_model, source_model)
 
-        @test haskey(target_model.trained_policies, RLExtensionTestAgent)
-        @test target_model.trained_policies[RLExtensionTestAgent] ===
-              source_model.trained_policies[RLExtensionTestAgent]
-
-        # Test get_trained_policies function
-        policies = get_trained_policies(target_model)
-        @test haskey(policies, RLExtensionTestAgent)
-        @test policies[RLExtensionTestAgent] === source_model.trained_policies[RLExtensionTestAgent]
+        target_policies = get_trained_policies(target_model)
+        source_policies = get_trained_policies(source_model)
+        @test haskey(target_policies, RLExtensionTestAgent)
+        @test target_policies[RLExtensionTestAgent] === source_policies[RLExtensionTestAgent]
     end
 
 
@@ -528,9 +522,7 @@ end
             observation_spaces=Dict(
                 RLExtensionTestAgent => Crux.ContinuousSpace((5,), Float32)
             ),
-            training_agent_types=[RLExtensionTestAgent],
-            max_steps=10,
-            observation_radius=1
+            training_agent_types=[RLExtensionTestAgent]
         )
 
         set_rl_config!(model, rl_config)

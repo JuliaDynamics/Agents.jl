@@ -1,6 +1,7 @@
 # # Boltzmann Wealth Model with Reinforcement Learning
 
-# This example demonstrates how to integrate reinforcement learning (RL) with 
+# This is a tutorial for the ReinforcementLearningABM model which combines reinforcement learning with agent based modelling. 
+# The example demonstrates how to integrate reinforcement learning with 
 # agent-based modeling using the Boltzmann wealth distribution model. In this model,
 # agents move around a grid and exchange wealth when they encounter other agents,
 # but their movement decisions are learned through reinforcement learning rather
@@ -28,10 +29,12 @@
 # - **Reward**: Reduction in Gini coefficient (wealth inequality measure)
 # - **Goal**: Learn movement patterns that promote wealth redistribution
 
-# ## Loading packages and defining the agent type
+# ## Loading packages and defining the agent type 
+# This part is the same as with the normal usage of Agents.jl
 
 using Agents, Random, Statistics, Distributions
-using POMDPs, Crux, Flux
+# Import the library required for the RL extension
+using Crux
 
 @agent struct RLBoltzmannAgent(GridAgent{2})
     wealth::Int
@@ -42,10 +45,11 @@ end
 # First, we define the Gini coefficient calculation, which measures wealth inequality.
 # A Gini coefficient of 0 represents perfect equality, while 1 represents maximum inequality.
 
-function gini(wealths::Vector{Int})
+function gini(model::ABM)
+    wealths = [a.wealth for a in allagents(model)]
     n, sum_wi = length(wealths), sum(wealths)
     (n <= 1 || sum_wi == 0.0) && return 0.0
-    num = sum((2i - n - 1) * w for (i, w) in enumerate(sort(wealths)))
+    num = sum((2i - n - 1) * w for (i, w) in enumerate(sort!(wealths)))
     den = n * sum_wi
     return num / den
 end
@@ -56,6 +60,9 @@ end
 # Unlike traditional ABM where this might contain random movement, here the movement
 # is determined by the RL policy based on the chosen action.
 
+# This function follows the standard Agents.jl agent step signature, but includes
+# an additional third argument `action::Int` that represents the action chosen
+# by the RL policy. This action is optimized during training by the RL framework.
 function boltzmann_rl_step!(agent::RLBoltzmannAgent, model, action::Int)
     ## Action definitions: 1=stay, 2=north, 3=south, 4=east, 5=west
     dirs = ((0, 0), (0, 1), (0, -1), (1, 0), (-1, 0))
@@ -96,24 +103,23 @@ function global_to_local(neighbor_pos, center_pos, radius, grid_dims) # helper f
     return ntuple(i -> transform_dim(neighbor_pos[i], center_pos[i], grid_dims[i]), length(grid_dims))
 end
 
-function get_local_observation_boltzmann(model::ABM, agent_id::Int)
-    target_agent = model[agent_id]
-    agent_pos = target_agent.pos
+function boltzmann_get_observation(model::ABM, agent)
+    agent_pos = agent.pos
     width, height = spacesize(model)
-    observation_radius = model.rl_config[][:observation_radius]
+    observation_radius = model.observation_radius
 
     grid_size = 2 * observation_radius + 1
     ## 2 channels: occupancy and relative wealth
     neighborhood_grid = zeros(Float32, grid_size, grid_size, 2)
 
-    for pos in nearby_positions(target_agent.pos, model, observation_radius)
+    for pos in nearby_positions(agent_pos, model, observation_radius)
         k = 0
         for neighbor in agents_in_position(pos, model)
-            lpos = global_to_local(pos, target_agent.pos, observation_radius, spacesize(model))
-            neighbor.id == agent_id && continue
+            lpos = global_to_local(pos, agent_pos, observation_radius, spacesize(model))
+            neighbor.id == agent.id && continue
             neighborhood_grid[lpos..., 1] = 1.0
-            wealth_diff = Float32(neighbor.wealth - target_agent.wealth)
-            wealth_sum = Float32(neighbor.wealth + target_agent.wealth)
+            wealth_diff = Float32(neighbor.wealth - agent.wealth)
+            wealth_sum = Float32(neighbor.wealth + agent.wealth)
             if wealth_sum > 0
                 k += 1
                 neighborhood_grid[lpos..., 2] = wealth_diff / wealth_sum
@@ -123,28 +129,15 @@ function get_local_observation_boltzmann(model::ABM, agent_id::Int)
     end
 
     total_wealth = sum(a.wealth for a in allagents(model))
-    normalized_wealth = total_wealth > 0 ? Float32(target_agent.wealth / total_wealth) : 0.0f0
-    normalized_pos = (Float32(agent_pos[1] / width), Float32(agent_pos[2] / height))
+    normalized_wealth = total_wealth > 0 ? Float32(agent.wealth / total_wealth) : 0.0f0
+    normalized_pos_x = Float32(agent_pos[1] / width)
+    normalized_pos_y = Float32(agent_pos[2] / height)
 
-    return (
-        normalized_wealth=normalized_wealth,
-        normalized_pos=normalized_pos,
-        neighborhood_grid=neighborhood_grid
-    )
-end
-
-# Define observation function that returns vectors directly
-
-function boltzmann_get_observation(model::ABM, agent_id::Int)
-    observation_data = get_local_observation_boltzmann(model, agent_id)
-    flattened_grid = vec(observation_data.neighborhood_grid)
-
-    ## Combine all normalized features into a single vector
     return vcat(
-        Float32(observation_data.normalized_wealth),
-        Float32(observation_data.normalized_pos[1]),
-        Float32(observation_data.normalized_pos[2]),
-        flattened_grid
+        normalized_wealth,
+        normalized_pos_x,
+        normalized_pos_y,
+        vec(neighborhood_grid)
     )
 end
 
@@ -154,16 +147,14 @@ end
 # decreases in the Gini coefficient. This creates an incentive for agents to learn
 # movement patterns that promote wealth redistribution.
 
-function boltzmann_calculate_reward(env, agent, action, initial_model, final_model)
-    initial_wealths = [a.wealth for a in allagents(initial_model)]
-    final_wealths = [a.wealth for a in allagents(final_model)]
+function boltzmann_calculate_reward(agent, action, previous_model, current_model)
 
-    initial_gini = gini(initial_wealths)
-    final_gini = gini(final_wealths)
+    initial_gini = gini(previous_model)
+    final_gini = gini(current_model)
 
     ## Reward decrease in Gini coefficient
     reward = (initial_gini - final_gini) * 100
-    reward > 0 && (reward = reward / (abmtime(env) + 1))
+    reward > 0 && (reward = reward / (abmtime(current_model) + 1))
     ## Small penalty for neutral actions
     reward <= 0.0 && (reward = -0.1f0)
 
@@ -176,8 +167,7 @@ end
 # inequality (Gini coefficient) drops below a threshold, indicating success.
 
 function boltzmann_is_terminal_rl(env)
-    wealths = [a.wealth for a in allagents(env)]
-    current_gini = gini(wealths)
+    current_gini = gini(env)
     return current_gini < 0.1
 end
 
@@ -185,13 +175,12 @@ end
 
 # The following functions handle model creation and RL configuration setup.
 # Define a separate function for model initialization
-function create_fresh_boltzmann_model(num_agents, dims, initial_wealth, seed=rand(Int))
+function create_fresh_boltzmann_model(num_agents, dims, initial_wealth, observation_radius, seed=rand(Int))
     rng = MersenneTwister(seed)
     space = GridSpace(dims; periodic=true)
 
     properties = Dict{Symbol,Any}(
-        :gini_coefficient => 0.0,
-        :step_count => 0
+        :observation_radius => observation_radius
     )
 
     model = ReinforcementLearningABM(RLBoltzmannAgent, space;
@@ -203,17 +192,13 @@ function create_fresh_boltzmann_model(num_agents, dims, initial_wealth, seed=ran
         add_agent_single!(RLBoltzmannAgent, model, rand(rng, 1:initial_wealth))
     end
 
-    ## Calculate initial Gini coefficient
-    wealths = [a.wealth for a in allagents(model)]
-    model.gini_coefficient = gini(wealths)
-
     return model
 end
 
 function initialize_boltzmann_rl_model(; num_agents=10, dims=(10, 10), initial_wealth=10, observation_radius=4)
     ## RL configuration specifies the learning environment parameters
     rl_config = (
-        model_init_fn=() -> create_fresh_boltzmann_model(num_agents, dims, initial_wealth),
+        model_init_fn=() -> create_fresh_boltzmann_model(num_agents, dims, initial_wealth, observation_radius),
         observation_fn=boltzmann_get_observation,
         reward_fn=boltzmann_calculate_reward,
         terminal_fn=boltzmann_is_terminal_rl,
@@ -225,13 +210,11 @@ function initialize_boltzmann_rl_model(; num_agents=10, dims=(10, 10), initial_w
             ## Observation space: (2*radius+1)² grid cells * 2 channels + 3 agent features
             RLBoltzmannAgent => Crux.ContinuousSpace((((2 * observation_radius + 1)^2 * 2) + 3,), Float32)
         ),
-        training_agent_types=[RLBoltzmannAgent],
-        max_steps=50,
-        observation_radius=observation_radius
+        training_agent_types=[RLBoltzmannAgent]
     )
 
     ## Create the main model using the initialization function
-    model = create_fresh_boltzmann_model(num_agents, dims, initial_wealth)
+    model = create_fresh_boltzmann_model(num_agents, dims, initial_wealth, observation_radius)
 
     ## Set the RL configuration
     set_rl_config!(model, rl_config)
@@ -249,12 +232,13 @@ boltzmann_rl_model = initialize_boltzmann_rl_model()
 
 # Train the Boltzmann agents
 train_model!(
-    boltzmann_rl_model, RLBoltzmannAgent;
+    boltzmann_rl_model;
     training_steps=200000,
+    max_steps=50,
     solver_params=Dict(
         :ΔN => 200,            # Custom batch size for PPO updates
         :log => (period=1000,) # Log every 1000 steps
-))
+    ))
 
 # Plot the learning curve to see how agents improved over training
 plot_learning(boltzmann_rl_model.training_history[RLBoltzmannAgent])
@@ -285,7 +269,7 @@ function agent_size(agent) # Custom size function based on wealth
     size_factor = clamped_wealth / max_expected_wealth
     return 10 + size_factor * 15
 end
- 
+
 fig, ax = abmplot(fresh_boltzmann_model;
     agent_color=agent_color,
     agent_size=agent_size,
@@ -297,17 +281,15 @@ ax.ylabel = "Y Position"
 fig
 
 # Run simulation with trained agents on the fresh model
-initial_wealths = [a.wealth for a in allagents(fresh_boltzmann_model)]
-initial_gini = gini(initial_wealths)
-"Initial wealth distribution anf Gini coefficient: $initial_wealths, $initial_gini"
+initial_gini = gini(fresh_boltzmann_model)
+"Initial Gini coefficient: $initial_gini"
 
 # Step the model forward to see the trained behavior
 Agents.step!(fresh_boltzmann_model, 10)
 
 # Check the results after simulation
-final_wealths = [a.wealth for a in allagents(fresh_boltzmann_model)]
-final_gini = gini(final_wealths) 
-"Final wealth distribution and Gini coefficient: $final_wealths, $final_gini"
+final_gini = gini(fresh_boltzmann_model)
+"Final Gini coefficient: $final_gini"
 
 # Plot the final state
 fig, ax = abmplot(fresh_boltzmann_model;
@@ -345,16 +327,15 @@ abmvideo("rl_boltzmann.mp4", fresh_boltzmann_model; frames=100,
 
 # ## Key takeaways
 
-# This example demonstrates several important concepts:
+# This example demonstrated several important concepts:
 
-# 1. **RL-ABM Integration**: How to seamlessly integrate reinforcement learning 
+# 1. **RL-ABM Integration**: How to integrate reinforcement learning 
 #    with agent-based modeling using the `ReinforcementLearningABM` type.
 
 # 2. **Custom Reward Design**: The reward function encourages behavior that 
 #    reduces wealth inequality, showing how RL can optimize for specific outcomes.
 
-# 3. **Observation Engineering**: Agents observe their local neighborhood and 
-#    relative wealth position, providing them with relevant information for decision-making.
+# 3. **Observation Engineering**: Agents observe their local neighborhood, providing them with relevant information for decision-making.
 
 # 4. **Policy Transfer**: Trained policies can be copied to fresh model instances,
 #    enabling evaluation and deployment of learned behaviors.

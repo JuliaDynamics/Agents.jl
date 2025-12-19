@@ -475,8 +475,7 @@
 # ```julia
 # println("\nTraining wolves and sheep with reinforcement learning...")
 # try
-#     train_model!(rl_model, [RLSheep, RLWolf];
-#         training_mode=:simultaneous,  # Both species learn at the same time
+#     train_model!(rl_model,:simultaneous;  # Both species learn at the same time
 #         n_iterations=5,
 #         batch_size=400 * nagents(rl_model),
 #         solver_params=Dict(

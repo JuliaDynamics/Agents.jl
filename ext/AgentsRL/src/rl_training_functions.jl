@@ -1,6 +1,6 @@
 function Agents.setup_rl_training(model::ReinforcementLearningABM, agent_type;
     training_steps=50_000,
-    max_steps=nothing,
+    max_steps=100,
     value_network=nothing,
     policy_network=nothing,
     solver=nothing,
@@ -37,10 +37,6 @@ function Agents.setup_rl_training(model::ReinforcementLearningABM, agent_type;
         policy_net = DiscreteNetwork(Chain(Dense(Crux.dim(O)..., 64, relu), Dense(64, 64, relu), Dense(64, length(as))), as)
     else
         policy_net = policy_network()
-    end
-
-    if isnothing(max_steps)
-        max_steps = model.rl_config[][:max_steps]
     end
 
     # Create solver based on type
@@ -98,6 +94,7 @@ end
 
 function Agents.train_agent_sequential(model::ReinforcementLearningABM, agent_types;
     training_steps=50_000,
+    max_steps=100,
     custom_networks=Dict(),
     custom_solvers=Dict(),
     solver_types=Dict(),
@@ -127,6 +124,7 @@ function Agents.train_agent_sequential(model::ReinforcementLearningABM, agent_ty
             model,
             agent_type;
             training_steps=training_steps,
+            max_steps=max_steps,
             value_network=value_net,
             policy_network=policy_net,
             solver=custom_solver,
@@ -153,6 +151,7 @@ end
 function Agents.train_agent_simultaneous(model::ReinforcementLearningABM, agent_types;
     n_iterations=5,
     batch_size=10_000,
+    max_steps=100,
     custom_networks=Dict(),
     custom_solvers=Dict(),
     solver_types=Dict(),
@@ -182,6 +181,7 @@ function Agents.train_agent_simultaneous(model::ReinforcementLearningABM, agent_
             model,
             agent_type;
             training_steps=batch_size,
+            max_steps=max_steps,
             value_network=value_net,
             policy_network=policy_net,
             solver=custom_solver,
@@ -265,16 +265,19 @@ function Agents.create_custom_solver(solver_type, π, S; custom_params...)
 end
 
 
-function Agents.train_model!(model::ReinforcementLearningABM, agent_types;
-    training_mode::Symbol=:sequential,
+function Agents.train_model!(model::ReinforcementLearningABM, training_mode::Symbol=:sequential;
     kwargs...)
 
     if isnothing(model.rl_config[])
         error("RL configuration not set. Use set_rl_config! first.")
     end
 
-    # Ensure agent_types is a vector
-    agent_types_vec = agent_types isa Vector ? agent_types : [agent_types]
+    config = model.rl_config[]
+    if !haskey(config, :training_agent_types) || isempty(config.training_agent_types)
+        error("No training_agent_types specified in RL configuration.")
+    end
+
+    agent_types_vec = config.training_agent_types
 
     # Set training flag
     model.is_training[] = true
