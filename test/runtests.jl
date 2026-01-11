@@ -171,4 +171,5 @@ end
     include("visualization_tests.jl")
     include("new_space_tests.jl")
     include("reinforcement_learning_tests.jl")
+    include("rl_extension_tests.jl")
 end

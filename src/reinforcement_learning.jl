@@ -1,4 +1,5 @@
 export ReinforcementLearningABM
+export RLConfig
 export get_trained_policies, set_rl_config!, copy_trained_policies!
 export train_model!, create_policy_network, create_value_network
 
@@ -27,6 +28,35 @@ struct ReinforcementLearningABM{
     is_training::Base.RefValue{Bool}
     current_training_agent_type::Base.RefValue{Any}
     current_training_agent_id::Base.RefValue{Int}  # Counter/index for cycling through agents of training type (not actual agent ID)
+end
+
+# Configuration container for Reinforcement Learning setup.
+# Use keyword constructor `RLConfig(...)` to create instances.
+struct RLConfig
+    model_init_fn::Union{Nothing,Function}
+    observation_fn::Function
+    reward_fn::Function
+    terminal_fn::Union{Nothing,Function}
+    agent_step_fn::Union{Nothing,Function}
+    action_spaces::Union{Nothing,Dict{Type,Any}}
+    observation_spaces::Union{Nothing,Dict{Type,Any}}
+    training_agent_types::Union{Nothing,Vector{Type}}
+    discount_rates::Union{Nothing,Dict{Type,Float64}}
+    state_spaces::Union{Nothing,Dict{Type,Any}}
+end
+
+function RLConfig(; model_init_fn=nothing,
+                   observation_fn::Function,
+                   reward_fn::Function,
+                   terminal_fn=nothing,
+                   agent_step_fn=nothing,
+                   action_spaces=Dict{Type,Any}(),
+                   observation_spaces=Dict{Type,Any}(),
+                   training_agent_types=Vector{Type}(),
+                   discount_rates=Dict{Type,Float64}(),
+                   state_spaces=Dict{Type,Any}())
+    return RLConfig(model_init_fn, observation_fn, reward_fn, terminal_fn, agent_step_fn,
+                    action_spaces, observation_spaces, training_agent_types, discount_rates, state_spaces)
 end
 
 # Extend mandatory internal API for `AgentBasedModel`
@@ -121,7 +151,7 @@ Optional: **Transfer policies** to fresh models using [`copy_trained_policies!`]
 - `AgentType(s)`: The result of `@agent` or `@multiagent` or a `Union` of agent types.
   Any agent type can be used - they don't need to inherit from `RLAgent`.
 - `space`: A subtype of `AbstractSpace`. See [Space](@ref available_spaces) for all available spaces.
-- `rl_config`: (Optional) A named tuple containing RL configuration. Can be set later with [`set_rl_config!`](@ref).
+- `rl_config`: (Optional) An `RLConfig` struct containing RL configuration. Can be set later with [`set_rl_config!`](@ref).
 
 ## Keyword Arguments
 
@@ -131,7 +161,7 @@ Same as [`StandardABM`](@ref):
 
 ## RL Configuration
 
-The `rl_config` should be a named tuple with the following fields:
+The `rl_config` should be an `RLConfig` struct with the following fields:
 
 ### Required Functions
 
@@ -280,7 +310,7 @@ function set_rl_config!(model::ReinforcementLearningABM, config)
     model.rl_config[] = config
 
     # Initialize training history for each training agent type
-    if haskey(config, :training_agent_types)
+    if !isnothing(config.training_agent_types)
         for agent_type in config.training_agent_types
             if !haskey(model.training_history, agent_type)
                 model.training_history[agent_type] = nothing  # Will be set during training
@@ -351,7 +381,7 @@ function get_current_training_agent_type(model::ReinforcementLearningABM)
 
     # Otherwise, fall back to first agent type in training_agent_types
     config = model.rl_config[]
-    if haskey(config, :training_agent_types) && !isempty(config.training_agent_types)
+    if config.training_agent_types !== nothing && !isempty(config.training_agent_types)
         return config.training_agent_types[1]
     else
         error("No training agent type specified in RL configuration")
@@ -406,8 +436,11 @@ function reset_model_for_episode!(model::ReinforcementLearningABM)
     config = model.rl_config[]
 
     # If there's a model initialization function, use it
-    if haskey(config, :model_init_fn)
-        new_model = config.model_init_fn()
+    # Handle both RLConfig struct and NamedTuple
+    model_init_fn = hasproperty(config, :model_init_fn) ? config.model_init_fn : nothing
+    
+    if model_init_fn !== nothing
+        new_model = model_init_fn()
         # Copy agents and properties from new model
         remove_all!(model)
         for agent in allagents(new_model)

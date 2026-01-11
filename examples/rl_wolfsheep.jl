@@ -422,25 +422,25 @@
 #     observation_radius=4, seed=1234)
 # 
 #     # RL configuration specifying learning environment parameters
-#     rl_config = (
-#         model_init_fn=() -> create_fresh_wolfsheep_model(n_sheeps, n_wolves, dims, regrowth_time,
+#     rl_config = RLConfig(; 
+#         model_init_fn = () -> create_fresh_wolfsheep_model(n_sheeps, n_wolves, dims, regrowth_time,
 #             Δenergy_sheep, Δenergy_wolf, sheep_reproduce, wolf_reproduce, seed),
-#         observation_fn=wolfsheep_get_observation,
-#         reward_fn=wolfsheep_calculate_reward,
-#         terminal_fn=wolfsheep_is_terminal_rl,
-#         agent_step_fn=wolfsheep_rl_step!,
-#         action_spaces=Dict(
+#         observation_fn = wolfsheep_get_observation,
+#         reward_fn = wolfsheep_calculate_reward,
+#         terminal_fn = wolfsheep_is_terminal_rl,
+#         agent_step_fn = wolfsheep_rl_step!,
+#         action_spaces = Dict(
 #             RLSheep => Crux.DiscreteSpace(5),  # 5 movement actions
 #             RLWolf => Crux.DiscreteSpace(5)    # 5 movement actions
 #         ),
-#         observation_spaces=Dict(
+#         observation_spaces = Dict(
 #             RLSheep => Crux.ContinuousSpace((((2 * observation_radius + 1)^2 * 3) + 4,), Float32),
 #             RLWolf => Crux.ContinuousSpace((((2 * observation_radius + 1)^2 * 3) + 4,), Float32)
 #         ),
-#         training_agent_types=[RLSheep, RLWolf],
-#         max_steps=300,
-#         observation_radius=observation_radius,
-#         discount_rates=Dict(
+#         training_agent_types = [RLSheep, RLWolf],
+#         max_steps = 300,
+#         observation_radius = observation_radius,
+#         discount_rates = Dict(
 #             RLSheep => 0.99,  # Long-term planning for survival
 #             RLWolf => 0.99    # Long-term planning for hunting
 #         )

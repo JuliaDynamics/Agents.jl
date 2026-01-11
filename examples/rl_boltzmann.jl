@@ -197,20 +197,20 @@ end
 
 function initialize_boltzmann_rl_model(; num_agents=10, dims=(10, 10), initial_wealth=10, observation_radius=4)
     ## RL configuration specifies the learning environment parameters
-    rl_config = (
-        model_init_fn=() -> create_fresh_boltzmann_model(num_agents, dims, initial_wealth, observation_radius),
-        observation_fn=boltzmann_get_observation,
-        reward_fn=boltzmann_calculate_reward,
-        terminal_fn=boltzmann_is_terminal_rl,
-        agent_step_fn=boltzmann_rl_step!,
-        action_spaces=Dict(
+    rl_config = RLConfig(; 
+        model_init_fn = () -> create_fresh_boltzmann_model(num_agents, dims, initial_wealth, observation_radius),
+        observation_fn = boltzmann_get_observation,
+        reward_fn = boltzmann_calculate_reward,
+        terminal_fn = boltzmann_is_terminal_rl,
+        agent_step_fn = boltzmann_rl_step!,
+        action_spaces = Dict(
             RLBoltzmannAgent => Crux.DiscreteSpace(5)  ## 5 possible actions
         ),
-        observation_spaces=Dict(
+        observation_spaces = Dict(
             ## Observation space: (2*radius+1)² grid cells * 2 channels + 3 agent features
             RLBoltzmannAgent => Crux.ContinuousSpace((((2 * observation_radius + 1)^2 * 2) + 3,), Float32)
         ),
-        training_agent_types=[RLBoltzmannAgent]
+        training_agent_types = [RLBoltzmannAgent]
     )
 
     ## Create the main model using the initialization function

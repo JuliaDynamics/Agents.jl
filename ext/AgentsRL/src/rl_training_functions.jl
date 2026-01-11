@@ -273,7 +273,7 @@ function Agents.train_model!(model::ReinforcementLearningABM, training_mode::Sym
     end
 
     config = model.rl_config[]
-    if !haskey(config, :training_agent_types) || isempty(config.training_agent_types)
+    if config.training_agent_types === nothing || isempty(config.training_agent_types)
         error("No training_agent_types specified in RL configuration.")
     end
 

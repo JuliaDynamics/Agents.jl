@@ -37,7 +37,7 @@ end
 
 # Create basic RL configuration
 function create_test_rl_config()
-    return (
+    return RLConfig(
         observation_fn=test_observation_fn,
         reward_fn=test_reward_fn,
         terminal_fn=test_terminal_fn,
@@ -45,8 +45,6 @@ function create_test_rl_config()
         action_spaces=Dict(RLTestAgent => (; vals=1:5)),
         observation_spaces=Dict(RLTestAgent => (; dim=(3,))),
         training_agent_types=[RLTestAgent],
-        max_steps=20,
-        observation_radius=2,
         discount_rates=Dict(RLTestAgent => 0.95),
         model_init_fn=test_model_init_fn
     )
@@ -72,7 +70,7 @@ end
         config = create_test_rl_config()
         model2 = ReinforcementLearningABM(RLTestAgent, space, config)
         @test !isnothing(model2.rl_config[])
-        @test model2.rl_config[].max_steps == 20
+        @test model2.rl_config[] isa RLConfig
 
         # Test with other standard parameters
         model3 = ReinforcementLearningABM(RLTestAgent, space;
@@ -93,7 +91,7 @@ end
         set_rl_config!(model, config)
 
         @test !isnothing(model.rl_config[])
-        @test model.rl_config[].max_steps == 20
+        @test model.rl_config[] isa RLConfig
         @test haskey(model.rl_config[].action_spaces, RLTestAgent)
         @test model.rl_config[].training_agent_types == [RLTestAgent]
 
@@ -103,7 +101,7 @@ end
 
         agent = add_agent!(RLTestAgent, model, 10.0, 0)
 
-        @test model.rl_config[] isa NamedTuple
+        @test model.rl_config[] isa RLConfig
         @test model.trained_policies isa Dict
         @test Agents.get_current_training_agent_type(model) == RLTestAgent
         @test Agents.get_current_training_agent(model) == agent
@@ -232,7 +230,7 @@ end
         model = ReinforcementLearningABM(Union{RLTestAgent,RLTestAgent2}, space; rng=StableRNG(42))
 
         # Create config for multiple agent types
-        config = (
+        config = RLConfig(
             observation_fn=(model, agent_id) -> Float32[model[agent_id].pos...],
             reward_fn=(env, agent, action, init, final) -> 1.0f0,
             terminal_fn=(env) -> false,
@@ -246,8 +244,6 @@ end
                 RLTestAgent2 => (; dim=(2,))
             ),
             training_agent_types=[RLTestAgent, RLTestAgent2],
-            max_steps=50,
-            observation_radius=1,
             discount_rates=Dict(
                 RLTestAgent => 0.95,
                 RLTestAgent2 => 0.99
@@ -281,7 +277,11 @@ end
         @test_throws ErrorException Agents.reset_model_for_episode!(model)
 
         # 2. Test with a minimal valid config
-        minimal_config = (training_agent_types=[RLTestAgent],)
+        minimal_config = RLConfig(
+            observation_fn=(model, agent_id) -> Float32[1.0, 2.0],
+            reward_fn=(agent, action, prev, curr) -> 1.0f0,
+            training_agent_types=[RLTestAgent]
+        )
         set_rl_config!(model, minimal_config)
 
         @test Agents.get_current_training_agent_type(model) == RLTestAgent
@@ -293,7 +293,11 @@ end
         @test model.time[] == 0
 
         # 3. Test error with an invalid config (empty training agent types)
-        invalid_config = (training_agent_types=[],)
+        invalid_config = RLConfig(
+            observation_fn=(model, agent_id) -> Float32[1.0, 2.0],
+            reward_fn=(agent, action, prev, curr) -> 1.0f0,
+            training_agent_types=[]
+        )
         set_rl_config!(model, invalid_config)
         @test_throws ErrorException Agents.get_current_training_agent_type(model)
     end
@@ -383,7 +387,7 @@ end
     end
 
     function create_wrapper_test_config()
-        return (
+        return RLConfig(
             observation_fn=wrapper_test_observation_fn,
             reward_fn=wrapper_test_reward_fn,
             terminal_fn=wrapper_test_terminal_fn,
@@ -391,8 +395,6 @@ end
             action_spaces=Dict(WrapperTestAgent => (; vals=1:5)),
             observation_spaces=Dict(WrapperTestAgent => (; dim=(3,))),
             training_agent_types=[WrapperTestAgent],
-            max_steps=10,
-            observation_radius=2,
             discount_rates=Dict(WrapperTestAgent => 0.9),
             model_init_fn=wrapper_test_model_init_fn
         )
@@ -477,20 +479,21 @@ end
         config = create_wrapper_test_config()
 
         # Verify all required config components are present
-        @test haskey(config, :observation_fn)
-        @test haskey(config, :reward_fn)
-        @test haskey(config, :terminal_fn)
-        @test haskey(config, :agent_step_fn)
-        @test haskey(config, :action_spaces)
-        @test haskey(config, :observation_spaces)
-        @test haskey(config, :training_agent_types)
-        @test haskey(config, :max_steps)
-        @test haskey(config, :observation_radius)
-        @test haskey(config, :discount_rates)
+        @test config isa RLConfig
+        @test !isnothing(config.observation_fn)
+        @test !isnothing(config.reward_fn)
+        @test !isnothing(config.terminal_fn)
+        @test !isnothing(config.agent_step_fn)
+        @test !isnothing(config.action_spaces)
+        @test !isnothing(config.observation_spaces)
+        @test !isnothing(config.training_agent_types)
+        @test !isnothing(config.discount_rates)
 
         # Test setting the config
         set_rl_config!(model, config)
-        @test model.rl_config[] == config
+        @test model.rl_config[] isa RLConfig
+        @test model.rl_config[].observation_fn === config.observation_fn
+        @test model.rl_config[].reward_fn === config.reward_fn
 
         # Verify action space structure
         action_space = config.action_spaces[WrapperTestAgent]

@@ -234,19 +234,19 @@ end
         model = create_simple_rl_model()
 
         # Set up RL configuration
-        rl_config = (
-            model_init_fn=() -> create_simple_rl_model(),
-            observation_fn=simple_observation_fn,
-            reward_fn=simple_reward_fn,
-            terminal_fn=simple_terminal_fn,
-            agent_step_fn=simple_agent_step_fn,
-            action_spaces=Dict(
+        rl_config = RLConfig(; 
+            model_init_fn = () -> create_simple_rl_model(),
+            observation_fn = simple_observation_fn,
+            reward_fn = simple_reward_fn,
+            terminal_fn = simple_terminal_fn,
+            agent_step_fn = simple_agent_step_fn,
+            action_spaces = Dict(
                 RLExtensionTestAgent => Crux.DiscreteSpace(5)
             ),
-            observation_spaces=Dict(
+            observation_spaces = Dict(
                 RLExtensionTestAgent => Crux.ContinuousSpace((5,), Float32)
             ),
-            training_agent_types=[RLExtensionTestAgent]
+            training_agent_types = [RLExtensionTestAgent]
         )
 
         set_rl_config!(model, rl_config)
@@ -266,19 +266,19 @@ end
     @testset "Custom Network Creation" begin
         model = create_simple_rl_model()
 
-        rl_config = (
-            model_init_fn=() -> create_simple_rl_model(),
-            observation_fn=simple_observation_fn,
-            reward_fn=simple_reward_fn,
-            terminal_fn=simple_terminal_fn,
-            agent_step_fn=simple_agent_step_fn,
-            action_spaces=Dict(
+        rl_config = RLConfig(; 
+            model_init_fn = () -> create_simple_rl_model(),
+            observation_fn = simple_observation_fn,
+            reward_fn = simple_reward_fn,
+            terminal_fn = simple_terminal_fn,
+            agent_step_fn = simple_agent_step_fn,
+            action_spaces = Dict(
                 RLExtensionTestAgent => Crux.DiscreteSpace(5)
             ),
-            observation_spaces=Dict(
+            observation_spaces = Dict(
                 RLExtensionTestAgent => Crux.ContinuousSpace((5,), Float32)
             ),
-            training_agent_types=[RLExtensionTestAgent]
+            training_agent_types = [RLExtensionTestAgent]
         )
 
         set_rl_config!(model, rl_config)
@@ -312,21 +312,21 @@ end
         model = create_multi_agent_rl_model()
 
         # Set up multi-agent RL configuration
-        rl_config = (
-            model_init_fn=() -> create_multi_agent_rl_model(),
-            observation_fn=multi_agent_observation_fn,
-            reward_fn=multi_agent_reward_fn,
-            terminal_fn=(model) -> length(allagents(model)) < 3 || abmtime(model) >= 30,
-            agent_step_fn=multi_agent_agent_step_fn,
-            action_spaces=Dict(
+        rl_config = RLConfig(; 
+            model_init_fn = () -> create_multi_agent_rl_model(),
+            observation_fn = multi_agent_observation_fn,
+            reward_fn = multi_agent_reward_fn,
+            terminal_fn = (model) -> length(allagents(model)) < 3 || abmtime(model) >= 30,
+            agent_step_fn = multi_agent_agent_step_fn,
+            action_spaces = Dict(
                 RLExtensionTestPredator => Crux.DiscreteSpace(5),
                 RLExtensionTestPrey => Crux.DiscreteSpace(5)
             ),
-            observation_spaces=Dict(
+            observation_spaces = Dict(
                 RLExtensionTestPredator => Crux.ContinuousSpace((4,), Float32),
                 RLExtensionTestPrey => Crux.ContinuousSpace((4,), Float32)
             ),
-            training_agent_types=[RLExtensionTestPredator, RLExtensionTestPrey]
+            training_agent_types = [RLExtensionTestPredator, RLExtensionTestPrey]
         )
 
         set_rl_config!(model, rl_config)
@@ -357,21 +357,21 @@ end
     @testset "Simultaneous Training" begin
         model = create_multi_agent_rl_model(n_predators=2, n_prey=3)
 
-        rl_config = (
-            model_init_fn=() -> create_multi_agent_rl_model(n_predators=2, n_prey=3),
-            observation_fn=multi_agent_observation_fn,
-            reward_fn=multi_agent_reward_fn,
-            terminal_fn=(model) -> length(allagents(model)) < 2 || abmtime(model) >= 25,
-            agent_step_fn=multi_agent_agent_step_fn,
-            action_spaces=Dict(
+        rl_config = RLConfig(; 
+            model_init_fn = () -> create_multi_agent_rl_model(n_predators=2, n_prey=3),
+            observation_fn = multi_agent_observation_fn,
+            reward_fn = multi_agent_reward_fn,
+            terminal_fn = (model) -> length(allagents(model)) < 2 || abmtime(model) >= 25,
+            agent_step_fn = multi_agent_agent_step_fn,
+            action_spaces = Dict(
                 RLExtensionTestPredator => Crux.DiscreteSpace(5),
                 RLExtensionTestPrey => Crux.DiscreteSpace(5)
             ),
-            observation_spaces=Dict(
+            observation_spaces = Dict(
                 RLExtensionTestPredator => Crux.ContinuousSpace((4,), Float32),
                 RLExtensionTestPrey => Crux.ContinuousSpace((4,), Float32)
             ),
-            training_agent_types=[RLExtensionTestPredator, RLExtensionTestPrey]
+            training_agent_types = [RLExtensionTestPredator, RLExtensionTestPrey]
         )
 
         set_rl_config!(model, rl_config)
@@ -401,19 +401,19 @@ end
     @testset "Train Model Function Integration" begin
         model = create_simple_rl_model(n_agents=3)
 
-        rl_config = (
-            model_init_fn=() -> create_simple_rl_model(n_agents=3),
-            observation_fn=simple_observation_fn,
-            reward_fn=simple_reward_fn,
-            terminal_fn=simple_terminal_fn,
-            agent_step_fn=simple_agent_step_fn,
-            action_spaces=Dict(
+        rl_config = RLConfig(; 
+            model_init_fn = () -> create_simple_rl_model(n_agents=3),
+            observation_fn = simple_observation_fn,
+            reward_fn = simple_reward_fn,
+            terminal_fn = simple_terminal_fn,
+            agent_step_fn = simple_agent_step_fn,
+            action_spaces = Dict(
                 RLExtensionTestAgent => Crux.DiscreteSpace(5)
             ),
-            observation_spaces=Dict(
+            observation_spaces = Dict(
                 RLExtensionTestAgent => Crux.ContinuousSpace((5,), Float32)
             ),
-            training_agent_types=[RLExtensionTestAgent]
+            training_agent_types = [RLExtensionTestAgent]
         )
 
         set_rl_config!(model, rl_config)
@@ -471,19 +471,19 @@ end
         # Create source model with training
         source_model = create_simple_rl_model()
 
-        rl_config = (
-            model_init_fn=() -> create_simple_rl_model(),
-            observation_fn=simple_observation_fn,
-            reward_fn=simple_reward_fn,
-            terminal_fn=simple_terminal_fn,
-            agent_step_fn=simple_agent_step_fn,
-            action_spaces=Dict(
+        rl_config = RLConfig(; 
+            model_init_fn = () -> create_simple_rl_model(),
+            observation_fn = simple_observation_fn,
+            reward_fn = simple_reward_fn,
+            terminal_fn = simple_terminal_fn,
+            agent_step_fn = simple_agent_step_fn,
+            action_spaces = Dict(
                 RLExtensionTestAgent => Crux.DiscreteSpace(5)
             ),
-            observation_spaces=Dict(
+            observation_spaces = Dict(
                 RLExtensionTestAgent => Crux.ContinuousSpace((5,), Float32)
             ),
-            training_agent_types=[RLExtensionTestAgent]
+            training_agent_types = [RLExtensionTestAgent]
         )
 
         set_rl_config!(source_model, rl_config)
@@ -510,19 +510,19 @@ end
     @testset "Different Solver Types" begin
         model = create_simple_rl_model()
 
-        rl_config = (
-            model_init_fn=() -> create_simple_rl_model(),
-            observation_fn=simple_observation_fn,
-            reward_fn=simple_reward_fn,
-            terminal_fn=simple_terminal_fn,
-            agent_step_fn=simple_agent_step_fn,
-            action_spaces=Dict(
+        rl_config = RLConfig(; 
+            model_init_fn = () -> create_simple_rl_model(),
+            observation_fn = simple_observation_fn,
+            reward_fn = simple_reward_fn,
+            terminal_fn = simple_terminal_fn,
+            agent_step_fn = simple_agent_step_fn,
+            action_spaces = Dict(
                 RLExtensionTestAgent => Crux.DiscreteSpace(5)
             ),
-            observation_spaces=Dict(
+            observation_spaces = Dict(
                 RLExtensionTestAgent => Crux.ContinuousSpace((5,), Float32)
             ),
-            training_agent_types=[RLExtensionTestAgent]
+            training_agent_types = [RLExtensionTestAgent]
         )
 
         set_rl_config!(model, rl_config)

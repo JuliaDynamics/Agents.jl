@@ -156,7 +156,7 @@ function POMDPs.initialstate(wrapper::RLEnvironmentWrapper)
     current_agent_type = Agents.get_current_training_agent_type(model)
     config = model.rl_config[]
 
-    if haskey(config, :state_spaces) && haskey(config.state_spaces, current_agent_type)
+    if config.state_spaces !== nothing && haskey(config.state_spaces, current_agent_type)
         state_dims = Crux.dim(config.state_spaces[current_agent_type])
     else
         state_dims = (10,)  # Default state dimensions
@@ -257,9 +257,8 @@ function POMDPs.isterminal(wrapper::RLEnvironmentWrapper, s)
     end
 
     config = model.rl_config[]
-    max_steps = get(config, :max_steps, 100)
 
-    return config.terminal_fn(model) || abmtime(model) >= max_steps
+    return (config.terminal_fn !== nothing && config.terminal_fn(model))
 end
 
 """
@@ -280,7 +279,7 @@ function POMDPs.discount(wrapper::RLEnvironmentWrapper)
     current_agent_type = Agents.get_current_training_agent_type(model)
     config = model.rl_config[]
 
-    if haskey(config, :discount_rates) && haskey(config.discount_rates, current_agent_type)
+    if config.discount_rates !== nothing && haskey(config.discount_rates, current_agent_type)
         return config.discount_rates[current_agent_type]
     else
         return 0.99
@@ -306,7 +305,7 @@ function Crux.state_space(wrapper::RLEnvironmentWrapper)
     current_agent_type = Agents.get_current_training_agent_type(model)
     config = model.rl_config[]
 
-    if haskey(config, :state_spaces) && haskey(config.state_spaces, current_agent_type)
+    if config.state_spaces !== nothing && haskey(config.state_spaces, current_agent_type)
         return config.state_spaces[current_agent_type]
     else
         return Crux.ContinuousSpace((10,))
@@ -348,7 +347,7 @@ function advance_simulation!(model::ReinforcementLearningABM)
             model.current_training_agent_id[] = 1
 
             # Run other agent types with their policies or random behavior
-            training_agent_types = get(config, :training_agent_types, [current_agent_type])
+            training_agent_types = config.training_agent_types === nothing ? [current_agent_type] : config.training_agent_types
             for agent_type in training_agent_types
                 if agent_type != current_agent_type
                     other_agents = [a for a in allagents(model) if typeof(a) == agent_type]
