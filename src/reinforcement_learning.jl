@@ -46,17 +46,17 @@ struct RLConfig
 end
 
 function RLConfig(; model_init_fn=nothing,
-                   observation_fn::Function,
-                   reward_fn::Function,
-                   terminal_fn=nothing,
-                   agent_step_fn=nothing,
-                   action_spaces=Dict{Type,Any}(),
-                   observation_spaces=Dict{Type,Any}(),
-                   training_agent_types=Vector{Type}(),
-                   discount_rates=Dict{Type,Float64}(),
-                   state_spaces=Dict{Type,Any}())
+    observation_fn::Function,
+    reward_fn::Function,
+    terminal_fn=nothing,
+    agent_step_fn=nothing,
+    action_spaces=Dict{Type,Any}(),
+    observation_spaces=Dict{Type,Any}(),
+    training_agent_types=Vector{Type}(),
+    discount_rates=Dict{Type,Float64}(),
+    state_spaces=Dict{Type,Any}())
     return RLConfig(model_init_fn, observation_fn, reward_fn, terminal_fn, agent_step_fn,
-                    action_spaces, observation_spaces, training_agent_types, discount_rates, state_spaces)
+        action_spaces, observation_spaces, training_agent_types, discount_rates, state_spaces)
 end
 
 # Extend mandatory internal API for `AgentBasedModel`
@@ -438,7 +438,7 @@ function reset_model_for_episode!(model::ReinforcementLearningABM)
     # If there's a model initialization function, use it
     # Handle both RLConfig struct and NamedTuple
     model_init_fn = hasproperty(config, :model_init_fn) ? config.model_init_fn : nothing
-    
+
     if model_init_fn !== nothing
         new_model = model_init_fn()
         # Copy agents and properties from new model
