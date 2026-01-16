@@ -15,13 +15,13 @@ AgentBasedModel
 step!(::AgentBasedModel, args...)
 ```
 
-### Discrete time models
+## Discrete time ABM
 
 ```@docs
 StandardABM
 ```
 
-### Continuous time models
+## Continuous time ABM
 
 ```@docs
 EventQueueABM
@@ -29,7 +29,7 @@ AgentEvent
 add_event!
 ```
 
-### Reinforcement learning models
+## Reinforcement learning ABM
 
 ```@docs
 ReinforcementLearningABM

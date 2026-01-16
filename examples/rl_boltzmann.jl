@@ -1,26 +1,27 @@
 # # Boltzmann Wealth Model with Reinforcement Learning
 
-# This is a tutorial for the ReinforcementLearningABM model which combines reinforcement learning with agent based modelling. 
-# The example demonstrates how to integrate reinforcement learning with 
+# This is a tutorial for the [`ReinforcementLearningABM`](@ref) model which
+# combines reinforcement learning with agent based modelling.
+# The example demonstrates how to integrate reinforcement learning with
 # agent-based modeling using the Boltzmann wealth distribution model. In this model,
 # agents move around a grid and exchange wealth when they encounter other agents,
 # but their movement decisions are learned through reinforcement learning rather
 # than being random.
 
-# The model showcases how RL agents can learn to optimize their behavior to achieve 
-# specific goals - in this case, reducing wealth inequality as measured by the 
+# The model showcases how RL agents can learn to optimize their behavior to achieve
+# specific goals - in this case, reducing wealth inequality as measured by the
 # Gini coefficient.
 
 # ## Model specification
 
-# The Boltzmann wealth model is a classic example in econophysics where agents 
+# The Boltzmann wealth model is a classic example in econophysics where agents
 # represent economic actors who exchange wealth. The traditional model uses random
 # movement, but here we replace that with learned behavior using reinforcement learning.
 
 # **Rules:**
 # - Agents move on a 2D periodic grid
 # - When agents occupy the same position, they may exchange wealth
-# - Wealth flows from richer to poorer agents  
+# - Wealth flows from richer to poorer agents
 # - Agent movement is learned through RL to minimize wealth inequality
 
 # **RL Integration:**
@@ -29,7 +30,7 @@
 # - **Reward**: Reduction in Gini coefficient (wealth inequality measure)
 # - **Goal**: Learn movement patterns that promote wealth redistribution
 
-# ## Loading packages and defining the agent type 
+# ## Loading packages and defining the agent type
 # This part is the same as with the normal usage of Agents.jl
 
 using Agents, Random, Statistics, Distributions
@@ -84,7 +85,7 @@ end
 
 # The following functions define how the RL environment interacts with the ABM:
 # - **Observation function**: Extracts relevant state information for the RL agent
-# - **Reward function**: Defines what behavior we want to encourage  
+# - **Reward function**: Defines what behavior we want to encourage
 # - **Terminal function**: Determines when an episode ends
 
 # ### Observation function
@@ -143,7 +144,7 @@ end
 
 # ### Reward function
 
-# The reward function encourages agents to reduce wealth inequality by rewarding 
+# The reward function encourages agents to reduce wealth inequality by rewarding
 # decreases in the Gini coefficient. This creates an incentive for agents to learn
 # movement patterns that promote wealth redistribution.
 
@@ -197,7 +198,7 @@ end
 
 function initialize_boltzmann_rl_model(; num_agents=10, dims=(10, 10), initial_wealth=10, observation_radius=4)
     ## RL configuration specifies the learning environment parameters
-    rl_config = RLConfig(; 
+    rl_config = RLConfig(;
         model_init_fn = () -> create_fresh_boltzmann_model(num_agents, dims, initial_wealth, observation_radius),
         observation_fn = boltzmann_get_observation,
         reward_fn = boltzmann_calculate_reward,
@@ -329,10 +330,10 @@ abmvideo("rl_boltzmann.mp4", fresh_boltzmann_model; frames=100,
 
 # This example demonstrated several important concepts:
 
-# 1. **RL-ABM Integration**: How to integrate reinforcement learning 
-#    with agent-based modeling using the `ReinforcementLearningABM` type.
+# 1. **RL-ABM Integration**: How to integrate reinforcement learning
+#    with agent-based modeling using the [`ReinforcementLearningABM`] type.
 
-# 2. **Custom Reward Design**: The reward function encourages behavior that 
+# 2. **Custom Reward Design**: The reward function encourages behavior that
 #    reduces wealth inequality, showing how RL can optimize for specific outcomes.
 
 # 3. **Observation Engineering**: Agents observe their local neighborhood, providing them with relevant information for decision-making.

@@ -1,4 +1,6 @@
+using Agents
 using POMDPs, Crux, Flux
+using Test, StableRNGs
 
 # Test agents for RL extension testing
 @agent struct RLExtensionTestAgent(GridAgent{2})
@@ -234,7 +236,7 @@ end
         model = create_simple_rl_model()
 
         # Set up RL configuration
-        rl_config = RLConfig(; 
+        rl_config = RLConfig(;
             model_init_fn = () -> create_simple_rl_model(),
             observation_fn = simple_observation_fn,
             reward_fn = simple_reward_fn,
@@ -266,7 +268,7 @@ end
     @testset "Custom Network Creation" begin
         model = create_simple_rl_model()
 
-        rl_config = RLConfig(; 
+        rl_config = RLConfig(;
             model_init_fn = () -> create_simple_rl_model(),
             observation_fn = simple_observation_fn,
             reward_fn = simple_reward_fn,
@@ -312,7 +314,7 @@ end
         model = create_multi_agent_rl_model()
 
         # Set up multi-agent RL configuration
-        rl_config = RLConfig(; 
+        rl_config = RLConfig(;
             model_init_fn = () -> create_multi_agent_rl_model(),
             observation_fn = multi_agent_observation_fn,
             reward_fn = multi_agent_reward_fn,
@@ -357,7 +359,7 @@ end
     @testset "Simultaneous Training" begin
         model = create_multi_agent_rl_model(n_predators=2, n_prey=3)
 
-        rl_config = RLConfig(; 
+        rl_config = RLConfig(;
             model_init_fn = () -> create_multi_agent_rl_model(n_predators=2, n_prey=3),
             observation_fn = multi_agent_observation_fn,
             reward_fn = multi_agent_reward_fn,
@@ -401,7 +403,7 @@ end
     @testset "Train Model Function Integration" begin
         model = create_simple_rl_model(n_agents=3)
 
-        rl_config = RLConfig(; 
+        rl_config = RLConfig(;
             model_init_fn = () -> create_simple_rl_model(n_agents=3),
             observation_fn = simple_observation_fn,
             reward_fn = simple_reward_fn,
@@ -471,7 +473,7 @@ end
         # Create source model with training
         source_model = create_simple_rl_model()
 
-        rl_config = RLConfig(; 
+        rl_config = RLConfig(;
             model_init_fn = () -> create_simple_rl_model(),
             observation_fn = simple_observation_fn,
             reward_fn = simple_reward_fn,
@@ -510,7 +512,7 @@ end
     @testset "Different Solver Types" begin
         model = create_simple_rl_model()
 
-        rl_config = RLConfig(; 
+        rl_config = RLConfig(;
             model_init_fn = () -> create_simple_rl_model(),
             observation_fn = simple_observation_fn,
             reward_fn = simple_reward_fn,
@@ -532,7 +534,7 @@ end
             solver_type=:DQN, training_steps=100)
         @test solver isa OffPolicySolver
 
-        # Test A2C solver  
+        # Test A2C solver
         env, solver = Agents.setup_rl_training(model, RLExtensionTestAgent;
             solver_type=:A2C, training_steps=100)
         @test solver isa OnPolicySolver

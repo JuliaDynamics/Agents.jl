@@ -1,3 +1,7 @@
+using Agents
+using POMDPs, Crux, Flux
+using Test, StableRNGs
+
 # Test agents for RL testing
 @agent struct RLTestAgent(GridAgent{2})
     wealth::Float64
@@ -28,7 +32,7 @@ function test_model_init_fn()
     model = ReinforcementLearningABM(RLTestAgent, space; rng=StableRNG(42))
 
     # Add some agents
-    for i in 1:3
+    for _ in 1:3
         add_agent!(RLTestAgent, model, rand() * 50.0, 0)
     end
 
@@ -529,7 +533,7 @@ end
             # Calculate reward
             reward = config.reward_fn(model, agent, action, initial_model, model)
 
-            # Get new observation  
+            # Get new observation
             new_obs = config.observation_fn(model, agent.id)
 
             # Check terminal condition
