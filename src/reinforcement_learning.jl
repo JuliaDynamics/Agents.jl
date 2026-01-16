@@ -119,6 +119,8 @@ A concrete implementation of an [`AgentBasedModel`](@ref) that extends [`Standar
 with built-in reinforcement learning capabilities. This model type integrates RL training
 into the ABM framework, allowing agents to learn and adapt their behavior
 through interaction with the environment.
+This documentation string contains the necessary information, but we recommend
+going through the dedicated [reinforcement learning tutorial](@ref rltutorial) as well.
 
 !!! note "`Crux` extension needed!"
 

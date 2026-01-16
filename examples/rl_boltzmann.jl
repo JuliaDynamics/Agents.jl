@@ -1,9 +1,9 @@
-# # Boltzmann Wealth Model with Reinforcement Learning
+# # [Boltzmann Wealth Model with Reinforcement Learning](@id rltutorial)
 
 # This is a tutorial for the [`ReinforcementLearningABM`](@ref) model which
 # combines reinforcement learning with agent based modelling.
 # The example demonstrates how to integrate reinforcement learning with
-# agent-based modeling using the Boltzmann wealth distribution model. In this model,
+# agent based modelling using the Boltzmann wealth distribution model. In this model,
 # agents move around a grid and exchange wealth when they encounter other agents,
 # but their movement decisions are learned through reinforcement learning rather
 # than being random.
@@ -11,6 +11,17 @@
 # The model showcases how RL agents can learn to optimize their behavior to achieve
 # specific goals - in this case, reducing wealth inequality as measured by the
 # Gini coefficient.
+
+# !!! note "`Crux` extension needed!"
+#
+#     This functionality is formally a package extension. To access it you need to be `using Crux`.
+
+# !!! note "Reinforcement Learning fundamentals assummed"
+#
+#     The discussion in this tutorial assumes you are familiar with the fundamentals of
+#     reinforcement learning. If not, you can start your journey from the
+#     [Wikipedia page](https://en.wikipedia.org/wiki/Reinforcement_learning).
+
 
 # ## Model specification
 
@@ -34,8 +45,11 @@
 # This part is the same as with the normal usage of Agents.jl
 
 using Agents, Random, Statistics, Distributions
+
 # Import the library required for the RL extension
 using Crux
+
+# and define the agent type as usual
 
 @agent struct RLBoltzmannAgent(GridAgent{2})
     wealth::Int
@@ -61,9 +75,11 @@ end
 # Unlike traditional ABM where this might contain random movement, here the movement
 # is determined by the RL policy based on the chosen action.
 
-# This function follows the standard Agents.jl agent step signature, but includes
+# This function augments the standard Agents.jl `agent_step!` signature by including
 # an additional third argument `action::Int` that represents the action chosen
 # by the RL policy. This action is optimized during training by the RL framework.
+# The correspondence between integers and "actual agent actions" is decided by the user.
+
 function boltzmann_rl_step!(agent::RLBoltzmannAgent, model, action::Int)
     ## Action definitions: 1=stay, 2=north, 3=south, 4=east, 5=west
     dirs = ((0, 0), (0, 1), (0, -1), (1, 0), (-1, 0))
@@ -245,10 +261,11 @@ train_model!(
 plot_learning(boltzmann_rl_model.training_history[RLBoltzmannAgent])
 
 # ## Running the trained model
+
 # After training, we create a fresh model instance and apply the learned policies
 # to see how well the agents perform.
 
-#First, create a fresh model instance for simulation with the same parameters
+# First, create a fresh model instance for simulation with the same parameters
 fresh_boltzmann_model = initialize_boltzmann_rl_model()
 
 # And copy the trained policies to the fresh model
