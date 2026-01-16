@@ -14,7 +14,7 @@ end
 end
 
 # Helper functions for testing
-function test_observation_fn(model::ReinforcementLearningABM, agent_id::Int)
+function test_observation_fn(agent_id::Int, model::ReinforcementLearningABM)
 end
 
 function test_reward_fn(env::ReinforcementLearningABM, agent::AbstractAgent, action::Int,
@@ -235,7 +235,7 @@ end
 
         # Create config for multiple agent types
         config = RLConfig(
-            observation_fn=(model, agent_id) -> Float32[model[agent_id].pos...],
+            observation_fn=(agent_id, model) -> Float32[model[agent_id].pos...],
             reward_fn=(env, agent, action, init, final) -> 1.0f0,
             terminal_fn=(env) -> false,
             agent_step_fn=(agent, model, action) -> nothing,
@@ -282,7 +282,7 @@ end
 
         # 2. Test with a minimal valid config
         minimal_config = RLConfig(
-            observation_fn=(model, agent_id) -> Float32[1.0, 2.0],
+            observation_fn=(agent_id, model) -> Float32[1.0, 2.0],
             reward_fn=(agent, action, prev, curr) -> 1.0f0,
             training_agent_types=[RLTestAgent]
         )
@@ -298,7 +298,7 @@ end
 
         # 3. Test error with an invalid config (empty training agent types)
         invalid_config = RLConfig(
-            observation_fn=(model, agent_id) -> Float32[1.0, 2.0],
+            observation_fn=(agent_id, model) -> Float32[1.0, 2.0],
             reward_fn=(agent, action, prev, curr) -> 1.0f0,
             training_agent_types=[]
         )
@@ -347,7 +347,7 @@ end
         last_action::Int = 0
     end
 
-    function wrapper_test_observation_fn(model::ReinforcementLearningABM, agent_id::Int)
+    function wrapper_test_observation_fn(agent_id::Int, model::ReinforcementLearningABM)
         agent = model[agent_id]
         # Return position and wealth as observation
         return Float32[agent.pos[1], agent.pos[2], agent.wealth/100.0]
@@ -414,7 +414,7 @@ end
         agent = add_agent!(WrapperTestAgent, model, 15.0, 0)
 
         # Test observation function works
-        obs = config.observation_fn(model, agent.id)
+        obs = config.observation_fn(agent.id, model)
         @test obs isa Vector{Float32}
         @test length(obs) == 3
         @test obs[1] == 2.0f0  # x position
@@ -525,7 +525,7 @@ end
         for action in actions
             # Record initial state
             initial_model = deepcopy(model)
-            initial_obs = config.observation_fn(model, agent.id)
+            initial_obs = config.observation_fn(agent.id, model)
 
             # Execute action
             config.agent_step_fn(agent, model, action)
@@ -534,7 +534,7 @@ end
             reward = config.reward_fn(model, agent, action, initial_model, model)
 
             # Get new observation
-            new_obs = config.observation_fn(model, agent.id)
+            new_obs = config.observation_fn(agent.id, model)
 
             # Check terminal condition
             is_terminal = config.terminal_fn(model)

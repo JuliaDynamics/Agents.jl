@@ -8,7 +8,7 @@ This wrapper serves as a bridge between Agent-Based Models and Reinforcement Lea
 algorithms, translating between ABM concepts and RL concepts:
 
 - **States**: ABM state → Vector{Float32} representations
-- **Actions**: Discrete integer actions → Agent behaviors  
+- **Actions**: Discrete integer actions → Agent behaviors
 - **Observations**: Agent-centric views → Vector{Float32} feature vectors
 - **Rewards**: Simulation outcomes → Scalar reward signals
 
@@ -112,7 +112,7 @@ Get the observation for the current training agent.
 
 ## Notes
 This function uses the configured observation function to generate observation vectors
-for the current training agent. If no agent is currently being trained, it returns a 
+for the current training agent. If no agent is currently being trained, it returns a
 zero vector with appropriate dimensions.
 """
 function POMDPs.observation(wrapper::RLEnvironmentWrapper, s::Vector{Float32})
@@ -130,7 +130,7 @@ function POMDPs.observation(wrapper::RLEnvironmentWrapper, s::Vector{Float32})
     end
     config = model.rl_config[]
     # Get observation vector directly from the configured function
-    return config.observation_fn(model, current_agent)
+    return config.observation_fn(current_agent, model)
 end
 
 """
@@ -356,7 +356,7 @@ function advance_simulation!(model::ReinforcementLearningABM)
                         try
                             if haskey(model.trained_policies, agent_type)
                                 # Use trained policy
-                                obs_vec = config.observation_fn(model, other_agent)
+                                obs_vec = config.observation_fn(other_agent, model)
                                 action = Crux.action(model.trained_policies[agent_type], obs_vec)
                                 config.agent_step_fn(other_agent, model, action)
                             else

@@ -59,7 +59,7 @@ function create_multi_agent_rl_model(; n_predators=3, n_prey=7, dims=(10, 10), s
 end
 
 
-function simple_observation_fn(model, agent)
+function simple_observation_fn(agent, model)
     observation_radius = model.observation_radius
     # Simple observation: agent position, energy, wealth, and neighbor count
     neighbor_count = length([a for a in nearby_agents(agent, model, observation_radius)])
@@ -129,7 +129,7 @@ function simple_agent_step_fn(agent, model, action)
     end
 end
 
-function multi_agent_observation_fn(model, agent)
+function multi_agent_observation_fn(agent, model)
     observation_radius = model.observation_radius
 
     # Different observations for different agent types

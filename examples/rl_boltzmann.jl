@@ -12,7 +12,7 @@
 # specific goals - in this case, reducing wealth inequality as measured by the
 # Gini coefficient.
 
-# !!! note "`Crux` extension needed!"
+# !!! note "`Crux` needed!"
 #
 #     This functionality is formally a package extension. To access it you need to be `using Crux`.
 
@@ -108,6 +108,7 @@ end
 
 # The observation function provides agents with local neighborhood information.
 # This includes occupancy information and relative wealth of nearby agents.
+# The observation function must return the observed quantities as a `Vector{Float32}`.
 
 function global_to_local(neighbor_pos, center_pos, radius, grid_dims) # helper function
     function transform_dim(neighbor_coord, center_coord, dim_size)
@@ -120,8 +121,7 @@ function global_to_local(neighbor_pos, center_pos, radius, grid_dims) # helper f
     return ntuple(i -> transform_dim(neighbor_pos[i], center_pos[i], grid_dims[i]), length(grid_dims))
 end
 
-function boltzmann_get_observation(model::ABM, agent)
-    agent_pos = agent.pos
+function boltzmann_get_observation(agent, model::ABM)
     width, height = spacesize(model)
     observation_radius = model.observation_radius
 
@@ -129,10 +129,10 @@ function boltzmann_get_observation(model::ABM, agent)
     ## 2 channels: occupancy and relative wealth
     neighborhood_grid = zeros(Float32, grid_size, grid_size, 2)
 
-    for pos in nearby_positions(agent_pos, model, observation_radius)
+    for pos in nearby_positions(agent.pos, model, observation_radius)
         k = 0
         for neighbor in agents_in_position(pos, model)
-            lpos = global_to_local(pos, agent_pos, observation_radius, spacesize(model))
+            lpos = global_to_local(pos, agent.pos, observation_radius, spacesize(model))
             neighbor.id == agent.id && continue
             neighborhood_grid[lpos..., 1] = 1.0
             wealth_diff = Float32(neighbor.wealth - agent.wealth)
@@ -147,8 +147,8 @@ function boltzmann_get_observation(model::ABM, agent)
 
     total_wealth = sum(a.wealth for a in allagents(model))
     normalized_wealth = total_wealth > 0 ? Float32(agent.wealth / total_wealth) : 0.0f0
-    normalized_pos_x = Float32(agent_pos[1] / width)
-    normalized_pos_y = Float32(agent_pos[2] / height)
+    normalized_pos_x = Float32(agent.pos[1] / width)
+    normalized_pos_y = Float32(agent.pos[2] / height)
 
     return vcat(
         normalized_wealth,

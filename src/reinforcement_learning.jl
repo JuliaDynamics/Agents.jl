@@ -171,7 +171,7 @@ The `rl_config` should be an `RLConfig` struct with the following fields:
 
 ### Required Functions
 
-- **`observation_fn(model::ReinforcementLearningABM, agent::AbstractAgent) → Vector{Float32}`**
+- **`observation_fn(agent::AbstractAgent, model::ReinforcementLearningABM) → Vector{Float32}`**
   Function to generate observation vectors for agents from the model state.
   - `model`: The ReinforcementLearningABM instance
   - `agent`: The agent for which to generate observation
