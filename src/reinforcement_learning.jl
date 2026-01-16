@@ -120,17 +120,21 @@ with built-in reinforcement learning capabilities. This model type integrates RL
 into the ABM framework, allowing agents to learn and adapt their behavior
 through interaction with the environment.
 
+!!! note "`Crux` extension needed!"
+
+    This functionality is formally a package extension. To access it you need to be `using Crux`.
+
 ## Key Features
 
 - **Integrated RL Training**: Built-in support for training agents using various RL algorithms
-- **Multi-Agent Learning**: Support for training multiple agent types simultaneously or sequentially  
+- **Multi-Agent Learning**: Support for training multiple agent types simultaneously or sequentially
 - **Flexible Observation Models**: Customizable observation functions for different agent types
 - **Reward Engineering**: User-defined reward functions for different learning objectives
 - **Policy Management**: Automatic management of trained policies and their deployment
 
 ## Usage Overview
 
-For a complete tutorial on using `ReinforcementLearningABM`, see the 
+For a complete tutorial on using `ReinforcementLearningABM`, see the
 [Boltzmann Wealth Model with Reinforcement Learning](@ref) example in the documentation.
 
 The typical workflow is:
@@ -165,13 +169,13 @@ The `rl_config` should be an `RLConfig` struct with the following fields:
 
 ### Required Functions
 
-- **`observation_fn(model::ReinforcementLearningABM, agent::AbstractAgent) → Vector{Float32}`**  
+- **`observation_fn(model::ReinforcementLearningABM, agent::AbstractAgent) → Vector{Float32}`**
   Function to generate observation vectors for agents from the model state.
   - `model`: The ReinforcementLearningABM instance
   - `agent`: The agent for which to generate observation
   - **Returns**: `Vector{Float32}` - Flattened feature vector ready for neural network input
 
-- **`reward_fn(env::ReinforcementLearningABM, agent::AbstractAgent, action::Int, initial_model::ReinforcementLearningABM, final_model::ReinforcementLearningABM) → Float32`**  
+- **`reward_fn(env::ReinforcementLearningABM, agent::AbstractAgent, action::Int, initial_model::ReinforcementLearningABM, final_model::ReinforcementLearningABM) → Float32`**
   Function to calculate scalar rewards based on agent actions and state transitions.
   - `agent`: The agent that took the action
   - `action`: Integer action that was taken
@@ -179,12 +183,12 @@ The `rl_config` should be an `RLConfig` struct with the following fields:
   - `current_model`: Model state after the action
   - **Returns**: `Float32` - Scalar reward signal for the action
 
-- **`terminal_fn(env::ReinforcementLearningABM) → Bool`**  
+- **`terminal_fn(env::ReinforcementLearningABM) → Bool`**
   Function to determine if the current episode should terminate.
   - `env`: The current model state
   - **Returns**: `Bool` - `true` if episode should end, `false` to continue
 
-- **`agent_step_fn(agent::AbstractAgent, model::ReinforcementLearningABM, action::Int) → Nothing`**  
+- **`agent_step_fn(agent::AbstractAgent, model::ReinforcementLearningABM, action::Int) → Nothing`**
   Function that executes an agent's action in the model.
   - `agent`: The agent taking the action
   - `model`: The model containing the agent
@@ -193,32 +197,32 @@ The `rl_config` should be an `RLConfig` struct with the following fields:
 
 ### Required Action and Observation Spaces
 
-- **`action_spaces::Dict{Type, ActionSpace}`**  
+- **`action_spaces::Dict{Type, ActionSpace}`**
   Dictionary mapping agent types to their available actions.
   - Keys: Agent types (e.g., `MyAgent`)
   - Values: Action spaces (e.g., `Crux.DiscreteSpace(5)` for 5 discrete actions)
 
-- **`observation_spaces::Dict{Type, ObservationSpace}`**  
+- **`observation_spaces::Dict{Type, ObservationSpace}`**
   Dictionary mapping agent types to their observation vector dimensions.
-  - Keys: Agent types (e.g., `MyAgent`)  
+  - Keys: Agent types (e.g., `MyAgent`)
   - Values: Observation spaces (e.g., `Crux.ContinuousSpace((84,), Float32)` for 84-dim vectors)
 
 ### Other Required Arguments
 
-- **`training_agent_types::Vector{Type}`**  
+- **`training_agent_types::Vector{Type}`**
   Vector of agent types that should undergo RL training.
   - Must be a subset of agent types present in the model
   - Example: `[MyAgent1, MyAgent2]`
 
 ### Optional Arguments
 
-- **`discount_rates::Dict{Type, Float64}`** *(Optional)*  
+- **`discount_rates::Dict{Type, Float64}`** *(Optional)*
   Dictionary mapping agent types to their reward discount factors (γ).
   - Keys: Agent types
   - Values: Discount factors between 0.0 and 1.0
   - **Default**: 0.99 for all agent types if not specified
 
-- **`model_init_fn() → ReinforcementLearningABM`** *(Optional)*  
+- **`model_init_fn() → ReinforcementLearningABM`** *(Optional)*
   Function to create fresh model instances for episode resets during training.
   - **Returns**: New ReinforcementLearningABM instance with reset state
   - If not provided, uses basic model reset without full reinitialization
@@ -366,7 +370,7 @@ function rl_agent_step! end
 
 """
     get_current_training_agent_type(model::ReinforcementLearningABM) → Type
-    
+
 Get the currently training agent type.
 """
 function get_current_training_agent_type(model::ReinforcementLearningABM)
@@ -478,7 +482,7 @@ function step_ahead_rl! end
 ################
 
 """
-    setup_rl_training(model::ReinforcementLearningABM, agent_type; 
+    setup_rl_training(model::ReinforcementLearningABM, agent_type;
         training_steps=50_000,
         value_network=nothing,
         policy_network=nothing,
@@ -489,7 +493,7 @@ function step_ahead_rl! end
 
 Set up RL training for a specific agent type using the ReinforcementLearningABM directly.
 
-## Keyword Arguments  
+## Keyword Arguments
 - `training_steps::Int`: Number of training steps (default: 50_000)
 - `value_network`: Custom value network function (default: auto-generated)
 - `policy_network`: Custom policy network function (default: auto-generated)
@@ -503,7 +507,7 @@ Set up RL training for a specific agent type using the ReinforcementLearningABM 
 function setup_rl_training end
 
 """
-    train_agent_sequential(model::ReinforcementLearningABM, agent_types; 
+    train_agent_sequential(model::ReinforcementLearningABM, agent_types;
         training_steps=50_000,
         custom_networks=Dict(),
         custom_solvers=Dict(),
@@ -511,7 +515,7 @@ function setup_rl_training end
         solver_params=Dict()
     ) → (policies, solvers)
 
-Train multiple agent types sequentially using the ReinforcementLearningABM, where each 
+Train multiple agent types sequentially using the ReinforcementLearningABM, where each
 subsequent agent is trained against the previously trained agents.
 
 ## Keyword Arguments
@@ -527,8 +531,8 @@ subsequent agent is trained against the previously trained agents.
 function train_agent_sequential end
 
 """
-    train_agent_simultaneous(model::ReinforcementLearningABM, agent_types; 
-        n_iterations=5, 
+    train_agent_simultaneous(model::ReinforcementLearningABM, agent_types;
+        n_iterations=5,
         batch_size=10_000,
         custom_networks=Dict(),
         custom_solvers=Dict(),
@@ -536,7 +540,7 @@ function train_agent_sequential end
         solver_params=Dict()
     ) → (policies, solvers)
 
-Train multiple agent types simultaneously using the ReinforcementLearningABM with 
+Train multiple agent types simultaneously using the ReinforcementLearningABM with
 alternating batch updates.
 
 ## Keyword Arguments
@@ -622,19 +626,19 @@ Create a custom solver with specified parameters.
 function create_custom_solver end
 
 """
-    train_model!(model::ReinforcementLearningABM 
+    train_model!(model::ReinforcementLearningABM
                 training_mode::Symbol=:sequential; kwargs...)
 
-Train the agents in the model using reinforcement learning. Agent types to train are read 
-from `model.rl_config[:training_agent_types]`. Trained policies are stored in the model 
-and can be accessed via [`get_trained_policies`](@ref) or copied to other models using 
-[`copy_trained_policies!`](@ref). This is the main function for RL training in Agents.jl, supporting both single-agent and multi-agent 
+Train the agents in the model using reinforcement learning. Agent types to train are read
+from `model.rl_config[:training_agent_types]`. Trained policies are stored in the model
+and can be accessed via [`get_trained_policies`](@ref) or copied to other models using
+[`copy_trained_policies!`](@ref). This is the main function for RL training in Agents.jl, supporting both single-agent and multi-agent
 learning scenarios.
 
 ## Training Modes
 
 ### Sequential Training (`:sequential`)
-Agents are trained one at a time in sequence. Each subsequent agent type is trained against 
+Agents are trained one at a time in sequence. Each subsequent agent type is trained against
 the previously trained agents.
 
 **Process:**
@@ -642,8 +646,8 @@ the previously trained agents.
 2. Train second agent type against the trained first agent
 3. Continue until all agent types are trained
 
-### Simultaneous Training (`:simultaneous`)  
-All agent types are trained at the same time with alternating batch updates. This creates 
+### Simultaneous Training (`:simultaneous`)
+All agent types are trained at the same time with alternating batch updates. This creates
 a co-evolutionary dynamic where agents adapt to each other simultaneously.
 
 **Process:**
@@ -651,17 +655,17 @@ a co-evolutionary dynamic where agents adapt to each other simultaneously.
 2. Alternate training batches between agent types
 3. Each agent learns against the evolving policies of others
 
-## Keyword Arguments  
+## Keyword Arguments
 
 ### General Training Parameters
 
-- **`max_steps::Int`**: Maximum number of simulation steps per training episode 
+- **`max_steps::Int`**: Maximum number of simulation steps per training episode
   (default: 50). Episodes terminate when this limit is reached OR `terminal_fn` returns `true`.
 
 ### Sequential Training Parameters
 This applies only when `training_mode=:sequential`:
 
-- **`training_steps::Int`**: Number of environment steps for training each agent type 
+- **`training_steps::Int`**: Number of environment steps for training each agent type
   (default: 50,000).
 
 ### Simultaneous Training Parameters
@@ -676,7 +680,7 @@ These apply only when `training_mode=:simultaneous`:
   - **Global parameters**: Applied to all agent types
     ```julia
     solver_params = Dict(
-        :ΔN => 200,              
+        :ΔN => 200,
         :log => (period=1000,),
     )
     ```
@@ -691,15 +695,15 @@ These apply only when `training_mode=:simultaneous`:
 - **`solver_types::Dict{Type, Symbol}`**: Different RL algorithms for different agent types.
   ```julia
   solver_types = Dict(
-      FastAgent => :DQN,    
-      SmartAgent => :PPO      
+      FastAgent => :DQN,
+      SmartAgent => :PPO
   )
   ```
 
 ## Network Architecture Customization
 
-- **`custom_networks::Dict{Type, Dict{Symbol, Function}}`**: Custom neural network 
-  architectures for specific agent types. Each entry maps an agent type to a dictionary 
+- **`custom_networks::Dict{Type, Dict{Symbol, Function}}`**: Custom neural network
+  architectures for specific agent types. Each entry maps an agent type to a dictionary
   containing `:value_network` and/or `:policy_network` functions.
   ```julia
   custom_networks = Dict(
@@ -710,7 +714,7 @@ These apply only when `training_mode=:simultaneous`:
   )
   ```
 
-- **`custom_solvers::Dict{Type, Any}`**: Pre-configured complete solvers for specific 
+- **`custom_solvers::Dict{Type, Any}`**: Pre-configured complete solvers for specific
   agent types. Bypasses automatic solver creation.
   ```julia
   custom_solvers = Dict(
@@ -726,7 +730,7 @@ These apply only when `training_mode=:simultaneous`:
 
 ### Basic training with custom solver parameters
 ```julia
-train_model!(model, MyAgent; 
+train_model!(model, MyAgent;
     training_steps=10000,
     solver_params=Dict(:ΔN => 100, :log => (period=500,)))
 ```
@@ -734,7 +738,7 @@ train_model!(model, MyAgent;
 ### Multi-Agent Sequential Training
 ```julia
 # Train predator and prey sequentially
-train_model!(model, [Predator, Prey]; 
+train_model!(model, [Predator, Prey];
     training_mode=:sequential,
     training_steps=20000,
     solver_params=Dict(
@@ -746,13 +750,13 @@ train_model!(model, [Predator, Prey];
 # Multi-Agent Simultaneous Training
 ```julia
 # Co-evolutionary training
-train_model!(model, [PlayerA, PlayerB]; 
+train_model!(model, [PlayerA, PlayerB];
     training_mode=:simultaneous,
     n_iterations=10,
     batch_size=5000,
     solver_params=Dict(
         PlayerA => Dict(:ΔN => 100),
-        PlayerB => Dict(:ΔN => 200)   
+        PlayerB => Dict(:ΔN => 200)
     ))
 ```
 
