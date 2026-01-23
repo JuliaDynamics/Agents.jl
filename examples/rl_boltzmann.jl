@@ -1,5 +1,18 @@
 # # [Boltzmann Wealth Model with Reinforcement Learning](@id rltutorial)
 
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../rn_boltzmann.mp4" type="video/mp4">
+# </video>
+# ```
+
+# ```@raw html
+# <video width="auto" controls autoplay loop>
+# <source src="../rl_boltzmann.mp4" type="video/mp4">
+# </video>
+# ```
+
+
 # This is a tutorial for the [`ReinforcementLearningABM`](@ref) model which
 # combines reinforcement learning with agent based modelling.
 # The example demonstrates how to integrate reinforcement learning with
@@ -163,6 +176,9 @@ end
 # The reward function encourages agents to reduce wealth inequality by rewarding
 # decreases in the Gini coefficient. This creates an incentive for agents to learn
 # movement patterns that promote wealth redistribution.
+# As the Gini coefficient is only dependent on the global model state,
+# all agents have the same reward, and hence the reward function does not
+# actually utilize the input agent.
 
 function boltzmann_calculate_reward(agent, action, previous_model, current_model)
 
@@ -183,26 +199,25 @@ end
 # Define when an RL episode should end. Here, episodes terminate when wealth
 # inequality (Gini coefficient) drops below a threshold, indicating success.
 
-function boltzmann_is_terminal_rl(env)
-    current_gini = gini(env)
-    return current_gini < 0.1
-end
+boltzmann_is_terminal_rl(env) = gini(env) < 0.1
 
 # ## Model initialization
 
 # The following functions handle model creation and RL configuration setup.
-# Define a separate function for model initialization
+# We first create a separate function the generates a [`ReinforcementLearningABM`](@ref)
+# without an RL configuration. This function will be further used during training to
+# generate new models while updating the overall model policies.
+
 function create_fresh_boltzmann_model(num_agents, dims, initial_wealth, observation_radius, seed=rand(Int))
     rng = MersenneTwister(seed)
     space = GridSpace(dims; periodic=true)
 
-    properties = Dict{Symbol,Any}(
-        :observation_radius => observation_radius
-    )
+    properties = Dict{Symbol,Any}(:observation_radius => observation_radius)
 
     model = ReinforcementLearningABM(RLBoltzmannAgent, space;
         agent_step=boltzmann_rl_step!,
-        properties=properties, rng=rng, scheduler=Schedulers.Randomly())
+        properties=properties, rng=rng, scheduler=Schedulers.Randomly()
+    )
 
     ## Add agents with random initial wealth
     for _ in 1:num_agents
@@ -212,8 +227,14 @@ function create_fresh_boltzmann_model(num_agents, dims, initial_wealth, observat
     return model
 end
 
+# We then use this function to create another keyword-based function,
+# which initializes an RL model with the RL training functions we have created so far:
+
 function initialize_boltzmann_rl_model(; num_agents=10, dims=(10, 10), initial_wealth=10, observation_radius=4)
-    ## RL configuration specifies the learning environment parameters
+    ## Create the main model using the initialization function
+    model = create_fresh_boltzmann_model(num_agents, dims, initial_wealth, observation_radius)
+
+    ## `RLConfig` specifies the learning environment parameters
     rl_config = RLConfig(;
         model_init_fn = () -> create_fresh_boltzmann_model(num_agents, dims, initial_wealth, observation_radius),
         observation_fn = boltzmann_get_observation,
@@ -230,10 +251,7 @@ function initialize_boltzmann_rl_model(; num_agents=10, dims=(10, 10), initial_w
         training_agent_types = [RLBoltzmannAgent]
     )
 
-    ## Create the main model using the initialization function
-    model = create_fresh_boltzmann_model(num_agents, dims, initial_wealth, observation_radius)
-
-    ## Set the RL configuration
+    ## Set the RL configuration to the model
     set_rl_config!(model, rl_config)
 
     return model
@@ -330,18 +348,20 @@ plotkwargs = (;
     agent_size=agent_size,
     agent_marker=:circle
 )
-abmvideo("boltzmann.mp4", fresh_boltzmann_model; frames=100,
+abmvideo("rn_boltzmann.mp4", fresh_boltzmann_model; frames=100,
     framerate=20,
-    title="Boltzmann Money Model with Random Agents",
-    plotkwargs...)
+    title="Boltzmann Wealth Model with Random Agents",
+    plotkwargs...
+)
 
 # We know copy the trained policies and the agents are...smarter!
 fresh_boltzmann_model = initialize_boltzmann_rl_model(; num_agents=500, dims=(100, 100))
 copy_trained_policies!(fresh_boltzmann_model, boltzmann_rl_model)
 abmvideo("rl_boltzmann.mp4", fresh_boltzmann_model; frames=100,
     framerate=20,
-    title="Boltzmann Money Model with RL Agents",
-    plotkwargs...)
+    title="Boltzmann Wealth Model with RL Agents",
+    plotkwargs...
+)
 
 # ## Key takeaways
 

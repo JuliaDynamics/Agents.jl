@@ -167,7 +167,8 @@ Same as [`StandardABM`](@ref):
 
 ## RL Configuration
 
-The `rl_config` should be an `RLConfig` struct with the following fields:
+The `rl_config` argument is an instance of the `RLConfig` struct with the following fields
+(which can be given as keywords):
 
 ### Required Functions
 
@@ -443,10 +444,8 @@ function reset_model_for_episode!(model::ReinforcementLearningABM)
 
     # If there's a model initialization function, use it
     # Handle both RLConfig struct and NamedTuple
-    model_init_fn = hasproperty(config, :model_init_fn) ? config.model_init_fn : nothing
-
-    if model_init_fn !== nothing
-        new_model = model_init_fn()
+    if config.model_init_fn !== nothing
+        new_model = config.model_init_fn()
         # Copy agents and properties from new model
         remove_all!(model)
         for agent in allagents(new_model)
