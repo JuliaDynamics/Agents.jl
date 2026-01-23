@@ -12,7 +12,6 @@
 # </video>
 # ```
 
-
 # This is a tutorial for the [`ReinforcementLearningABM`](@ref) model which
 # combines reinforcement learning with agent based modelling.
 # The example demonstrates how to integrate reinforcement learning with
@@ -290,7 +289,8 @@ fresh_boltzmann_model = initialize_boltzmann_rl_model()
 copy_trained_policies!(fresh_boltzmann_model, boltzmann_rl_model)
 
 # Let's visualize the initial state and run a simulation to see the trained behavior.
-using CairoMakie, ColorSchemes
+using CairoMakie
+using CairoMakie.Makie.ColorSchemes
 
 function agent_color(agent) # Custom color function based on wealth
     max_expected_wealth = 10
