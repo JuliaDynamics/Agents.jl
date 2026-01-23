@@ -3,6 +3,7 @@ println("Loading packages...")
 using Agents
 using LightOSM
 using CairoMakie
+using Crux # precompile it to avoid doc messages
 import Literate
 
 pages = [
@@ -15,6 +16,7 @@ pages = [
         "examples/predator_prey.md",
         "examples/rabbit_fox_hawk.md",
         "examples/event_rock_paper_scissors.md",
+        "examples/rl_boltzmann.md",
         "examples.md"
     ],
     "api.md",
