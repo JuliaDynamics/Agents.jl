@@ -10,17 +10,11 @@ using CairoMakie, Agents
     If you have found this package useful, please consider starring it on [GitHub](https://github.com/JuliaDynamics/Agents.jl).
     This gives us an accurate lower bound of the (satisfied) user count.
 
-!!! tip "Latest news: Agents.jl v6.0"
-    This is a new major release of Agents.jl with great new content
-    and massive performance increases all across the board!
-    Please see the online [CHANGELOG](https://github.com/JuliaDynamics/Agents.jl/blob/main/CHANGELOG.md) for a full list of changes.
-    The most noteworthy ones are:
+!!! tip "Latest news: Agents.jl v6.3"
+    This new version brings two powerful, but both **experimental** features:
 
-    - A new macro `@multiagent` allows to run multi-agent simulations more efficiently.
-    - A new experimental model type `EventQueueABM` has been implemented. It operates in continuous time through the scheduling of events at arbitrary time points. It is a generalization of "Gillespie-like" models.
-    - `AgentBasedModel` defines an API that can be extended by other models.
-    - Stronger inheritance capabilities in `@agent`.
-    - Manually setting or altering the ids of agents is no longer allowed. The agent id is now considered a read-only field, and is set internally by Agents.jl.
+    1. Allowing the agent container to be based on `StructVectors`, using a Struct-of-Arrays internal layout. Currently it only supports single agent types. To use this, pass `container = StructVector` to `StandardABM` or `EventQueueABM` constructors, as well as use the helper construct `SoAType{A}` for dispatch purposes instead of your agent type `A` (read the docstring of `SoAType`).
+    2. Native integration of ABMs with Reinforcement Learning is now provided by the new model type `ReinforcementLearningABM`. To learn how to use this functionality checkout the new tutorial on the Boltzmann Wealth Model with Reinforcement Learning.
 
 
 ## Highlights
