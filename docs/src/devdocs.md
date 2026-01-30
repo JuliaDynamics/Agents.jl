@@ -102,7 +102,7 @@ groups:
 ## Required
 const ABMPlot = Agents.get_ABMPlot_type()
 
-function Agents.agents_space_dimensionality(space::Agents.AbstractSpace)
+function Agents.space_axis_dimensionality(space::Agents.AbstractSpace)
 end
 
 function Agents.get_axis_limits(model::ABM{<:Agents.AbstractSpace})

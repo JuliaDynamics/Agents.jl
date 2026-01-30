@@ -146,6 +146,16 @@ function Makie.plot!(p::_ABMPlot)
     p.pos, p.color, p.marker, p.markersize =
         lift_attributes(p.abmobs[].model, p.agent_color, p.agent_size, p.agent_marker, p.offset)
 
+    # This works, but then `spaceplot!` errors.
+    # Makie.ComputePipeline.map!(p, [:abmobs, :agent_color, :agent_size, :agent_marker, :offset], [:pos, :color, :marker, :markersize]) do abmobs, ac, as, am, offset
+    #     model = abmobs.model
+    #     pos = abmplot_pos(model, offset)
+    #     color = abmplot_colors(model, ac)
+    #     marker = abmplot_markers(model, am, pos)
+    #     markersize = abmplot_markersizes(model, as)
+    #     return pos, color, marker, markersize
+    # end
+
     # gracefully handle deprecations of old plot kwargs
     merge_spaceplotkwargs!(p)
     merge_agentsplotkwargs!(p)

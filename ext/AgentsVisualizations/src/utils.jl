@@ -5,7 +5,7 @@ function Agents.check_space_visualization_API(::ABM{S}) where {S}
     checkmark(i) = checks[i] ? "✔" : "❌"
     checks = [
         # Required
-        hasmethod(agents_space_dimensionality, (S, )),
+        hasmethod(space_axis_dimensionality, (S, )),
         hasmethod(get_axis_limits, (ABM{S}, )),
         hasmethod(agentsplot!, (Axis, ABMP{S})) ||
             hasmethod(agentsplot!, (Axis3, ABMP{S})),
@@ -58,7 +58,7 @@ end
 function has_custom_space(::ABM{S}) where {S}
     S <: Nothing &&
         @info "An empty plot will be drawn for agents in a model with Nothing space."
-    if S <: Union{GridSpace, GridSpaceSingle, OSMSpace, ContinuousSpace, 
+    if S <: Union{GridSpace, GridSpaceSingle, OSMSpace, ContinuousSpace,
         GraphSpace, Nothing}
         return false
     end
@@ -70,7 +70,7 @@ first_abmplot_in(ax) = ax.scene.plots[findfirst(p -> isa(p, _ABMPlot), ax.scene.
 function merge_spaceplotkwargs!(p)
     if hasproperty(p, :osmplotkwargs)
         @warn "Usage of osmplotkwargs is deprecated. " *
-            "Please remove it from the call to abmplot and " * 
+            "Please remove it from the call to abmplot and " *
             "use only spaceplotkwargs instead." maxlog=1
         merge!(p.spaceplotkwargs, p.osmplotkwargs)
     end

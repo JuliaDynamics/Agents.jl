@@ -1,6 +1,6 @@
 ## Required
 
-Agents.agents_space_dimensionality(::GraphSpace) = 2
+Agents.space_axis_dimensionality(::GraphSpace) = 2
 
 Agents.get_axis_limits(model::ABM{<:GraphSpace}) = nothing, nothing
 
@@ -64,7 +64,7 @@ end
 
 ## Inspection
 
-function Makie.show_data(inspector::DataInspector, 
+function Makie.show_data(inspector::DataInspector,
         p::ABMP{<:GraphSpace}, idx, source::Scatter)
     pos = Makie.position_on_plot(source, idx)
     proj_pos = Makie.shift_project(Makie.parent_scene(p), pos)

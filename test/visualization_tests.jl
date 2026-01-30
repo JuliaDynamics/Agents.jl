@@ -33,14 +33,14 @@ params = Dict(
 )
 
 function daisyworld_test()
-    model = AgentsExampleZoo.daisyworld(; solar_luminosity = 1.0, solar_change = 0.0, 
+    model = AgentsExampleZoo.daisyworld(; solar_luminosity = 1.0, solar_change = 0.0,
         scenario = :change)
     fig, _ = abmplot(model; params, plotkwargs...)
     return fig
 end
 
 function daisyworld_abmexploration(params, plotkwargs)
-    model = Models.daisyworld(; solar_luminosity = 1.0, solar_change = 0.0, 
+    model = Models.daisyworld(; solar_luminosity = 1.0, solar_change = 0.0,
         scenario = :change)
     black(a) = a.breed == :black
     white(a) = a.breed == :white
@@ -48,7 +48,7 @@ function daisyworld_abmexploration(params, plotkwargs)
     temperature(model) = mean(model.temperature)
     mdata = [temperature, :solar_luminosity]
     fig, _ = abmexploration(model;
-        params, plotkwargs...,  adata, alabels = ["Black daisys", "White daisys"], 
+        params, plotkwargs...,  adata, alabels = ["Black daisys", "White daisys"],
         mdata, mlabels = ["T", "L"]
     )
     return fig
@@ -166,7 +166,7 @@ This is similar to [`ids_in_position`](@ref), but specialized for `CustomSpace`.
 """
 Agents.ids_in_position(pos, model::ABM{<:CustomSpace}) = Agents.ids_in_position(pos, abmspace(model))
 Agents.ids_in_position(pos, space::CustomSpace) = space.stored_ids[pos...]
-Base.isempty(pos::Any, model::ABM{<:CustomSpace}) = Agents.ids_in_position(pos, model) == 0 
+Base.isempty(pos::Any, model::ABM{<:CustomSpace}) = Agents.ids_in_position(pos, model) == 0
 
 #######################################################################################
 # Implementation of nearby_stuff
@@ -245,7 +245,7 @@ end
 
 const ABMPlot = Agents.get_ABMPlot_type()
 
-Agents.agents_space_dimensionality(::CustomSpace{D}) where {D} = D
+Agents.space_axis_dimensionality(::CustomSpace{D}) where {D} = D
 
 function Agents.get_axis_limits(model::ABM{<:CustomSpace})
     e = size(abmspace(model)) .+ 0.5
@@ -264,7 +264,7 @@ function Agents.ids_to_inspect(model::ABM{<:CustomSpace}, pos)
 end
 
 function custom_space_schelling_test()
-    space = CustomSpace((20, 20); 
+    space = CustomSpace((20, 20);
         periodic = false,
         field_that_should_be_a_property_instead = true
     )

@@ -1,5 +1,5 @@
-Agents.agents_space_dimensionality(model::ABM) = 
-    Agents.agents_space_dimensionality(abmspace(model))
+Agents.space_axis_dimensionality(model::ABM) =
+    Agents.space_axis_dimensionality(abmspace(model))
 
 function Agents.agentsplot!(ax::Axis, p::ABMP)
     if user_used_polygons(p.agent_marker[], p.marker[])
@@ -12,7 +12,7 @@ end
 
 "Plot agents into a 3D space."
 function Agents.agentsplot!(ax::Axis3, p::_ABMPlot)
-    if p.agent_marker[] === :circle 
+    if p.agent_marker[] === :circle
         p.agent_marker[], p.marker[] = :Sphere, Sphere(Point3f(0), 1)
     end
     meshscatter!(p, p.pos; p.color, p.marker, p.markersize, p.agentsplotkwargs...)
@@ -51,7 +51,7 @@ function Agents.abmplot_heatobs(model::ABM, heatarray)
 end
 
 function Agents.abmplot_pos(model::ABM, offset)
-    postype = agents_space_dimensionality(abmspace(model)) == 3 ? Point3f : Point2f
+    postype = space_axis_dimensionality(abmspace(model)) == 3 ? Point3f : Point2f
     if isnothing(offset)
         return postype[postype(model[i].pos) for i in allids(model)]
     else
@@ -60,7 +60,7 @@ function Agents.abmplot_pos(model::ABM, offset)
 end
 
 Agents.abmplot_colors(model::ABM, ac) = to_color(ac)
-Agents.abmplot_colors(model::ABM, ac::Function) = 
+Agents.abmplot_colors(model::ABM, ac::Function) =
     to_color.([ac(model[i]) for i in allids(model)])
 
 function Agents.abmplot_markers(model::ABM, am, pos)
@@ -90,7 +90,7 @@ Agents.abmplot_markersizes(model::ABM, as::Function) = [as(model[i]) for i in al
 ## Inspection
 
 # 2D space
-function Makie.show_data(inspector::DataInspector, 
+function Makie.show_data(inspector::DataInspector,
         p::ABMP{<:Agents.AbstractSpace}, idx, source::Scatter)
     pos = Makie.position_on_plot(source, idx)
     proj_pos = Makie.shift_project(Makie.parent_scene(p), pos)

@@ -3,9 +3,9 @@ module AgentsVisualizations
 using Agents, Makie
 using Agents: add_interaction!
 # Pull API functions into extension module
-using Agents: agents_space_dimensionality, get_axis_limits, agentsplot!
+using Agents: space_axis_dimensionality, get_axis_limits, agentsplot!
 using Agents: spaceplot!, static_preplot!
-using Agents: abmplot_heatobs, abmplot_pos, abmplot_colors, abmplot_markers, 
+using Agents: abmplot_heatobs, abmplot_pos, abmplot_colors, abmplot_markers,
     abmplot_markersizes
 using Agents: convert_element_pos, ids_to_inspect
 

@@ -272,22 +272,22 @@ export translate_polygon, scale_polygon, rotate_polygon
 ############################################################################################
 
 """
-    check_space_visualization_API(model::ABM)
+    check_space_visualization_API(space::AbstractSpace)
 
-Checks whether all the necessary method extensions indicated in
-[`space-visualization-API.jl`](../ext/AgentsVisualizations/space-visualization-API.jl)
-have been defined.
+Checks whether all the necessary visualization method extensions for the given `space`
+are defined.
 """
 function check_space_visualization_API end
 
 ## Required
 
 """
-    agents_space_dimensionality(space::S) where {S<:Agents.AbstractSpace}
+    space_axis_dimensionality(space::AbstractSpace)
 
-Return dimensionality of given model space.
+Return 2 or 3, which decides whether a 2D or 3D axis will be used
+to plot ABMs with a given `space`. Default to 2.
 """
-function agents_space_dimensionality end
+space_axis_dimensionality(space::AbstractSpace) = 2
 
 """
     get_axis_limits(model::ABM{S}) where {S<:Agents.AbstractSpace}

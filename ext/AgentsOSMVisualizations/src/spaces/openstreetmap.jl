@@ -1,6 +1,6 @@
 ## Required
 
-Agents.agents_space_dimensionality(::OSMSpace) = 2
+Agents.space_axis_dimensionality(::OSMSpace) = 2
 
 function Agents.get_axis_limits(model::ABM{<:OSMSpace})
     o = [Inf, Inf]
@@ -18,7 +18,7 @@ end
 ## Preplots
 
 """
-`OSMSpace` preplot that takes `spaceplotkwargs` and creates an `OSMMakie.osmplot` 
+`OSMSpace` preplot that takes `spaceplotkwargs` and creates an `OSMMakie.osmplot`
 with them in the given Makie axis.
 """
 function Agents.spaceplot!(ax::Axis, p::ABMP{<:OSMSpace}; spaceplotkwargs...)

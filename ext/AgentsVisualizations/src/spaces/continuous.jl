@@ -1,6 +1,6 @@
 ## Required
 
-Agents.agents_space_dimensionality(::ContinuousSpace{D}) where {D} = D
+Agents.space_axis_dimensionality(::ContinuousSpace{D}) where {D} = D
 
 function Agents.get_axis_limits(model::ABM{<:ContinuousSpace})
     e = abmspace(model).extent
