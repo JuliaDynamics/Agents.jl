@@ -232,8 +232,10 @@ The `rl_config` argument is an instance of the `RLConfig` struct with the follow
 
 - **`model_init_fn() → ReinforcementLearningABM`** *(Optional)*
   Function to create fresh model instances for episode resets during training.
-  - **Returns**: New ReinforcementLearningABM instance with reset state
-  - If not provided, uses basic model reset without full reinitialization
+  - **Returns**: New `ReinforcementLearningABM` instance (with agents and anything else
+    required to run the ABM simulation)
+  - If not provided, only the model time is reset to 0 at the start of each episode;
+    all agents and model properties carry over from the previous episode
 
 ## Related Functions
 
