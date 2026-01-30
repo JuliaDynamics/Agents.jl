@@ -54,11 +54,12 @@
 # - **Goal**: Learn movement patterns that promote wealth redistribution
 
 # ## Loading packages and defining the agent type
+
 # This part is the same as with the normal usage of Agents.jl
 
 using Agents, Random, Statistics, Distributions
 
-# Import the library required for the RL extension
+# while we also need to import the library required for the RL extension
 using Crux
 
 # and define the agent type as usual
