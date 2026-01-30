@@ -182,12 +182,13 @@ The `rl_config` argument is an instance of the `RLConfig` struct with the follow
   - `agent`: The agent for which to generate observation
   - **Returns**: `Vector{Float32}` - Flattened feature vector ready for neural network input
 
-- **`reward_fn(env::ReinforcementLearningABM, agent::AbstractAgent, action::Int, initial_model::ReinforcementLearningABM, final_model::ReinforcementLearningABM) → Float32`**
+- **`reward_fn(agent::AbstractAgent, action::Int, model_before::ABM, model_after::ABM) → Float32`**
   Function to calculate scalar rewards based on agent actions and state transitions.
-  - `agent`: The agent that took the action
+  Note that often this does not depend on either `agent, action`.
+  - `agent`: The agent that took the given `action`
   - `action`: Integer action that was taken
-  - `previous_model`: Model state before the action
-  - `current_model`: Model state after the action
+  - `model_before`: Model state before the action
+  - `model_after`: Model state after the action
   - **Returns**: `Float32` - Scalar reward signal for the action
 
 - **`terminal_fn(env::ReinforcementLearningABM) → Bool`**
