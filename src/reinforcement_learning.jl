@@ -174,6 +174,10 @@ The `rl_config` argument is an instance of the `RLConfig` struct with the follow
 
 - **`observation_fn(agent::AbstractAgent, model::ReinforcementLearningABM) → Vector{Float32}`**
   Function to generate observation vectors for agents from the model state.
+  The purpose of the observation function is to transform from the state space to the
+  observation space (that is almost always much more limited). Said more formally
+  the observation function maps from the markov decision process (the whole ABM) to a
+  partially observable markov decision process. The inputs and outputs are:
   - `model`: The ReinforcementLearningABM instance
   - `agent`: The agent for which to generate observation
   - **Returns**: `Vector{Float32}` - Flattened feature vector ready for neural network input

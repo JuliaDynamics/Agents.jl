@@ -118,9 +118,10 @@ end
 
 # ### Observation function
 
-# The observation function provides agents with local neighborhood information.
-# This includes occupancy information and relative wealth of nearby agents.
-# The observation function must return the observed quantities as a `Vector{Float32}`.
+# The observation function is a key component of reinforcement learning.
+# In our scenario, it focuses on the local neighborhood of the agent and the
+# wealth distribution in this neighborhood (as well as the agent's own wealth).
+# Note that the observation function must return the observed quantities as a `Vector{Float32}`.
 
 function global_to_local(neighbor_pos, center_pos, radius, grid_dims) # helper function
     function transform_dim(neighbor_coord, center_coord, dim_size)
@@ -172,7 +173,8 @@ end
 
 # ### Reward function
 
-# The reward function encourages agents to reduce wealth inequality by rewarding
+# The reward function is also a key component of reinforcement learning.
+# Here, the reward function encourages agents to reduce wealth inequality by rewarding
 # decreases in the Gini coefficient. This creates an incentive for agents to learn
 # movement patterns that promote wealth redistribution.
 # As the Gini coefficient is only dependent on the global model state,
