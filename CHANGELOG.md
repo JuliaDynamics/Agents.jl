@@ -1,6 +1,13 @@
 # v6.3
 
-**Experimental**: The `StructVector` container type, that supports a Struct-of-Arrays (SoA) layout, has been added. It currently only works with single agent types.
+This new version brings two powerful, but both **experimental** features:
+
+1. Allowing the agent container to be based on `StructVectors`, using a Struct-of-Arrays internal layout. Currently it only supports single agent types. To use this, pass `container = StructVector` to `StandardABM` or `EventQueueABM` constructors, as well as use the helper construct `SoAType{A}` for dispatch purposes instead of your agent type `A` (read the docstring of `SoAType`).
+2. Native integration of ABMs with Reinforcement Learning is now provided by the new model type `ReinforcementLearningABM`. To learn how to use this functionality checkout the new tutorial on the Boltzmann Wealth Model with Reinforcement Learning.
+
+These two features are labelled experimental because they did not yet undergo extensive testing by a broader pool of users. As versions progress and bug reports come in, and get solved, the features will mature to fully stable.
+
+The experimental status allows us as developers to make breaking changes, if need be, to either feature, in order to fully stabilize them.
 
 # v6.2
 

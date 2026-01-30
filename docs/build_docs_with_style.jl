@@ -52,7 +52,7 @@ function build_docs_with_style(pages, modules...;
     )
     settings = (
         modules = [modules...],
-        format = Documenter.HTML(
+        format = Documenter.HTML(;
             prettyurls = CI,
             assets = [
                 asset("https://fonts.googleapis.com/css?family=Montserrat|Source+Code+Pro&display=swap", class=:css),

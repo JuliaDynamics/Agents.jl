@@ -8,24 +8,37 @@ In this page we list the remaining API functions, which constitute the bulk of A
 - [`AgentBasedModel`](@ref)
 - [`StandardABM`](@ref)
 - [`EventQueueABM`](@ref)
+- [`ReinforcementLearningABM`](@ref)
 
 ```@docs
 AgentBasedModel
 step!(::AgentBasedModel, args...)
 ```
 
-### Discrete time models
+## Discrete time ABM
 
 ```@docs
 StandardABM
 ```
 
-### Continuous time models
+## Continuous time ABM
 
 ```@docs
 EventQueueABM
 AgentEvent
 add_event!
+```
+
+## Reinforcement learning ABM
+
+```@docs
+ReinforcementLearningABM
+set_rl_config!
+create_policy_network
+create_value_network
+train_model!
+get_trained_policies
+copy_trained_policies!
 ```
 
 ## Agent types
@@ -94,6 +107,7 @@ OpenStreetMapSpace
 ```
 
 ## Adding agents
+
 ```@docs
 add_agent!
 add_agent_own_pos!
@@ -102,6 +116,7 @@ random_position
 ```
 
 ## Moving agents
+
 ```@docs
 move_agent!
 walk!
@@ -110,6 +125,7 @@ get_direction
 ```
 
 ### Movement with paths
+
 For [`OpenStreetMapSpace`](@ref), and [`GridSpace`](@ref)/[`ContinuousSpace`](@ref) using [`Pathfinding`](@ref), a special
 movement method is available.
 
@@ -121,6 +137,7 @@ is_stationary
 ```
 
 ## Removing agents
+
 ```@docs
 remove_agent!
 remove_all!
@@ -128,12 +145,14 @@ sample!
 ```
 
 ## Space utility functions
+
 ```@docs
 normalize_position
 spacesize
 ```
 
 ## [`DiscreteSpace` exclusives](@id DiscreteSpace_exclusives)
+
 ```@docs
 positions
 npositions
@@ -154,6 +173,7 @@ isempty(::Int, ::ABM)
 ```
 
 ## `GraphSpace` exclusives
+
 ```@docs
 add_edge!
 rem_edge!
@@ -162,6 +182,7 @@ rem_vertex!
 ```
 
 ## [`ContinuousSpace` exclusives](@id ContinuosSpace_exclusives)
+
 ```@docs
 nearest_neighbor
 get_spatial_property
@@ -174,6 +195,7 @@ manhattan_distance
 ```
 
 ## `OpenStreetMapSpace` exclusives
+
 ```@docs
 OSM
 OSM.lonlat
@@ -190,6 +212,7 @@ OSM.download_osm_network
 ```
 
 ## Nearby Agents
+
 ```@docs
 nearby_ids
 nearby_agents
@@ -205,6 +228,7 @@ Most iteration in Agents.jl is **dynamic** and **lazy**, when possible, for perf
 
 **Dynamic** means that when iterating over the result of e.g. the [`ids_in_position`](@ref) function, the iterator will be affected by actions that would alter its contents.
 Specifically, imagine the scenario
+
 ```@example docs
 using Agents
 # We don't need to make a new agent type here,
@@ -218,16 +242,20 @@ for id in ids_in_position((1, 1, 1, 1), model)
 end
 collect(allids(model))
 ```
+
 You will notice that only 1 agent was removed. This is simply because the final state of the iteration of `ids_in_position` was reached unnaturally, because the length of its output was reduced by 1 _during_ iteration.
 To avoid problems like these, you need to `collect` the iterator to have a non dynamic version.
 
 **Lazy** means that when possible the outputs of the iteration are not collected and instead are generated on the fly.
 A good example to illustrate this is [`nearby_ids`](@ref), where doing something like
+
 ```julia
 a = random_agent(model)
 sort!(nearby_ids(random_agent(model), model))
 ```
+
 leads to error, since you cannot `sort!` the returned iterator. This can be easily solved by adding a `collect` in between:
+
 ```@example docs
 a = random_agent(model)
 sort!(collect(nearby_agents(a, model)))
@@ -248,12 +276,12 @@ index_mapped_groups
 ```
 
 ## Data collection and analysis
+
 ```@docs
 run!
 ensemblerun!
 paramscan
 ```
-
 
 ### Manual data collection
 
@@ -269,6 +297,7 @@ dataname
 ```
 
 For example, the core loop of `run!` is just
+
 ```julia
 df_agent = init_agent_dataframe(model, adata)
 df_model = init_model_dataframe(model, mdata)
@@ -287,6 +316,7 @@ while until(t, t0, n, model)
 end
 return df_agent, df_model
 ```
+
 (here `until` and `should_we_collect` are internal functions)
 
 ## [Schedulers](@id Schedulers)
@@ -311,15 +341,19 @@ Schedulers.ByKind
 ```
 
 ### [Advanced scheduling](@id advanced_scheduling)
+
 You can use [Function-like objects](https://docs.julialang.org/en/v1/manual/methods/#Function-like-objects) to make your scheduling possible of arbitrary events.
 For example, imagine that after the `n`-th step of your simulation you want to fundamentally change the order of agents. To achieve this you can define
+
 ```julia
 mutable struct MyScheduler
     n::Int # step number
     w::Float64
 end
 ```
+
 and then define a calling method for it like so
+
 ```julia
 function (ms::MyScheduler)(model::ABM)
     ms.n += 1 # increment internal counter by 1 each time its called
@@ -334,17 +368,20 @@ function (ms::MyScheduler)(model::ABM)
     end
 end
 ```
+
 and pass it to e.g. `step!` by initializing it
+
 ```julia
 ms = MyScheduler(100, 0.5)
 step!(model, agentstep, modelstep, 100; scheduler = ms)
 ```
 
-
 ### How to use `Distributed`
+
 To use the `parallel=true` option of [`ensemblerun!`](@ref) you need to load `Agents` and define your fundamental types at all processors. See the [Performance Tips](@ref) page for parallelization.
 
 ## Path-finding
+
 ```@docs
 Pathfinding
 Pathfinding.AStar
@@ -354,6 +391,7 @@ Pathfinding.random_walkable
 ```
 
 ### Pathfinding Metrics
+
 ```@docs
 Pathfinding.DirectDistance
 Pathfinding.MaxDistance
@@ -364,8 +402,10 @@ Building a custom metric is straightforward, if the provided ones do not suit yo
 See the [Developer Docs](@ref) for details.
 
 ## Save, Load, Checkpoints
+
 There may be scenarios where interacting with data in the form of files is necessary. The following
 functions provide an interface to save/load data to/from files.
+
 ```@docs
 AgentsIO.save_checkpoint
 AgentsIO.load_checkpoint
@@ -374,6 +414,7 @@ AgentsIO.dump_to_csv
 ```
 
 It is also possible to write data to file at predefined intervals while running your model, instead of storing it in memory:
+
 ```@docs
 offline_run!
 ```
