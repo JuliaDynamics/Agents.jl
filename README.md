@@ -7,18 +7,19 @@
 [![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 [![Package Downloads](https://img.shields.io/badge/dynamic/json?url=http%3A%2F%2Fjuliapkgstats.com%2Fapi%2Fv1%2Ftotal_downloads%2FAgents&query=total_requests&label=Downloads)](http://juliapkgstats.com/pkg/Agents)
 
-Agents.jl is a pure [Julia](https://julialang.org/) framework for agent-based modeling (ABM): a computational simulation methodology where autonomous agents react to their environment (including other agents) given a predefined set of rules.
-Some major highlights of Agents.jl are:
+**Agents.jl** is a pure [Julia](https://julialang.org/) general-purpose framework for **agent-based modeling (ABM)**: a computational simulation methodology where autonomous agents react to their environment (including other agents) given a predefined set of rules.
+Some major highlights of Agents.jl that set it apart other similar frameworks are:
 
 1. It is fast (typically [faster than established competitors](https://github.com/JuliaDynamics/ABMFrameworksComparison))
 2. It is simple: has a very short learning curve and requires writing minimal code
 3. Has an extensive interface of thousands of out-of-the box possible agent actions
 4. Straightforwardly allows simulations on Open Street Maps
-5. Allows both traditional discrete-time ABM simulations as well as continuous time
-   "event queue" based ABM simulations.
-6. Provides native and unrestricted integration of ABM simulations with Reinforcement Learning (RL).
+5. Allows both traditional discrete-time ABM simulations as well as continuous time "event queue" based ABM simulations
+6. Provides native and unrestricted integration of ABM simulations with Reinforcement Learning (RL)
 
 More information and an extensive list of features can be found in the documentation, which you can either find [online](https://juliadynamics.github.io/Agents.jl/stable/) or build locally by running the `docs/make.jl` file.
+
+**Agents.jl** is part of [JuliaDynamics](https://juliadynamics.github.io/JuliaDynamics/), an organization dedicated to creating high quality scientific software.
 
 ## Citation
 
