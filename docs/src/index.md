@@ -19,20 +19,20 @@ using CairoMakie, Agents
 
 ## Highlights
 
-### Software quality
-
-* Free and open source.
-* Small learning curve due to intuitive design based on a modular space-agnostic function-based modelling implementation.
-* Extremely high performance when compared to other open source frameworks, routinely being 100x faster versus other ABM frameworks ([proof](https://github.com/JuliaDynamics/ABM_Framework_Comparisons))
-* User-created models typically have much smaller source code versus implementations in other open source ABM frameworks ([proof](https://github.com/JuliaDynamics/ABM_Framework_Comparisons))
-* High quality, extensive documentation featuring tutorials, example ABM implementations, an [extra zoo of ABM examples](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/), and integration examples with other Julia packages
-
-
 ```@raw html
 <video width="auto" controls autoplay loop>
 <source src="https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/videos/agents/showcase.mp4?raw=true" type="video/mp4">
 </video>
 ```
+
+### Software quality
+
+* Free and open source.
+* Small learning curve due to intuitive design based on a modular space-agnostic functional modelling implementation.
+* User-created models typically have much smaller source code versus implementations in other open source ABM frameworks ([proof](https://github.com/JuliaDynamics/ABM_Framework_Comparisons)), making them faster to prototype and modify.
+* Excellent computational performance, typically [faster than established competitors](https://github.com/JuliaDynamics/ABMFrameworksComparison).
+* High quality, extensive documentation featuring tutorials, example ABM implementations, an [extra zoo of ABM examples](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/), integration examples with other Julia packages, and developer's docs.
+* Developer-friendly design allows fundamentally new progress in ABM modelling. You can create entirely new types of Space configurations and integrate them fully with the rest of Agents.jl API.
 
 
 ### Agent based modelling
