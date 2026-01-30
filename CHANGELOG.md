@@ -9,6 +9,10 @@ These two features are labelled experimental because they did not yet undergo ex
 
 The experimental status allows us as developers to make breaking changes, if need be, to either feature, in order to fully stabilize them.
 
+Other notable changes:
+
+- All plotting-related deprecations removed. Incorrect code will now error.
+
 # v6.2
 
 The `EventQueueABM` which was previously considered experimental is now considered to be stable.
