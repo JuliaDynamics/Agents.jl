@@ -109,7 +109,6 @@ abmheatmap!
 ```
 
 
-
 XXX Stooped here
 
 As before, all custom space types should implement this API and be subtypes of

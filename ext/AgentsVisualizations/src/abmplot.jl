@@ -61,13 +61,10 @@ function Agents.abmplot!(
         spaceplotkwargs = NamedTuple(),
 
         # Interactivity
-        add_controls=false,
         params=Dict(),
         add_controls = !isempty(params),
         dt=nothing, # animation evolution speed
         enable_inspection = add_controls,
-        _used_poly=false,
-
     )
 
     model = abmobs.model[]
@@ -91,9 +88,12 @@ function Agents.abmplot!(
     pos, color, marker, markersize =
         lift_attributes(model, agent_color, agent_size, agent_marker, offset)
 
-    spaceplot!(ax, model; spaceplotkwargs...)
+    user_used_poly = deduce somehow XXX TODO!
+
     abmheatmap!(ax, abmobs, heatarray, add_colorbar, heatkwargs)
+    spaceplot!(ax, model; spaceplotkwargs...)
     static_preplot!(ax, abmobs)
+
     # XXX I STOPPED HERE
     agentsplot!(ax, model, pos, color, marker, markersize, agentsplotkwargs)
 
@@ -133,7 +133,7 @@ function abmheatmap!(ax, abmobs::ABMObservable, heatarray, add_colorbar, heatkwa
     heatobs = @lift(abmplot_heatobs($(abmobs.model), heatarray))
     isnothing(heatobs[]) && return nothing
     hmap = Makie.heatmap!(
-        p, heatobs;
+        ax, heatobs;
         colormap=JULIADYNAMICS_CMAP, heatkwargs
     )
     add_colorbar && Colorbar(ax.parent[1, 1][1, 2], hmap, width=20)
@@ -151,8 +151,5 @@ function lift_attributes(model, ac, as, am, offset)
     color = @lift(abmplot_colors($model, $ac))
     marker = @lift(abmplot_markers($model, $am, $pos))
     markersize = @lift(abmplot_markersizes($model, $as))
-
     return pos, color, marker, markersize
 end
-
-const ABMP{S} = _ABMPlot{<:Tuple{<:ABMObservable{<:Observable{<:ABM{<:S}}}}}
