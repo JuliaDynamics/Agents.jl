@@ -278,15 +278,6 @@ export translate_polygon, scale_polygon, rotate_polygon
 ############################################################################################
 ## Visualization API
 ############################################################################################
-
-"""
-    check_space_visualization_API(space::AbstractSpace)
-
-Checks whether all the necessary visualization method extensions for the given `space`
-are defined.
-"""
-function check_space_visualization_API end
-
 ## Required
 
 """
