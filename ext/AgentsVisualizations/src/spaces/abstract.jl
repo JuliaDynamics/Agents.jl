@@ -20,9 +20,7 @@ function Agents.agentsplot!(ax::Axis3, p::_ABMPlot)
 end
 
 ## Preplots
-
-Agents.spaceplot!(ax::Axis, p::_ABMPlot; spaceplotkwargs...) = nothing
-Agents.spaceplot!(ax::Axis3, p::_ABMPlot; spaceplotkwargs...) = nothing
+Agents.spaceplot!(ax::Union{Axis, Axis3}, model::ABM; spaceplotkwargs...) = nothing
 
 function Agents.static_preplot!(ax::Axis, p::_ABMPlot)
     hasproperty(p, :static_preplot!) && return old_static_preplot!(ax, p.abmobs[].model, p)

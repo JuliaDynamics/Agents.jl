@@ -1,16 +1,20 @@
-function Agents.add_interaction!(ax, p)
-    if p.add_controls[]
-        @assert !isnothing(ax) "Need `ax` to add model controls."
-        stepclick, resetclick = add_controls!(ax.parent, p.abmobs[], p.dt[])
-        if !isempty(p.params[])
-            @assert !isnothing(ax) "Need `ax` to add plots and parameter sliders."
-            add_param_sliders!(ax.parent, p.abmobs[].model, p.params[], resetclick)
+function Agents.add_interaction!(ax, abmobs, params, dt)
+    if add_controls
+        stepclick, resetclick = add_controls!(ax.parent, abmobs, dt)
+        if !isempty(params)
+            add_param_sliders!(ax.parent, abmobs.model, params, resetclick)
         end
-    else
-        stepclick = resetclick = nothing
+        # link the two buttons to the abmobs
+        on(stepclick) do click
+            abmobs.stepclick[] += 1
+            notify(abmobs.stepclick)
+        end
+        on(resetclick) do click
+            abmobs.resetclick[] += 1
+            notify(abmobs.resetclick)
+        end
     end
-
-    return stepclick, resetclick
+    return
 end
 
 Agents.add_interaction!(ax) = add_interaction!(ax, first_abmplot_in(ax))

@@ -32,7 +32,7 @@ function init_abm_data_plots!(fig, abmobs, adata, mdata, alabels, mlabels, plotk
     for i in 1:La # add adata plots
         y_label = dataname(adata[i])
         # string(adata[i][2]) * "_" * string(adata[i][1])
-        points = @lift(Point2f.(apply_offsets($(abmobs.adf).time, $(abmobs.offset_time_adf)), 
+        points = @lift(Point2f.(apply_offsets($(abmobs.adf).time, $(abmobs.offset_time_adf)),
                                 $(abmobs.adf)[:, y_label]))
         ax = plotlayout[i, :] = Axis(fig)
         push!(axs, ax)
@@ -46,7 +46,7 @@ function init_abm_data_plots!(fig, abmobs, adata, mdata, alabels, mlabels, plotk
 
     for i in 1:Lm # add mdata plots
         y_label = string(mdata[i])
-        points = @lift(Point2f.(apply_offsets($(abmobs.mdf).time, $(abmobs.offset_time_mdf)), 
+        points = @lift(Point2f.(apply_offsets($(abmobs.mdf).time, $(abmobs.offset_time_mdf)),
                                 $(abmobs.mdf)[:,y_label]))
         ax = plotlayout[i+La, :] = Axis(fig)
         push!(axs, ax)
@@ -72,7 +72,6 @@ function init_abm_data_plots!(fig, abmobs, adata, mdata, alabels, mlabels, plotk
         end
     end
     on(resetclick) do clicks
-
         for ax in axs
             vlines!(ax, [abmobs.offset_time_adf[][1][]], color = "#c41818")
         end

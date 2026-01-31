@@ -3,12 +3,18 @@
     abmplot!(ax::Axis/Axis3, model::ABM; kwargs...) → abmobs
 
 Plot an agent based model by plotting each individual agent as a marker and using
-the agent's position field as its location on the plot. The same function is used
-to make custom composite plots and animations for the model evolution
-using the returned `abmobs`. `abmplot` is also used to launch interactive GUIs for
+the agent's position field as its location on the plot.
+`abmplot` is also used to launch interactive GUIs for
 evolving agent based models, see "Interactivity" below.
 
 See also [`abmvideo`](@ref) and [`abmexploration`](@ref).
+
+
+`abmplot` returns an instance of [`ABMObservable`](@ref) that can be used to manually
+animate the model evolution, or make custom composite plots and videos.
+See the online documentation for examples on using this.
+Instead of `model::ABM`, an instance of [`ABMObservable`](@ref) can also be given
+to `abmplot` directly.
 
 ## Keyword arguments
 
@@ -59,7 +65,7 @@ See also [`abmvideo`](@ref) and [`abmexploration`](@ref).
   heatmap if `heatarray` is not nothing. It is strongly recommended to use `abmplot`
   instead of the `abmplot!` method if you use `heatarray`, so that a colorbar can be
   placed naturally.
-* `static_preplot!` : A function `f(ax, abmplot)` that plots something after the heatmap
+* `static_preplot!` : A function `f(ax, abmobs)` that plots something after the heatmap
   but before the agents.
 * `spaceplotkwargs = NamedTuple()` : keywords utilized when plotting the space.
   Directly passed to
@@ -166,6 +172,8 @@ struct ABMObservable{M, AD, MD, ADF, MDF, W, S, K}
     t_last_collect::S # observable of last timepoint where data was collected (for `when`)
     offset_time_adf::K
     offset_time_mdf::K
+    stepclick::Observable{Int}
+    resetclick::Observable{Int}
 end
 export ABMObservable
 

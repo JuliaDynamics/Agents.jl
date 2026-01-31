@@ -1,14 +1,34 @@
-function Agents.abmplot(model::ABM;
-        figure=NamedTuple(),
+# Convenience functions that propagate stuff to the main function
+function Agents.abmplot(either;
+        # These keywords are about the `ABM`
+        adata=nothing, mdata=nothing, when=true,
+
         axis=NamedTuple(),
-        warn_deprecation = true,
+        add_controls=false,
+        figure=NamedTuple(),
         kwargs...
     )
-    fig = Figure(; figure...)
-    ax = fig[1, 1][1, 1] = axistype(model)(fig; axis...)
-    abmobs = abmplot!(ax, model; warn_deprecation = warn_deprecation, kwargs...)
-
+    resolution = add_controls ? (800, 600) : (800, 800)
+    fig = Figure(; resolution, figure...)
+    abmobs = if either <: ABM
+        ABMObservable(model; adata, mdata, when)
+    else
+        either
+    end
+    ax = axistype(abmobs.model[])(fig[1, 1][1, 1]; axis...)
+    abmplot!(ax, abmobs; kwargs...)
     return fig, ax, abmobs
+end
+
+function Agents.abmplot!(ax, model::ABM;
+        # These keywords are about the `ABM`
+        adata=nothing, mdata=nothing, when=true,
+        # While all the rest are plotting related:
+        kwargs...
+    )
+    abmobs = ABMObservable(model; adata, mdata, when)
+    abmplot!(ax, abmobs; kwargs...) # MAIN function
+    return abmobs
 end
 
 function axistype(model::ABM)
@@ -18,99 +38,17 @@ function axistype(model::ABM)
     @error """Invalid axis dimensionality $(D)."""
 end
 
-function Agents.abmplot!(ax, model::ABM;
-        # These keywords are given to `ABMObservable`
-        agent_step! = Agents.dummystep,
-        model_step! = Agents.dummystep,
-        adata=nothing,
-        mdata=nothing,
-        when=true,
-        # These keywords are propagated to the actual plotting recipe that uses the observable
-        kwargs...
-    )
-    if agent_step! != Agents.dummystep || model_step! != Agents.dummystep
-        @warn "Passing agent_step! and model_step! to abmplot! is deprecated.
-        They are ignored.
-        These functions should be already contained inside the model instance."
-    end
-    abmobs = ABMObservable(model; adata, mdata, when)
-    abmplot!(ax, abmobs; kwargs...)
-    return abmobs
-end
-
-"""
-    abmplot(abmobs::ABMObservable; kwargs...) → fig, ax, abmobs
-    abmplot!(ax::Axis/Axis3, abmobs::ABMObservable; kwargs...) → abmobs
-
-Same functionality as `abmplot(model; kwargs...)`/`abmplot!(ax, model; kwargs...)`
-but allows to link an already existing `ABMObservable` to the created plots.
-"""
-function Agents.abmplot(abmobs::ABMObservable;
-        axis=NamedTuple(),
-        add_controls=false,
-        figure=add_controls ? (resolution=(800, 600),) : (resolution=(800, 800),),
-        kwargs...
-    )
-    fig = Figure(; figure...)
-    ax = fig[1, 1][1, 1] = axistype(abmobs.model[])(fig; axis...)
-    abmplot!(ax, abmobs; kwargs...)
-    return fig, ax, abmobs
-end
-
-function Agents.abmplot!(ax, abmobs::ABMObservable;
-        # These keywords are propagated to the _ABMPlot recipe
-        params = Dict(),
-        add_controls = !isempty(params),
-        enable_inspection = add_controls,
-        enable_space_checks = true,
-        kwargs...
-    )
-    if any(x -> x in keys(kwargs), [:as, :am, :ac])
-        @warn "Keywords `as, am, ac` has been deprecated in favor of
-          `agent_size, agent_marker, agent_color`" maxlog=1
-        kwargs = deprecate_asamac(kwargs)
-    end
-    if enable_space_checks
-        if has_custom_space(abmobs.model[])
-            Agents.check_space_visualization_API(abmobs.model[])
-        end
-    end
-
-    _abmplot!(ax, abmobs; ax, add_controls, params, kwargs...)
-
-    # Model inspection on mouse hover
-    enable_inspection && DataInspector(ax.parent)
-
-    return abmobs
-end
-
-_default_add_controls(as, ms) = true
-
-"""
-    _abmplot(model::ABM; kwargs...) → fig, ax, abmplot_object
-    _abmplot!(model::ABM; ax::Axis/Axis3, kwargs...) → abmplot_object
-
-This is the internal recipe for creating an `_ABMPlot`.
-"""
-@recipe(_ABMPlot, abmobs) do scene
-    Theme(
-    # TODO: insert JuliaDynamics theme here?
-    )
-    Attributes(
-        # Axis
-        # ax is currently necessary to have a reference to the parent Axis. This is needed
-        # for optional Colorbar of heatmap and optional buttons/sliders.
-        # Makie's recipe system still works on the old system of Scenes which have no
-        # concept of a parent Axis. Makie devs plan to enable this in the future. Until then
-        # we will have to work around it with this "little hack".
-        ax=nothing,
+###########################################################################################
+# Main plotting function
+###########################################################################################
+function Agents.abmplot!(
+        ax::Union{Axis, Axis3}, abmobs::ABMObservable;
 
         # Agent
         agent_color=JULIADYNAMICS_COLORS[1],
         agent_size=15,
         agent_marker=:circle,
         offset=nothing,
-        spaceplotkwargs = NamedTuple(),
         agentsplotkwargs = NamedTuple(),
 
         # Preplot
@@ -118,55 +56,60 @@ This is the internal recipe for creating an `_ABMPlot`.
         heatkwargs=NamedTuple(),
         add_colorbar=true,
         adjust_aspect=true,
+        enable_space_checks = true,
+        spaceplotkwargs = NamedTuple(),
 
-        # Interactive application
+        # Interactivity
         add_controls=false,
-        # Add parameter sliders if params are provided
         params=Dict(),
-        # Animation evolution speed
-        dt=nothing,
-        # Internal Attributes necessary for inspection, controls, etc. to work
+        add_controls = !isempty(params),
+        dt=nothing, # animation evolution speed
+        enable_inspection = add_controls,
         _used_poly=false,
-    )
-end
 
-function Makie.plot!(p::_ABMPlot)
-    model = p.abmobs[].model[]
-    ax = p.ax[]
-    if p.adjust_aspect[]
+
+    )
+
+    model = abmobs.model[]
+
+    if enable_space_checks
+        if has_custom_space(model)
+            Agents.check_space_visualization_API(model)
+        end
+    end
+
+    if adjust_aspect
         if ax isa Axis
             ax.aspect = DataAspect()
         elseif ax isa Axis3
-            ax.aspect = :data
+            ax.aspect = :data # is this up-to-date?
         end
     end
     set_axis_limits!(ax, model)
 
-    p.pos, p.color, p.marker, p.markersize =
-        lift_attributes(p.abmobs[].model, p.agent_color, p.agent_size, p.agent_marker, p.offset)
+    # These are all observables:
+    pos, color, marker, markersize =
+        lift_attributes(model, agent_color, agent_size, agent_marker, offset)
 
-    # This works, but then `spaceplot!` errors.
-    # Makie.ComputePipeline.map!(p, [:abmobs, :agent_color, :agent_size, :agent_marker, :offset], [:pos, :color, :marker, :markersize]) do abmobs, ac, as, am, offset
-    #     model = abmobs.model
-    #     pos = abmplot_pos(model, offset)
-    #     color = abmplot_colors(model, ac)
-    #     marker = abmplot_markers(model, am, pos)
-    #     markersize = abmplot_markersizes(model, as)
-    #     return pos, color, marker, markersize
-    # end
+    spaceplot!(ax, model; spaceplotkwargs...)
+    heatmap!(ax, abmobs, heatarray, add_colorbar, heatkwargs)
+    # XXX I STOPPED HERE
+    static_preplot!(ax, abmobs)
+    agentsplot!(ax, pos, color, marker, markersize)
 
-    # gracefully handle deprecations of old plot kwargs
-    merge_spaceplotkwargs!(p)
-    merge_agentsplotkwargs!(p)
+    add_controls && add_interaction!(ax, abmobs, params, dt)
 
-    spaceplot!(ax, p; p.spaceplotkwargs...)
-    heatmap!(ax, p)
-    static_preplot!(ax, p)
-    agentsplot!(ax, p)
+    # Model inspection on mouse hover
+    # TODO: Currently disabled as it relied on old recipe system
+    # enable_inspection && DataInspector(ax.parent)
 
-    p.stepclick, p.resetclick = add_interaction!(ax, p)
+    return abmobs
+end
 
-    return p
+_default_add_controls(as, ms) = true
+
+function Makie.plot!(p::_ABMPlot)
+
 end
 
 function set_axis_limits!(ax::Axis, model::ABM)
@@ -186,12 +129,14 @@ function set_axis_limits!(ax::Axis3, model::ABM)
     return o, e
 end
 
-function heatmap!(ax, p::_ABMPlot)
-    heatobs = @lift(abmplot_heatobs($(p.abmobs[].model), p.heatarray[]))
+function heatmap!(ax, abmobs::ABMObservable, heatarray, add_colorbar, heatkwargs)
+    heatobs = @lift(abmplot_heatobs($(abmobs.model), heatarray))
     isnothing(heatobs[]) && return nothing
-    hmap = Makie.heatmap!(p, heatobs;
-        colormap=JULIADYNAMICS_CMAP, p.heatkwargs...)
-    p.add_colorbar[] && Colorbar(ax.parent[1, 1][1, 2], hmap, width=20)
+    hmap = Makie.heatmap!(
+        p, heatobs;
+        colormap=JULIADYNAMICS_CMAP, heatkwargs
+    )
+    add_colorbar && Colorbar(ax.parent[1, 1][1, 2], hmap, width=20)
     # TODO: Set colorbar to be "glued" to axis
     # Problem with the following code, which comes from the tutorial
     # https://makie.juliaplots.org/stable/tutorials/aspect-tutorial/ ,
