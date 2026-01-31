@@ -321,12 +321,23 @@ from [`abmplot`](@ref).
 """
 function spaceplot! end
 
-## Lifting, totally optional. At the moment only the graph space uses these.
+## Lifting: transforming agent attributes into plottable quantities
+## Totally optional. At the moment only the graph space uses these.
 
 """
     abmplot_heatobs(model::ABM{S}, heatarray)
+
+Return the observable matrix that will be plotted as a `heatmap`.
 """
 function abmplot_heatobs end
+
+"""
+    abmheatmap!(ax, abmobs::ABMObservable, heatarray, add_colorbar, heatkwargs)
+
+Plot as a heatmap the obtained `heatarray` (an observable matrix).
+"""
+function abmheatmap! end
+
 """
     abmplot_pos(model::ABM{S}, offset)
 """
@@ -359,7 +370,9 @@ the given space `S`.
 function convert_element_pos end
 
 """
-    ids_to_inspect(model::ABM{S}, pos)
+    ids_to_inspect(model::ABM, pos)
+
+Return `ids` that should be shown in the data inspection (hover).
 """
 function ids_to_inspect end
 

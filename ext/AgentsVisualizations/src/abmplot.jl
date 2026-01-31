@@ -92,7 +92,7 @@ function Agents.abmplot!(
         lift_attributes(model, agent_color, agent_size, agent_marker, offset)
 
     spaceplot!(ax, model; spaceplotkwargs...)
-    heatmap!(ax, abmobs, heatarray, add_colorbar, heatkwargs)
+    abmheatmap!(ax, abmobs, heatarray, add_colorbar, heatkwargs)
     static_preplot!(ax, abmobs)
     # XXX I STOPPED HERE
     agentsplot!(ax, model, pos, color, marker, markersize, agentsplotkwargs)
@@ -129,7 +129,7 @@ function set_axis_limits!(ax::Axis3, model::ABM)
     return o, e
 end
 
-function heatmap!(ax, abmobs::ABMObservable, heatarray, add_colorbar, heatkwargs)
+function abmheatmap!(ax, abmobs::ABMObservable, heatarray, add_colorbar, heatkwargs)
     heatobs = @lift(abmplot_heatobs($(abmobs.model), heatarray))
     isnothing(heatobs[]) && return nothing
     hmap = Makie.heatmap!(
