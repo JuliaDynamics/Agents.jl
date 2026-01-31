@@ -67,14 +67,11 @@ to `abmplot` directly.
   placed naturally.
 * `preplot!` : A function `f(ax, abmobs)` that plots something after the heatmap,
   and after space-specific plotting, but before the agents.
-* `spaceplotkwargs = NamedTuple()` : keywords utilized when plotting the space.
+* `spaceplotkwargs = NamedTuple()`: keywords utilized when plotting the space.
   Directly passed to
   * `OSMMakie.osmplot!` if model space is `OpenStreetMapSpace`.
-  * [`GraphMakie.graphplot!`](https://graph.makie.org/stable/#GraphMakie.graphplot)
-  if model space is `GraphSpace`.
-* `adjust_aspect = true`: Adjust axis aspect ratio to be the model's space aspect ratio.
-* `enable_space_checks = true`: Set to `false` to disable checks related to the model
-  space.
+  * `GraphMakie.graphplot!` if model space is `GraphSpace`.
+* `adjust_aspect = true`: Adjust axis aspect ratio to be the model's space data aspect ratio.
 
 The stand-alone function `abmplot` also takes two optional `NamedTuple`s named `figure` and
 `axis` which can be used to change the automatically created `Figure` and `Axis` objects.
@@ -105,6 +102,7 @@ The stand-alone function `abmplot` also takes two optional `NamedTuple`s named `
   slides is only propagated to the actual model after a press of the "update" button.
 
 ## Data collection related
+
 * `adata, mdata, when`: Same as the keyword arguments of `Agents.run!`. If either or both
   `adata, mdata` are given, data are collected and stored in the `abmobs`,
   see [`ABMObservable`](@ref). The same keywords provide the data plots

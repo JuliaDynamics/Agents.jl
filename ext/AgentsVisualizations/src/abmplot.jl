@@ -57,7 +57,6 @@ function Agents.abmplot!(
         preplot! = (args...,) -> nothing,
         add_colorbar=true,
         adjust_aspect=true,
-        enable_space_checks = true,
         spaceplotkwargs = NamedTuple(),
 
         # Interactivity
@@ -68,12 +67,6 @@ function Agents.abmplot!(
     )
 
     model = abmobs.model[]
-
-    if enable_space_checks
-        if has_custom_space(model)
-            Agents.check_space_visualization_API(model)
-        end
-    end
 
     if adjust_aspect
         if ax isa Axis
@@ -88,7 +81,7 @@ function Agents.abmplot!(
     pos, color, marker, markersize =
         lift_attributes(model, agent_color, agent_size, agent_marker, offset)
 
-    user_used_poly = deduce somehow XXX TODO!
+    user_used_poly = deduce_somehow_XXX_TODO
 
     abmheatmap!(ax, abmobs, heatarray, add_colorbar, heatkwargs)
     spaceplot!(ax, model; spaceplotkwargs...)
@@ -104,12 +97,6 @@ function Agents.abmplot!(
     # enable_inspection && DataInspector(ax.parent)
 
     return abmobs
-end
-
-_default_add_controls(as, ms) = true
-
-function Makie.plot!(p::_ABMPlot)
-
 end
 
 function set_axis_limits!(ax::Axis, model::ABM)
