@@ -54,6 +54,7 @@ function Agents.abmplot!(
         # Preplot
         heatarray=nothing,
         heatkwargs=NamedTuple(),
+        static_preplot! = (args...,) -> nothing,
         add_colorbar=true,
         adjust_aspect=true,
         enable_space_checks = true,

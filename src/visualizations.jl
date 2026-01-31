@@ -276,7 +276,7 @@ function scale_polygon end
 export translate_polygon, scale_polygon, rotate_polygon
 
 ############################################################################################
-## Visualization API
+## Methods to extend for space
 ############################################################################################
 ## Required
 
@@ -292,20 +292,22 @@ space_axis_dimensionality(model::ABM) = space_axis_dimensionality(abmspace(model
     space_axis_limits(space::AbstractSpace)
 
 Return appropriate axis limits for given model.
-Return `nothing, nothing` if you want to disable this.
+They have to be a 2- or 3- tuple as expected by Makie when setting axis limits.
+Return a tuple of `nothing` to skip updating axis limits.
 """
 space_axis_limits(model::ABM) = space_axis_limits(abmspace(model))
-
 
 """
     agentsplot!(ax, space::AbstractSpace, pos, color, marker, markersize, agentsplotkwargs)
 
 Plot agents into `ax`, given positions, color, marker, and size.
-Arguments `pos, color, marker, markersize` are generated from the `model`
-and the `agent_color, agent_marker, agent_size` keywords of [`abmplot`](@ref).
-`agentsplotkwargs` is propagated from `abmplot`.
-
 By default this function does a `scatter`-plot and ignores `space`.
+
+Arguments `pos, color, marker, markersize` are generated from the `model`
+using the functions `abmplot_colors / _markers / _markersizes`, which you can also extend.
+By default these just map the `agent_color, agent_marker, agent_size` keywords of [`abmplot`](@ref).
+
+`agentsplotkwargs` is propagated from `abmplot`.
 """
 function agentsplot! end
 
@@ -314,13 +316,12 @@ function agentsplot! end
 """
     spaceplot!(ax, space::AbstractSpace; spaceplotkwargs...)
 
-Add a space-dependent plot to `ax`.
+Add a space-dependent plot to `ax`. `spaceplotkwargs` is propagated
+from [`abmplot`](@ref).
 """
 function spaceplot! end
 
-function static_preplot! end
-
-## Lifting
+## Lifting, totally optional. At the moment only the graph space uses these.
 
 """
     abmplot_heatobs(model::ABM{S}, heatarray)
@@ -333,19 +334,16 @@ function abmplot_pos end
 
 """
   abmplot_colors(model::ABM{S}, agent_color)
-  abmplot_colors(model::ABM{S}, agent_color::Function)
 """
 function abmplot_colors end
 
 """
     abmplot_markers(model::ABM{S}, agent_marker, pos)
-    abmplot_markers(model::ABM{S}, agent_marker::Function, pos)
 """
 function abmplot_markers end
 
 """
     abmplot_markersizes(model::ABM{S}, agent_size)
-    abmplot_markersizes(model::ABM{S}, agent_size::Function)
 """
 function abmplot_markersizes end
 

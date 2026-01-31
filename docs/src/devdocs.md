@@ -65,8 +65,45 @@ And that's it! Every function of the main API will now work. In some situations 
 
 ### Visualization of a custom space
 
-Visualization of a new space type within Agents.jl works in a very similar fashion to
+Visualization of a new space type within Agents.jl works in a similar fashion to
 creating a new space type.
+One your space works with the general Agents.jl API, you only need to extend a few functions for it to work automatically with the existing plotting and animation infrastructure.
+
+#### Mandatory methods
+
+You must extend the following functions:
+
+```@docs
+space_axis_dimensionality
+space_axis_limits
+```
+
+#### Optional alternative agent plotting
+
+If your space does not visualize agents in the default way of one agent = one scattered marker, then you want to extend some or all of the following functions.
+For example, `GraphSpace` aggregates multiple agents into one scattered marker and is extending these functions.
+
+```@docs
+agentsplot!
+abmplot_pos
+abmplot_colors
+abmplot_markers
+abmplot_markersizes
+```
+
+#### Optional pre-plotting
+
+Some spaces, like the `OSMSpace`, need to plot some elements before the agents can be plotted and animated. If that's the case, extend the following:
+
+```@docs
+spaceplot!
+```
+
+#### Heatmap handling
+
+
+XXX Stooped here
+
 As before, all custom space types should implement this API and be subtypes of
 `AbstractSpace`.
 To implement this API for your custom space:
