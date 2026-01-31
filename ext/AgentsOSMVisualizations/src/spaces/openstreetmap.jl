@@ -2,7 +2,7 @@
 
 Agents.space_axis_dimensionality(::OSMSpace) = 2
 
-function Agents.get_axis_limits(model::ABM{<:OSMSpace})
+function Agents.space_axis_limits(model::ABM{<:OSMSpace})
     o = [Inf, Inf]
     e = [-Inf, -Inf]
     for i ∈ Agents.positions(model)

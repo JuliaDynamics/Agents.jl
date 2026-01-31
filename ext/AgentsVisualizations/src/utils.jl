@@ -6,7 +6,7 @@ function Agents.check_space_visualization_API(::ABM{S}) where {S}
     checks = [
         # Required
         hasmethod(space_axis_dimensionality, (S, )),
-        hasmethod(get_axis_limits, (ABM{S}, )),
+        hasmethod(space_axis_limits, (ABM{S}, )),
         hasmethod(agentsplot!, (Axis, ABMP{S})) ||
             hasmethod(agentsplot!, (Axis3, ABMP{S})),
         # Preplots (Optional)

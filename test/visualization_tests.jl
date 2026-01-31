@@ -247,7 +247,7 @@ const ABMPlot = Agents.get_ABMPlot_type()
 
 Agents.space_axis_dimensionality(::CustomSpace{D}) where {D} = D
 
-function Agents.get_axis_limits(model::ABM{<:CustomSpace})
+function Agents.space_axis_limits(model::ABM{<:CustomSpace})
     e = size(abmspace(model)) .+ 0.5
     o = zero.(e) .+ 0.5
     return o, e

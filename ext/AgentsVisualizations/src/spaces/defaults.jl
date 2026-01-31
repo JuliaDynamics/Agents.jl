@@ -1,43 +1,21 @@
-Agents.space_axis_dimensionality(model::ABM) =
-    Agents.space_axis_dimensionality(abmspace(model))
-
-function Agents.agentsplot!(ax::Axis, p::ABMP)
-    if user_used_polygons(p.agent_marker[], p.marker[])
-        poly!(p, p.marker; p.color, p.agentsplotkwargs...)
+function Agents.agentsplot!(ax::Axis, space, pos, color, marker, markersize, agentsplotkwargs)
+    if user_used_polygons(marker)
+        poly!(ax, marker; color, agentsplotkwargs...)
     else
-        scatter!(p, p.pos; p.color, p.marker, p.markersize, p.agentsplotkwargs...)
+        scatter!(ax, pos; color, marker, markersize, agentsplotkwargs...)
     end
+    return
+end
+
+function Agents.agentsplot!(ax::Axis3, space, pos, color, marker, markersize, agentsplotkwargs)
+    if marker === :circle
+        marker = Sphere(Point3f(0), 1)
+    end
+    meshscatter!(ax, pos; color, marker, markersize, agentsplotkwargs...)
     return p
 end
 
-"Plot agents into a 3D space."
-function Agents.agentsplot!(ax::Axis3, p::_ABMPlot)
-    if p.agent_marker[] === :circle
-        p.agent_marker[], p.marker[] = :Sphere, Sphere(Point3f(0), 1)
-    end
-    meshscatter!(p, p.pos; p.color, p.marker, p.markersize, p.agentsplotkwargs...)
-    return p
-end
-
-## Preplots
-Agents.spaceplot!(ax::Union{Axis, Axis3}, model::ABM; spaceplotkwargs...) = nothing
-
-function Agents.static_preplot!(ax::Axis, p::_ABMPlot)
-    hasproperty(p, :static_preplot!) && return old_static_preplot!(ax, p.abmobs[].model, p)
-    return nothing
-end
-
-function Agents.static_preplot!(ax::Axis3, p::_ABMPlot)
-    hasproperty(p, :static_preplot!) && return old_static_preplot!(ax, p.abmobs[].model, p)
-    return nothing
-end
-
-function old_static_preplot!(ax, model, p)
-    @warn "Usage of the static_preplot! kwarg is deprecated. " *
-        "Please remove it from the call to abmplot and define a custom method for " *
-        "Agents.static_preplot!(ax, model, p) instead." maxlog=1
-    return p.static_preplot![](ax, model)
-end
+Agents.spaceplot!(ax::Union{Axis, Axis3}, space::AbstractSpace; spaceplotkwargs...) = nothing
 
 ## Lifting
 

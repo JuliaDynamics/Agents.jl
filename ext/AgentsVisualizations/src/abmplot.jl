@@ -67,7 +67,6 @@ function Agents.abmplot!(
         enable_inspection = add_controls,
         _used_poly=false,
 
-
     )
 
     model = abmobs.model[]
@@ -93,9 +92,9 @@ function Agents.abmplot!(
 
     spaceplot!(ax, model; spaceplotkwargs...)
     heatmap!(ax, abmobs, heatarray, add_colorbar, heatkwargs)
-    # XXX I STOPPED HERE
     static_preplot!(ax, abmobs)
-    agentsplot!(ax, pos, color, marker, markersize)
+    # XXX I STOPPED HERE
+    agentsplot!(ax, model, pos, color, marker, markersize, agentsplotkwargs)
 
     add_controls && add_interaction!(ax, abmobs, params, dt)
 
@@ -113,7 +112,7 @@ function Makie.plot!(p::_ABMPlot)
 end
 
 function set_axis_limits!(ax::Axis, model::ABM)
-    o, e = get_axis_limits(model)
+    o, e = space_axis_limits(model)
     any(isnothing, (o, e)) && return nothing
     xlims!(ax, o[1], e[1])
     ylims!(ax, o[2], e[2])
@@ -121,7 +120,7 @@ function set_axis_limits!(ax::Axis, model::ABM)
 end
 
 function set_axis_limits!(ax::Axis3, model::ABM)
-    o, e = get_axis_limits(model)
+    o, e = space_axis_limits(model)
     any(isnothing, (o, e)) && return nothing
     xlims!(ax, o[1], e[1])
     ylims!(ax, o[2], e[2])

@@ -293,31 +293,37 @@ function check_space_visualization_API end
     space_axis_dimensionality(space::AbstractSpace)
 
 Return 2 or 3, which decides whether a 2D or 3D axis will be used
-to plot ABMs with a given `space`. Default to 2.
+to plot ABMs with a given `space`.
 """
-space_axis_dimensionality(space::AbstractSpace) = 2
+space_axis_dimensionality(model::ABM) = space_axis_dimensionality(abmspace(model))
 
 """
-    get_axis_limits(model::ABM{S}) where {S<:Agents.AbstractSpace}
+    space_axis_limits(space::AbstractSpace)
 
 Return appropriate axis limits for given model.
 Return `nothing, nothing` if you want to disable this.
 """
-function get_axis_limits end
+space_axis_limits(model::ABM) = space_axis_limits(abmspace(model))
+
 
 """
-    agentsplot!(ax, p::ABMPlot)
+    agentsplot!(ax, space::AbstractSpace, pos, color, marker, markersize, agentsplotkwargs)
 
-Plot agents at their positions.
+Plot agents into `ax`, given positions, color, marker, and size.
+Arguments `pos, color, marker, markersize` are generated from the `model`
+and the `agent_color, agent_marker, agent_size` keywords of [`abmplot`](@ref).
+`agentsplotkwargs` is propagated from `abmplot`.
+
+By default this function does a `scatter`-plot and ignores `space`.
 """
 function agentsplot! end
 
 ## Preplots
 
 """
-    spaceplot!(ax, p::ABMPlot; spaceplotkwargs...)
+    spaceplot!(ax, space::AbstractSpace; spaceplotkwargs...)
 
-Create a space-dependent preplot.
+Add a space-dependent plot to `ax`.
 """
 function spaceplot! end
 
@@ -333,16 +339,19 @@ function abmplot_heatobs end
     abmplot_pos(model::ABM{S}, offset)
 """
 function abmplot_pos end
+
 """
   abmplot_colors(model::ABM{S}, agent_color)
   abmplot_colors(model::ABM{S}, agent_color::Function)
 """
 function abmplot_colors end
+
 """
     abmplot_markers(model::ABM{S}, agent_marker, pos)
     abmplot_markers(model::ABM{S}, agent_marker::Function, pos)
 """
 function abmplot_markers end
+
 """
     abmplot_markersizes(model::ABM{S}, agent_size)
     abmplot_markersizes(model::ABM{S}, agent_size::Function)

@@ -1,4 +1,4 @@
-# v6.3
+# v7
 
 This new version brings two powerful, but both **experimental** features:
 
@@ -11,7 +11,20 @@ The experimental status allows us as developers to make breaking changes, if nee
 
 Other notable changes:
 
-- All plotting-related deprecations removed. Incorrect code will now error.
+# TODOs:
+
+This new version also brings two breaking changes that we believe will not affect
+typical usage of Agents.jl:
+
+1. All deprecations regarding Agents.jl have been completely removed. Use version v6.2 if you are not comfortable with this.
+1. All plotting related source code has been completely overhauled.
+   - Main reason was the difficulty of maintaining the previous version which was relying on advanced Makie.jl features and was also significantly over-engineered.
+   - Data inspection is currently unavailable, and we welcome PRs to enable again data inspection in the new plotting code.
+   - All plotting-related deprecations have been removed. Incorrect code will now error.
+   -  The dev-user-facing interface for how to extend plotting for a new space has also been reworked. It is simplified.
+2. The `OSMSpace` is now not available immediately after `using Agents`.
+   - It is now a package extension. You need to be doing `using LightOSM` to access it.
+   - This change was done because `LightOSM` is now an abandoned package. We need to limit its hold over normal Agents.jl usage.
 
 # v6.2
 
