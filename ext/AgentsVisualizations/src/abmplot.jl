@@ -54,7 +54,7 @@ function Agents.abmplot!(
         # Preplot
         heatarray=nothing,
         heatkwargs=NamedTuple(),
-        static_preplot! = (args...,) -> nothing,
+        preplot! = (args...,) -> nothing,
         add_colorbar=true,
         adjust_aspect=true,
         enable_space_checks = true,
@@ -92,7 +92,7 @@ function Agents.abmplot!(
 
     abmheatmap!(ax, abmobs, heatarray, add_colorbar, heatkwargs)
     spaceplot!(ax, model; spaceplotkwargs...)
-    static_preplot!(ax, abmobs)
+    preplot!(ax, abmobs)
 
     # XXX I STOPPED HERE
     agentsplot!(ax, model, pos, color, marker, markersize, agentsplotkwargs)

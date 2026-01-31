@@ -150,7 +150,7 @@ using CairoMakie
 CairoMakie.activate!() # hide
 
 const ABMPlot = Agents.get_ABMPlot_type()
-function Agents.static_preplot!(ax::Axis, p::ABMPlot)
+function Agents.preplot!(ax::Axis, p::ABMPlot)
     obj = CairoMakie.scatter!([50 50]; color = :red) # Show position of teacher
     CairoMakie.hidedecorations!(ax) # hide tick labels etc.
     CairoMakie.translate!(obj, 0, 0, 5) # be sure that the teacher will be above students

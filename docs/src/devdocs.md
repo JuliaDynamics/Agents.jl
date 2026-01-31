@@ -160,7 +160,7 @@ end
 function Agents.spaceplot!(ax, p::ABMPlot; spaceplotkwargs...)
 end
 
-function Agents.static_preplot!(ax, p::ABMPlot)
+function Agents.preplot!(ax, p::ABMPlot)
 end
 
 ## Lifting (optional)

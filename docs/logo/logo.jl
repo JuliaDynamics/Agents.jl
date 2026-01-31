@@ -44,7 +44,7 @@ Makie.renderstring!(
 
 include("logo_model_def.jl")
 
-static_preplot!(ax, p) = hidedecorations!(ax)
+preplot!(ax, p) = hidedecorations!(ax)
 ax_kwargs = (;
     leftspinecolor = BLACK,
     rightspinecolor = BLACK,
@@ -62,7 +62,7 @@ sir = sir_logo_initiation(; N = 400, interaction_radius = 0.035)
 fig, ax = abmplot(sir;
     # agent_step! = sir_agent_step!, model_step! = sir_model_step!,
     enable_inspection = false,
-    ac = sir_colors, as = 9, static_preplot!,
+    ac = sir_colors, as = 9, preplot!,
     figure = (resolution = logo_dims, ), axis = ax_kwargs,
 )
 display(fig)
@@ -72,7 +72,7 @@ using CairoMakie
 CairoMakie.activate!()
 sir = sir_logo_initiation(; N = 600, interaction_radius = 0.035)
 abmvideo("agents4_logo.gif", sir, sir_agent_step!, sir_model_step!;
-    ac = sir_colors, as = 9, static_preplot!,
+    ac = sir_colors, as = 9, preplot!,
     figure = (resolution = logo_dims, backgroundcolor),
     axis = ax_kwargs, showstep = false,
     # For gif:
@@ -84,7 +84,7 @@ abmvideo("agents4_logo.gif", sir, sir_agent_step!, sir_model_step!;
 # %% Save final figure for making the icon
 fig, ax = abmplot(sir;
     enable_inspection = false,
-    ac = sir_colors, as = 9, static_preplot!,
+    ac = sir_colors, as = 9, preplot!,
     figure = (resolution = logo_dims, backgroundcolor), axis = ax_kwargs,
 )
 CairoMakie.save("agents_for_icon.png", fig)
