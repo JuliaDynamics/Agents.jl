@@ -68,7 +68,8 @@ properties = Dict(:min_to_be_happy => 3)
 model = StandardABM(
     Schelling, # type of agents
     space; # space they live in
-    agent_step! = schelling_step!, properties
+    agent_step! = schelling_step!, # dynamics of the simulation
+    properties # model-levle properties
 )
 
 ## populate the model with agents by automatically creating and adding them

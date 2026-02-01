@@ -8,10 +8,10 @@ function Agents.abmplot(either;
         figure=NamedTuple(),
         kwargs...
     )
-    resolution = add_controls ? (800, 600) : (800, 800)
-    fig = Figure(; resolution, figure...)
-    abmobs = if either <: ABM
-        ABMObservable(model; adata, mdata, when)
+    size = add_controls ? (800, 600) : (800, 800)
+    fig = Figure(; size, figure...)
+    abmobs = if either isa ABM
+        ABMObservable(either; adata, mdata, when)
     else
         either
     end
@@ -78,15 +78,25 @@ function Agents.abmplot!(
     set_axis_limits!(ax, model)
 
     # These are all observables:
-    pos, color, marker, markersize =
-        lift_attributes(model, agent_color, agent_size, agent_marker, offset)
+    pos, color, marker, markersize = lift_attributes(
+        abmobs.model, agent_color, agent_size, agent_marker, offset
+    )
 
-    user_used_poly = deduce_somehow_XXX_TODO
-
-    abmheatmap!(ax, abmobs, heatarray, add_colorbar, heatkwargs)
+    # heatmap and other plots
+    if !isnothing(heatarray)
+        abmheatmap!(ax, abmobs, abmspace(model), heatarray, heatkwargs)
+        add_colorbar && Colorbar(ax.parent[1, 1][1, 2], hmap, width=20)
+        # TODO: Set colorbar to be "glued" to axis
+        # Problem with the following code, which comes from the tutorial
+        # https://makie.juliaplots.org/stable/tutorials/aspect-tutorial/ ,
+        # is that it only works for axis that have 1:1 aspect ratio...
+        # rowsize!(fig[1, 1].layout, 1, ax.scene.px_area[].widths[2])
+        # colsize!(fig[1, 1].layout, 1, Aspect(1, 1.0))
+    end
     spaceplot!(ax, model; spaceplotkwargs...)
     preplot!(ax, abmobs)
 
+    # and the agent plot
     # XXX I STOPPED HERE
     agentsplot!(ax, model, pos, color, marker, markersize, agentsplotkwargs)
 
@@ -114,23 +124,6 @@ function set_axis_limits!(ax::Axis3, model::ABM)
     ylims!(ax, o[2], e[2])
     zlims!(ax, o[3], e[3])
     return o, e
-end
-
-function abmheatmap!(ax, abmobs::ABMObservable, heatarray, add_colorbar, heatkwargs)
-    heatobs = @lift(abmplot_heatobs($(abmobs.model), heatarray))
-    isnothing(heatobs[]) && return nothing
-    hmap = Makie.heatmap!(
-        ax, heatobs;
-        colormap=JULIADYNAMICS_CMAP, heatkwargs
-    )
-    add_colorbar && Colorbar(ax.parent[1, 1][1, 2], hmap, width=20)
-    # TODO: Set colorbar to be "glued" to axis
-    # Problem with the following code, which comes from the tutorial
-    # https://makie.juliaplots.org/stable/tutorials/aspect-tutorial/ ,
-    # is that it only works for axis that have 1:1 aspect ratio...
-    # rowsize!(fig[1, 1].layout, 1, ax.scene.px_area[].widths[2])
-    # colsize!(fig[1, 1].layout, 1, Aspect(1, 1.0))
-    return hmap
 end
 
 function lift_attributes(model, ac, as, am, offset)

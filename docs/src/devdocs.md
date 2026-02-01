@@ -160,9 +160,6 @@ end
 function Agents.spaceplot!(ax, p::ABMPlot; spaceplotkwargs...)
 end
 
-function Agents.preplot!(ax, p::ABMPlot)
-end
-
 ## Lifting (optional)
 
 function Agents.abmplot_heatobs(model::ABM{<:Agents.AbstractSpace}, heatarray)

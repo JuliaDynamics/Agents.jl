@@ -26,17 +26,17 @@ to `abmplot` directly.
   uses a `GraphSpace`, `agent_color, agent_size, agent_marker` functions instead take an *iterable of agents* in each
   position (i.e. node of the graph).
 
-  Using constants: `agent_color = "#338c54", agent_size = 15, agent_marker = :diamond`
+  Example using constants: `agent_color = "#338c54", agent_size = 15, agent_marker = :diamond`
 
-  Using functions:
+  Example using functions:
   ```julia
   agent_color(a) = a.status == :S ? "#2b2b33" : a.status == :I ? "#bf2642" : "#338c54"
   agent_size(a) = 10rand()
   agent_marker(a) = a.status == :S ? :circle : a.status == :I ? :diamond : :rect
   ```
-  Notice that for 2D models, `agent_marker` can be/return a `Makie.Polygon` instance, which plots each agent
+  For 2D models, `agent_marker` can be/return a `Makie.Polygon` instance, which plots each agent
   as an arbitrary polygon. It is assumed that the origin (0, 0) is the agent's position when
-  creating the polygon. In this case, the keyword `agent_size` is meaningless, as each polygon has
+  creating the polygon. In this case, the keyword `agent_size` is ignored, as each polygon has
   its own size. Use the functions `scale, rotate_polygon` to transform this polygon.
 
   3D models currently do not support having different markers. As a result, `agent_marker` cannot be
@@ -44,10 +44,10 @@ to `abmplot` directly.
 * `offset = nothing` : If not `nothing`, it must be a function taking as an input an
   agent and outputting an offset position tuple to be added to the agent's position
   (which matters only if there is overlap).
-* `agentsplotkwargs = ()` : Additional keyword arguments propagated to the function that
+* `agentsplotkwargs = NamedTuple()` : Additional keyword arguments propagated to the function that
   plots the agents (typically `scatter!`).
 
-### Preplot related
+### Extra plots related
 
 * `heatarray = nothing` : A keyword that plots a model property (that is a matrix)
   as a heatmap over the space.
@@ -160,7 +160,7 @@ keywords. All three observables are updated on stepping (when it makes sense).
 
 All plotting and interactivity should be defined by `lift`ing these observables.
 """
-struct ABMObservable{M, AD, MD, ADF, MDF, W, S, K}
+struct ABMObservable{M, AD, MD, ADF, MDF, W, S, K, OI}
     model::M # Observable{AgentBasedModel}
     adata::AD
     mdata::MD
@@ -170,8 +170,8 @@ struct ABMObservable{M, AD, MD, ADF, MDF, W, S, K}
     t_last_collect::S # observable of last timepoint where data was collected (for `when`)
     offset_time_adf::K
     offset_time_mdf::K
-    stepclick::Observable{Int}
-    resetclick::Observable{Int}
+    stepclick::OI # Observable{Int}
+    resetclick::OI
 end
 export ABMObservable
 
@@ -330,7 +330,7 @@ Return the observable matrix that will be plotted as a `heatmap`.
 function abmplot_heatobs end
 
 """
-    abmheatmap!(ax, abmobs::ABMObservable, heatarray, add_colorbar, heatkwargs)
+    abmheatmap!(ax, abmobs::ABMObservable, space, heatarray, add_colorbar, heatkwargs)
 
 Plot as a heatmap the obtained `heatarray` (an observable matrix).
 """

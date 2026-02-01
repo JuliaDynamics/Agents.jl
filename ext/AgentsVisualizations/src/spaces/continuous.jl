@@ -14,19 +14,16 @@ end
 Plot heatmap according to given `heatarray`.
 Special method for models with `ContinuousSpace`.
 """
-function heatmap!(ax, p::ABMP{S}) where {S<:ContinuousSpace}
-    heatobs = @lift(abmplot_heatobs($(p.abmobs[].model), p.heatarray[]))
-    isnothing(heatobs[]) && return nothing
-
+function abmheatmap!(ax, abmobs::ABMObservable, space::ContinuousSpace, heatarray, heatkwargs)
+    heatobs = @lift(abmplot_heatobs($(abmobs.model), heatarray))
     nbinx, nbiny = size(heatobs[])
-    extx, exty = abmspace(p.abmobs[].model[]).extent
+    extx, exty = space.extent
     coordx = range(0, extx; length=nbinx)
     coordy = range(0, exty; length=nbiny)
-    hmap = Makie.heatmap!(p, coordx, coordy, heatobs;
-        colormap=JULIADYNAMICS_CMAP, p.heatkwargs...
+    hmap = Makie.heatmap!(ax, coordx, coordy, heatobs;
+        colormap=JULIADYNAMICS_CMAP, heatkwargs...
     )
 
-    p.add_colorbar[] && Colorbar(ax.parent[1, 1][1, 2], hmap, width=20)
     # TODO: Set colorbar to be "glued" to axis
     # Problem with the following code, which comes from the tutorial
     # https://makie.juliaplots.org/stable/tutorials/aspect-tutorial/ ,
