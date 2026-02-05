@@ -1,3 +1,6 @@
+Agents.spaceplot!(ax, model::ABM; kw...) = spaceplot!(ax, abmspace(model); kw...)
+Agents.spaceplot!(ax, model::Agents.AbstractSpace; kw...) = nothing
+
 function Agents.agentsplot!(ax::Axis, space, pos, color, marker, markersize, agentsplotkwargs)
     if user_used_polygons(marker)
         poly!(ax, marker; color, agentsplotkwargs...)
@@ -48,15 +51,15 @@ end
 
 function Agents.abmplot_markers(model::ABM, am::Function, pos)
     marker = [am(model[i]) for i in allids(model)]
-    if user_used_polygons(am, marker)
+    if user_used_polygons(marker)
         marker = [translate_polygon(m, p) for (m, p) in zip(marker, pos)]
     end
     return marker
 end
 
-user_used_polygons(am, marker) = false
-user_used_polygons(am::Makie.Polygon, marker) = true
-user_used_polygons(am::Function, marker::Vector{<:Makie.Polygon}) = true
+user_used_polygons(marker) = false
+user_used_polygons(marker::Makie.Polygon) = true
+user_used_polygons(marker::Vector{<:Makie.Polygon}) = true
 
 Agents.abmplot_markersizes(model::ABM, as) = as
 Agents.abmplot_markersizes(model::ABM, as::Function) = [as(model[i]) for i in allids(model)]

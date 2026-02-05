@@ -315,7 +315,7 @@ function agentsplot! end
     spaceplot!(ax, space::AbstractSpace; spaceplotkwargs...)
 
 Add a space-dependent plot to `ax`. `spaceplotkwargs` is propagated
-from [`abmplot`](@ref).
+from [`abmplot`](@ref). By default this function does nothing.
 """
 function spaceplot! end
 

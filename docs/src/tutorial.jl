@@ -285,7 +285,7 @@ Stacktrace:
 # ```
 
 # This is not a limitation of Agents.jl but a fundamental limitation of the Julia
-# language that very likely will be addressed in the near future.
+# language that is currently being addressed (and is already solved if you use Revise.jl).
 # Normally, you would need to restart your Julia session to redefine a custom `struct`.
 # However, it is simpler to just do a mass rename in the text editor you use to
 # write Julia code (for example, Ctrl+Shift+H in VSCode can do a mass rename).
