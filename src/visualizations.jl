@@ -9,7 +9,6 @@ evolving agent based models, see "Interactivity" below.
 
 See also [`abmvideo`](@ref) and [`abmexploration`](@ref).
 
-
 `abmplot` returns an instance of [`ABMObservable`](@ref) that can be used to manually
 animate the model evolution, or make custom composite plots and videos.
 See the online documentation for examples on using this.

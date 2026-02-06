@@ -111,8 +111,7 @@ function Agents.abmvideo(file, model;
         t = title
     end
     axis = (title = t, titlealign = :left, axis...)
-    fig, ax, abmobs = abmplot(model;
-    add_controls = false, warn_deprecation = false, figure, axis, kwargs...)
+    fig, ax, abmobs = abmplot(model; add_controls = false, figure, axis, kwargs...)
 
     resize_to_layout!(fig)
 

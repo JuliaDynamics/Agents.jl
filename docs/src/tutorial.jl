@@ -508,7 +508,7 @@ nagents(schelling)
 # `AbstractRNG`. For example a common RNG is `Xoshiro`,
 # and we give this to the model via the `rng` keyword:
 
-using Random: Xoshiro # access the RNG object
+using Random: Xoshiro, shuffle! # access the RNG object
 
 schelling = StandardABM(
     SchellingAgent,
@@ -529,7 +529,7 @@ schelling = StandardABM(
 # change its parameters. Second, because the function is defined based on keywords,
 # it will be of further use in [`paramscan`](@ref) as we will discuss below.
 
-function initialize(; total_agents = 320, gridsize = (20, 20), min_to_be_happy = 3, seed = 125)
+function initialize(; total_agents = 320, gridsize = (20, 20), min_to_be_happy = 3, seed = 42)
     space = GridSpaceSingle(gridsize; periodic = false)
     properties = Dict(:min_to_be_happy => min_to_be_happy)
     rng = Xoshiro(seed)
@@ -541,8 +541,9 @@ function initialize(; total_agents = 320, gridsize = (20, 20), min_to_be_happy =
     )
     ## populate the model with agents, adding equal amount of the two types of agents
     ## at random positions in the model. At the start all agents are unhappy.
+    groups = shuffle!(vcat(fill(1, total_agents÷2), fill(2, total_agents÷2)))
     for n in 1:total_agents
-        add_agent_single!(model; mood = false, group = n < total_agents / 2 ? 1 : 2)
+        add_agent_single!(model; mood = false, group = groups[n])
     end
     return model
 end
@@ -606,11 +607,11 @@ figure # returning the figure displays it
 
 # The function [`abmvideo`](@ref) can be used to save an animation of the ABM into a video.
 
-schelling = initialize()
+schelling = initialize(total_agents = 1200, gridsize = (40, 40))
 abmvideo(
     "schelling.mp4", schelling;
     agent_color = groupcolor, agent_marker = groupmarker, agent_size = 10,
-    framerate = 4, frames = 20,
+    framerate = 4, frames = 25,
     title = "Schelling's segregation model"
 )
 
