@@ -24,7 +24,6 @@ typical usage of Agents.jl:
    -  The dev-user-facing interface for how to extend plotting for a new space has also been reworked. It is simplified.
    -  The function `check_space_visualization_API` has been removed.
    -  Instead, well structured developer docs exist.
-   -  Keyword `when` is removed from `ABMObservable` because it was actually never used. Data collection happens all the time in interactive applications.
 2. The `OSMSpace` is now not available immediately after `using Agents`.
    - It is now a package extension. You need to be doing `using LightOSM` to access it.
    - This change was done because `LightOSM` is now an abandoned package. We need to limit its hold over normal Agents.jl usage.

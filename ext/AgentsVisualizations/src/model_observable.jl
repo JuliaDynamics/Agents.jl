@@ -1,5 +1,5 @@
 function Agents.ABMObservable(model::AgentBasedModel;
-        adata = nothing, mdata = nothing,
+        adata = nothing, mdata = nothing, when = true,
     )
     adf = mdf = nothing
     if !isnothing(adata)
@@ -11,7 +11,7 @@ function Agents.ABMObservable(model::AgentBasedModel;
     timetype = typeof(abmtime(model))
     offset_time_adf = (Ref(zero(abmtime(model))), timetype[])
     offset_time_mdf = (Ref(zero(abmtime(model))), timetype[])
-    abmobs = ABMObservable(Observable(model), adata, mdata, adf, mdf,
+    abmobs = ABMObservable(Observable(model), adata, mdata, adf, mdf, when,
                            Observable(abmtime(model)), Observable(offset_time_adf),
                            Observable(offset_time_mdf), Observable(0), Observable(0)
     )
