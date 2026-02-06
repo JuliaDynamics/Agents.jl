@@ -111,7 +111,6 @@ end
 
 function set_axis_limits!(ax::Axis, model::ABM)
     o, e = space_axis_limits(model)
-    any(isnothing, (o, e)) && return nothing
     xlims!(ax, o[1], e[1])
     ylims!(ax, o[2], e[2])
     return o, e
@@ -119,7 +118,6 @@ end
 
 function set_axis_limits!(ax::Axis3, model::ABM)
     o, e = space_axis_limits(model)
-    any(isnothing, (o, e)) && return nothing
     xlims!(ax, o[1], e[1])
     ylims!(ax, o[2], e[2])
     zlims!(ax, o[3], e[3])
@@ -127,12 +125,9 @@ function set_axis_limits!(ax::Axis3, model::ABM)
 end
 
 function lift_attributes(model, ac, as, am, offset)
-    pos = @lift(abmplot_pos($model, $offset))
-    # color = @lift(abmplot_colors($model, $ac))
+    pos = lift((x, y) -> abmplot_pos(x, y), model, offset)
     color = lift((x, y) -> abmplot_colors(x, y), model, ac)
-    marker = @lift(abmplot_markers($model, $am, $pos))
-    # markersize = @lift(abmplot_markersizes($model, $as))
+    marker = lift((x, y, z) -> abmplot_markers(x, y, z), model, am, pos)
     markersize = lift((x, y) -> abmplot_markersizes(x, y), model, as)
-
     return pos, color, marker, markersize
 end

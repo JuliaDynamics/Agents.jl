@@ -281,22 +281,30 @@ By default these just map the `agent_color, agent_marker, agent_size` keywords o
 function agentsplot! end
 
 """
-    abmplot_pos(model::ABM{S}, offset)
+    abmplot_pos(model::ABM{S<:AbstractSpace}, offset)
+
+Return agent positions from the `model` given the `offset` keyword of `abmplot`.
 """
 function abmplot_pos end
 
 """
   abmplot_colors(model::ABM{S}, agent_color)
+
+Return agent colors from the `model` given the `agent_color` keyword of `abmplot`.
 """
 function abmplot_colors end
 
 """
     abmplot_markers(model::ABM{S}, agent_marker, pos)
+
+Return agent markers from the `model` given the `agent_marker` keyword of `abmplot`.
 """
 function abmplot_markers end
 
 """
     abmplot_markersizes(model::ABM{S}, agent_size)
+
+Return agent sizes from the `model` given the `agent_size` keyword of `abmplot`.
 """
 function abmplot_markersizes end
 
