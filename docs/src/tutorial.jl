@@ -601,7 +601,7 @@ groupmarker(a) = a.group == 1 ? :circle : :rect
 
 # We pass those functions to [`abmplot`](@ref)
 
-figure, _ = abmplot(schelling; agent_color = groupcolor, agent_marker = groupmarker, agent_size = 10)
+figure, _ = abmplot(schelling; agent_color = groupcolor, agent_marker = groupmarker)
 figure # returning the figure displays it
 
 # The function [`abmvideo`](@ref) can be used to save an animation of the ABM into a video.
@@ -609,7 +609,7 @@ figure # returning the figure displays it
 schelling = initialize()
 abmvideo(
     "schelling.mp4", schelling;
-    agent_color = groupcolor, agent_marker = groupmarker, as = 10,
+    agent_color = groupcolor, agent_marker = groupmarker, agent_size = 10,
     framerate = 4, frames = 20,
     title = "Schelling's segregation model"
 )
@@ -720,11 +720,6 @@ end
 
 
 # When making the model we specify the `Union` type for the agents
-
-model = StandardABM(
-    Union{Schelling, Politician}, # type of agents
-    space; # space they live in
-)
 
 model = StandardABM(
     Union{Schelling, Politician}, # type of agents

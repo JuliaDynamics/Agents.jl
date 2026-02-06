@@ -1,3 +1,6 @@
+space_axis_dimensionality(model::ABM) = space_axis_dimensionality(abmspace(model))
+space_axis_dimensionality(space::Agents.AbstractSpace) = length(space_axis_limits(space))
+
 Agents.spaceplot!(ax, model::ABM; kw...) = spaceplot!(ax, abmspace(model); kw...)
 Agents.spaceplot!(ax, model::Agents.AbstractSpace; kw...) = nothing
 
@@ -20,7 +23,7 @@ end
 
 ## Lifting
 
-function Agents.abmplot_heatobs(model::ABM, heatarray)
+function abmplot_heatarray(model::ABM, heatarray)
     isnothing(heatarray) && return nothing
     # TODO: use surface!(heatobs) here?
     matrix = Agents.get_data(model, heatarray, identity)

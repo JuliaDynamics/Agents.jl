@@ -15,7 +15,7 @@ Plot heatmap according to given `heatarray`.
 Special method for models with `ContinuousSpace`.
 """
 function abmheatmap!(ax, abmobs::ABMObservable, space::ContinuousSpace, heatarray, heatkwargs)
-    heatobs = @lift(abmplot_heatobs($(abmobs.model), heatarray))
+    heatobs = @lift(abmplot_heatarray($(abmobs.model), heatarray))
     nbinx, nbiny = size(heatobs[])
     extx, exty = space.extent
     coordx = range(0, extx; length=nbinx)

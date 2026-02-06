@@ -70,10 +70,9 @@ One your space works with the general Agents.jl API, you only need to extend a f
 
 #### Mandatory methods
 
-You must extend the following functions:
+You must extend the following function
 
 ```@docs
-space_axis_dimensionality
 space_axis_limits
 ```
 
@@ -100,11 +99,11 @@ spaceplot!
 
 #### Heatmap handling
 
-Heatmaps are extracted and plotted automatically, but your space may require some special handling for that. For example `ContinuousSpace` needs to map the finite heatmap matrix over the continuous space. If you require such handling, extend either of:
-
+Heatmaps are extracted and plotted automatically, but your space may require some special handling for that. For example `ContinuousSpace` needs to map the finite heatmap matrix over the continuous space.
+If you require such handling, extend either of:
 
 ```@docs
-abmplot_heatobs
+abmplot_heatarray
 abmheatmap!
 ```
 
@@ -162,7 +161,7 @@ end
 
 ## Lifting (optional)
 
-function Agents.abmplot_heatobs(model::ABM{<:Agents.AbstractSpace}, heatarray)
+function Agents.abmplot_heatarray(model::ABM{<:Agents.AbstractSpace}, heatarray)
 end
 
 function Agents.abmplot_pos(model::ABM{<:Agents.AbstractSpace}, offset)

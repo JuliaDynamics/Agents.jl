@@ -9,7 +9,7 @@ function Agents.space_axis_limits(space::Agents.AbstractGridSpace)
 end
 
 function abmheatmap!(ax, abmobs::ABMObservable, space::Agents.AbstractGridSpace, heatarray, heatkwargs)
-    heatobs = @lift(abmplot_heatobs($(abmobs.model), heatarray))
+    heatobs = @lift(abmplot_heatarray($(abmobs.model), heatarray))
     # TODO: use surface!(heatobs) here?
     hmap = Makie.heatmap!(
         ax, heatobs;
@@ -23,7 +23,7 @@ end
 
 ## Lifting
 
-function Agents.abmplot_heatobs(model::ABM{<:Agents.AbstractGridSpace}, heatarray)
+function Agents.abmplot_heatarray(model::ABM{<:Agents.AbstractGridSpace}, heatarray)
     isnothing(heatarray) && return nothing
     matrix = Agents.get_data(model, heatarray, identity)
     if !(matrix isa AbstractMatrix) || size(matrix) ≠ size(abmspace(model))

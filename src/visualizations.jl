@@ -235,39 +235,20 @@ function abmvideo end
 export abmvideo
 
 """
-    agent2string(agent::A)
-Convert agent data into a string which is used to display all agent variables and their
-values in the tooltip on mouse hover. Concatenates strings if there are multiple agents
-at one position.
-Custom tooltips for agents can be implemented by adding a specialised method
-for `agent2string`.
-
-Example:
-```julia
-function Agents.agent2string(agent::SpecialAgent)
-    \"\"\"
-    ✨ SpecialAgent ✨
-    ID = \$(agent.id)
-    Main weapon = \$(agent.charisma)
-    Side weapon = \$(agent.pistol)
-    \"\"\"
-end
-```
-"""
-function agent2string end
-
-"""
     translate_polygon(p::Polygon, point)
+
 Translate given polygon by given `point`.
 """
 function translate_polygon end
 """
     rotate_polygon(p::Polygon, θ)
+
 Rotate given polygon counter-clockwise by `θ` (in radians).
 """
 function rotate_polygon end
 """
     scale_polygon(p::Polygon, s)
+
 Scale given polygon by `s`, assuming polygon's center of reference is the origin.
 """
 function scale_polygon end
@@ -276,22 +257,12 @@ export translate_polygon, scale_polygon, rotate_polygon
 ############################################################################################
 ## Methods to extend for space
 ############################################################################################
-## Required
-
-"""
-    space_axis_dimensionality(space::AbstractSpace)
-
-Return 2 or 3, which decides whether a 2D or 3D axis will be used
-to plot ABMs with a given `space`.
-"""
-space_axis_dimensionality(model::ABM) = space_axis_dimensionality(abmspace(model))
-
 """
     space_axis_limits(space::AbstractSpace)
 
 Return appropriate axis limits for given model.
 They have to be a 2- or 3- tuple as expected by Makie when setting axis limits.
-Return a tuple of `nothing` to skip updating axis limits.
+The `length` of the output of this function decides whether a 2D or 3D axis is used.
 """
 space_axis_limits(model::ABM) = space_axis_limits(abmspace(model))
 
@@ -308,33 +279,6 @@ By default these just map the `agent_color, agent_marker, agent_size` keywords o
 `agentsplotkwargs` is propagated from `abmplot`.
 """
 function agentsplot! end
-
-## Preplots
-
-"""
-    spaceplot!(ax, space::AbstractSpace; spaceplotkwargs...)
-
-Add a space-dependent plot to `ax`. `spaceplotkwargs` is propagated
-from [`abmplot`](@ref). By default this function does nothing.
-"""
-function spaceplot! end
-
-## Lifting: transforming agent attributes into plottable quantities
-## Totally optional. At the moment only the graph space uses these.
-
-"""
-    abmplot_heatobs(model::ABM{S}, heatarray)
-
-Return the observable matrix that will be plotted as a `heatmap`.
-"""
-function abmplot_heatobs end
-
-"""
-    abmheatmap!(ax, abmobs::ABMObservable, space, heatarray, add_colorbar, heatkwargs)
-
-Plot as a heatmap the obtained `heatarray` (an observable matrix).
-"""
-function abmheatmap! end
 
 """
     abmplot_pos(model::ABM{S}, offset)
@@ -356,7 +300,61 @@ function abmplot_markers end
 """
 function abmplot_markersizes end
 
-## Inspection
+"""
+    abmplot_heatarray(model::ABM{S}, heatarray)
+
+Return the matrix that will be plotted as a `heatmap`.
+By default this is just `Agents.get_data(model, heatarray, identity)`.
+"""
+function abmplot_heatarray(model::ABM, heatarray)
+    get_data(model, heatarray, identity)
+end
+
+"""
+    abmheatmap!(ax, abmobs::ABMObservable, space, heatarray, add_colorbar, heatkwargs)
+
+Plot as a heatmap the obtained `heatarray` (an observable matrix).
+"""
+function abmheatmap! end
+
+"""
+    spaceplot!(ax, space::AbstractSpace; spaceplotkwargs...)
+
+Add a space-dependent plot to `ax`. `spaceplotkwargs` is propagated
+from [`abmplot`](@ref). By default this function does nothing.
+"""
+function spaceplot! end
+
+# Some cheat functions that only exist so that we can have
+# a conditional dependency on OSMMakie and GraphMakie
+function osmplot! end
+function graphplot! end
+
+
+###### Inspection, currently disabled
+
+"""
+    agent2string(agent::A)
+Convert agent data into a string which is used to display all agent variables and their
+values in the tooltip on mouse hover. Concatenates strings if there are multiple agents
+at one position.
+Custom tooltips for agents can be implemented by adding a specialised method
+for `agent2string`.
+
+Example:
+```julia
+function Agents.agent2string(agent::SpecialAgent)
+    \"\"\"
+    ✨ SpecialAgent ✨
+    ID = \$(agent.id)
+    Main weapon = \$(agent.charisma)
+    Side weapon = \$(agent.pistol)
+    \"\"\"
+end
+```
+"""
+function agent2string end
+
 
 """
     convert_element_pos(::S, pos)
@@ -373,8 +371,3 @@ function convert_element_pos end
 Return `ids` that should be shown in the data inspection (hover).
 """
 function ids_to_inspect end
-
-# Some cheat functions that only exist so that we can have
-# a conditional dependency on OSMMakie and GraphMakie
-function osmplot! end
-function graphplot! end

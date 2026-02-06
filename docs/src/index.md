@@ -10,11 +10,16 @@ using CairoMakie, Agents
     If you have found this package useful, please consider starring it on [GitHub](https://github.com/JuliaDynamics/Agents.jl).
     This gives us an accurate lower bound of the (satisfied) user count.
 
-!!! tip "Latest news: Agents.jl v6.3"
-    This new version brings two powerful, but both **experimental** features:
+!!! tip "Latest news: Agents.jl v7"
+    This new version brings two powerful and experimental features:
 
-    1. Allowing the agent container to be based on `StructVectors`, using a Struct-of-Arrays internal layout. Currently it only supports single agent types. To use this, pass `container = StructVector` to `StandardABM` or `EventQueueABM` constructors, as well as use the helper construct `SoAType{A}` for dispatch purposes instead of your agent type `A` (read the docstring of `SoAType`).
+    1. Allowing the agent container to be based on `StructVectors`, using a Struct-of-Arrays internal layout. This can increase simulation computational performance however it currently only supports single agent types. To use this, pass `container = StructVector` to `StandardABM` or `EventQueueABM` constructors, as well as use the helper construct `SoAType{A}` for dispatch purposes instead of your agent type `A` (read the docstring of `SoAType`).
     2. Native integration of ABMs with Reinforcement Learning is now provided by the new model type `ReinforcementLearningABM`. To learn how to use this functionality checkout the new tutorial on the Boltzmann Wealth Model with Reinforcement Learning.
+
+    There is also a minor breaking change: the internal code for plotting has been
+    fully reworked. This does not affect typical users, as all plotting API remains
+    identical, but it does affect users that were extending plotting for custom spaces. As a result of this change, data inspection is currently disabled.
+
 
 
 ## Highlights
