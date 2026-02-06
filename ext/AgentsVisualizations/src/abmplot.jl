@@ -81,7 +81,8 @@ function Agents.abmplot!(
         abmobs.model, agent_color, agent_size, agent_marker, offset
     )
 
-    # heatmap and other plots
+    # other plots
+    spaceplot!(ax, model; spaceplotkwargs...)
     if !isnothing(heatarray)
         heatobs = @lift(abmplot_heatarray($(abmobs.model), heatarray))
         abmheatmap!(ax, abmobs, abmspace(model), heatobs, heatkwargs)
@@ -93,11 +94,9 @@ function Agents.abmplot!(
         # rowsize!(fig[1, 1].layout, 1, ax.scene.px_area[].widths[2])
         # colsize!(fig[1, 1].layout, 1, Aspect(1, 1.0))
     end
-    spaceplot!(ax, model; spaceplotkwargs...)
     preplot!(ax, abmobs)
 
-    # and the agent plot
-    # XXX I STOPPED HERE
+    # and finally the agent plot
     agentsplot!(ax, model, pos, color, marker, markersize, agentsplotkwargs)
 
     add_controls && add_interaction!(ax, abmobs, params, dt)

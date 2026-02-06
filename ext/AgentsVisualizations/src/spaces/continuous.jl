@@ -13,13 +13,6 @@ function Agents.abmheatmap!(ax, abmobs::ABMObservable, space::ContinuousSpace, h
     hmap = Makie.heatmap!(ax, coordx, coordy, heatobs;
         colormap = JULIADYNAMICS_CMAP, heatkwargs...
     )
-
-    # TODO: Set colorbar to be "glued" to axis
-    # Problem with the following code, which comes from the tutorial
-    # https://makie.juliaplots.org/stable/tutorials/aspect-tutorial/ ,
-    # is that it only works for axis that have 1:1 aspect ratio...
-    # rowsize!(fig[1, 1].layout, 1, ax.scene.px_area[].widths[2])
-    # colsize!(fig[1, 1].layout, 1, Aspect(1, 1.0))
     return hmap
 end
 
