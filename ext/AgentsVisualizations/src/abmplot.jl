@@ -21,7 +21,7 @@ end
 
 function Agents.abmplot!(ax, model::ABM;
         # These keywords are about the `ABM`
-        adata=nothing, mdata=nothing, when = true,
+        adata = nothing, mdata = nothing, when = true,
         # While all the rest are plotting related:
         kwargs...
     )

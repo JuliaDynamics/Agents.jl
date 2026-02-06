@@ -14,11 +14,8 @@ function Agents.agentsplot!(ax::Axis, space, pos, color, marker, markersize, age
 end
 
 function Agents.agentsplot!(ax::Axis3, space, pos, color, marker, markersize, agentsplotkwargs)
-    if marker === :circle
-        marker = Sphere(Point3f(0), 1)
-    end
-    meshscatter!(ax, pos; color, marker, markersize, agentsplotkwargs...)
-    return p
+    scatter!(ax, pos; color, marker, markersize, agentsplotkwargs...)
+    return
 end
 
 ## Lifting
@@ -32,13 +29,12 @@ function Agents.abmplot_pos(model::ABM, offset)
 end
 
 Agents.abmplot_colors(model::ABM, ac) = to_color(ac)
-Agents.abmplot_colors(model::ABM, ac::Function) =
-    to_color.([ac(model[i]) for i in allids(model)])
+Agents.abmplot_colors(model::ABM, ac::Function) = to_color.([ac(model[i]) for i in allids(model)])
 
 function Agents.abmplot_markers(model::ABM, am, pos)
     if user_used_polygons(am)
         # for polygons we always need vector, even if all agents are same polygon
-        return [translate(am, p) for p in pos]
+        return [translate_polygon(am, p) for p in pos]
     else
         return am
     end
@@ -54,7 +50,9 @@ end
 
 user_used_polygons(marker) = false
 user_used_polygons(marker::Makie.Polygon) = true
+user_used_polygons(marker::Observable{<:Makie.Polygon}) = true
 user_used_polygons(marker::Vector{<:Makie.Polygon}) = true
+user_used_polygons(marker::Observable{<:Vector{<:Makie.Polygon}}) = true
 
 Agents.abmplot_markersizes(model::ABM, as) = as
 Agents.abmplot_markersizes(model::ABM, as::Function) = [as(model[i]) for i in allids(model)]

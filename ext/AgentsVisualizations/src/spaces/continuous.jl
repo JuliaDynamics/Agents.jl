@@ -5,13 +5,7 @@ function Agents.space_axis_limits(space::ContinuousSpace)
     return Tuple(zip(o, e))
 end
 
-## Preplots
-
-"""
-Plot heatmap according to given `heatarray`.
-Special method for models with `ContinuousSpace`.
-"""
-function abmheatmap!(ax, abmobs::ABMObservable, space::ContinuousSpace, heatarray, heatkwargs)
+function Agents.abmheatmap!(ax, abmobs::ABMObservable, space::ContinuousSpace, heatarray, heatkwargs)
     heatobs = @lift(abmplot_heatarray($(abmobs.model), heatarray))
     nbinx, nbiny = size(heatobs[])
     extx, exty = space.extent
@@ -30,7 +24,6 @@ function abmheatmap!(ax, abmobs::ABMObservable, space::ContinuousSpace, heatarra
     return hmap
 end
 
-## Lifting
 
 ## Inspection
 
