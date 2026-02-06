@@ -2,7 +2,6 @@
 function Agents.abmplot(either;
         # These keywords are about the `ABM`
         adata=nothing, mdata=nothing, when=true,
-
         axis=NamedTuple(),
         add_controls=false,
         figure=NamedTuple(),
@@ -16,7 +15,7 @@ function Agents.abmplot(either;
         either
     end
     ax = axistype(abmobs.model[])(fig[1, 1][1, 1]; axis...)
-    abmplot!(ax, abmobs; kwargs...)
+    abmplot!(ax, abmobs; add_controls, kwargs...)
     return fig, ax, abmobs
 end
 
