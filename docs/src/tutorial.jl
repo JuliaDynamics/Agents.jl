@@ -615,6 +615,19 @@ abmvideo(
     title = "Schelling's segregation model"
 )
 
+
+schelling = initialize(total_agents = 1200, gridsize = (40, 40))
+using Statistics: mean
+adata = [(:mood, mean)]
+params = Dict(:min_to_be_happy => 0:8)
+fig, abmobs = abmexploration(schelling;
+    params, adata, alabels = ["mean happiness"],
+)
+
+# TODO: BUG: WITHOUT PARAMS IT DOESNT PLOT SLIDERS....?!?!?!?
+
+
+
 # ```@raw html
 # <video width="auto" controls autoplay loop>
 # <source src="../schelling.mp4" type="video/mp4">

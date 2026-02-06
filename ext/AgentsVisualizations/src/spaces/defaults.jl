@@ -36,12 +36,12 @@ Agents.abmplot_colors(model::ABM, ac::Function) =
     to_color.([ac(model[i]) for i in allids(model)])
 
 function Agents.abmplot_markers(model::ABM, am, pos)
-    marker = am
-    if user_used_polygons(am, marker)
+    if user_used_polygons(am)
         # for polygons we always need vector, even if all agents are same polygon
-        marker = [translate(am, p) for p in pos]
+        return [translate(am, p) for p in pos]
+    else
+        return am
     end
-    return marker
 end
 
 function Agents.abmplot_markers(model::ABM, am::Function, pos)

@@ -9,19 +9,20 @@ function Agents.abmexploration(model;
         kwargs...
     )
     fig, ax, abmobs = abmplot(model;
-        figure, axis, warn_deprecation = false, add_controls = true, kwargs...
+        figure, axis, add_controls = true, kwargs...
     )
-    p = first_abmplot_in(ax)
 
     adata, mdata = abmobs.adata, abmobs.mdata
-    !isnothing(adata) && @assert eltype(adata)<:Tuple "Only aggregated agent data are allowed."
+    !isnothing(adata) && @assert eltype(adata) <: Tuple "Only aggregated agent data are allowed."
     !isnothing(alabels) && @assert length(alabels) == length(adata)
     !isnothing(mlabels) && @assert length(mlabels) == length(mdata)
-    init_abm_data_plots!(fig, abmobs, adata, mdata, alabels, mlabels, plotkwargs, p.stepclick, p.resetclick)
+    init_abm_data_plots!(fig, abmobs, adata, mdata, alabels, mlabels, plotkwargs)
+    display(fig)
     return fig, abmobs
 end
 
-function init_abm_data_plots!(fig, abmobs, adata, mdata, alabels, mlabels, plotkwargs, stepclick, resetclick)
+function init_abm_data_plots!(fig, abmobs, adata, mdata, alabels, mlabels, plotkwargs)
+    stepclick, resetclick = abmobs.stepclick, abmobs.resetclick
     La = isnothing(adata) ? 0 : size(abmobs.adf[])[2]-1
     Lm = isnothing(mdata) ? 0 : size(abmobs.mdf[])[2]-1
     La + Lm == 0 && return nothing # failsafe; don't add plots if dataframes are empty

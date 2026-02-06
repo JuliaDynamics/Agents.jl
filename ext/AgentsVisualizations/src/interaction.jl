@@ -1,29 +1,25 @@
 function Agents.add_interaction!(ax, abmobs, params, dt)
-    if add_controls
-        stepclick, resetclick = add_controls!(ax.parent, abmobs, dt)
-        if !isempty(params)
-            add_param_sliders!(ax.parent, abmobs.model, params, resetclick)
-        end
-        # link the two buttons to the abmobs
-        on(stepclick) do click
-            abmobs.stepclick[] += 1
-            notify(abmobs.stepclick)
-        end
-        on(resetclick) do click
-            abmobs.resetclick[] += 1
-            notify(abmobs.resetclick)
-        end
+    stepclick, resetclick = add_controls!(ax.parent, abmobs, dt)
+    if !isempty(params)
+        add_param_sliders!(ax.parent, abmobs.model, params, resetclick)
+    end
+    # link the two buttons to the abmobs
+    on(stepclick) do click
+        abmobs.stepclick[] += 1
+        notify(abmobs.stepclick)
+    end
+    on(resetclick) do click
+        abmobs.resetclick[] += 1
+        notify(abmobs.resetclick)
     end
     return
 end
 
-Agents.add_interaction!(ax) = add_interaction!(ax, first_abmplot_in(ax))
-
 "Initialize standard model control buttons."
 function add_controls!(fig, abmobs, dt)
 
-    model, adata, mdata, adf, mdf, when =
-        getfield.(Ref(abmobs), (:model, :adata, :mdata, :adf, :mdf, :when))
+    model, adata, mdata, adf, mdf =
+        getfield.(Ref(abmobs), (:model, :adata, :mdata, :adf, :mdf))
 
     # Create new layout for control buttons
     controllayout = fig[end+1, :][1, 1] = GridLayout(tellheight=true)
@@ -71,7 +67,7 @@ function add_controls!(fig, abmobs, dt)
         !isnothing(mdf) && update_offsets!(model[], abmobs.offset_time_mdf[], mdf[])
         model[] = deepcopy(model0)
         # Also collect data when resetting to make it clear where the reset point is
-        collect_data!(abmobs, model[], adata, mdata, adf, mdf)
+        collect_data!(model[], adata, mdata, adf, mdf)
         abmobs.t_last_collect[] = abmtime(model0)
     end
     # Clear button
@@ -82,7 +78,7 @@ function add_controls!(fig, abmobs, dt)
         abmobs.offset_time_mdf[] = (Ref(abmobs.offset_time_mdf[][1][]), timetype[])
         reinit_dataframes!(model[], adata, mdata, adf, mdf)
         # always collect data after clear, as the dataframes have been emptied
-        collect_data!(abmobs, model[], adata, mdata, adf, mdf)
+        collect_data!(model[], adata, mdata, adf, mdf)
         abmobs.t_last_collect[] = abmtime(model[])
     end
     # Layout buttons

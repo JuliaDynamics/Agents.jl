@@ -143,7 +143,7 @@ function add_interaction! end
 export add_interaction!
 
 """
-    ABMObservable(model; adata, mdata, when) → abmobs
+    ABMObservable(model; adata, mdata) → abmobs
 
 `abmobs` contains all information necessary to step an agent based model interactively,
 as well as collect data while stepping interactively.
@@ -154,18 +154,17 @@ as in [`Agents.run!`](@ref).
 
 The fields `abmobs.model, abmobs.adf, abmobs.mdf` are _observables_ that contain
 the [`AgentBasedModel`](@ref), and the agent and model dataframes with collected data.
-Data are collected as described in [`Agents.run!`](@ref) using the `adata, mdata, when`
-keywords. All three observables are updated on stepping (when it makes sense).
+Data are collected as described in [`Agents.run!`](@ref) using the `adata, mdata`
+keywords. All three observables are updated on stepping.
 
 All plotting and interactivity should be defined by `lift`ing these observables.
 """
-struct ABMObservable{M, AD, MD, ADF, MDF, W, S, K, OI}
+struct ABMObservable{M, AD, MD, ADF, MDF, S, K, OI}
     model::M # Observable{AgentBasedModel}
     adata::AD
     mdata::MD
     adf::ADF # this is `nothing` or `Observable`
     mdf::MDF # this is `nothing` or `Observable`
-    when::W
     t_last_collect::S # observable of last timepoint where data was collected (for `when`)
     offset_time_adf::K
     offset_time_mdf::K

@@ -11,7 +11,7 @@ function Agents.abmplot(either;
     size = add_controls ? (800, 600) : (800, 800)
     fig = Figure(; size, figure...)
     abmobs = if either isa ABM
-        ABMObservable(either; adata, mdata, when)
+        ABMObservable(either; adata, mdata)
     else
         either
     end
@@ -22,11 +22,11 @@ end
 
 function Agents.abmplot!(ax, model::ABM;
         # These keywords are about the `ABM`
-        adata=nothing, mdata=nothing, when=true,
+        adata=nothing, mdata=nothing,
         # While all the rest are plotting related:
         kwargs...
     )
-    abmobs = ABMObservable(model; adata, mdata, when)
+    abmobs = ABMObservable(model; adata, mdata)
     abmplot!(ax, abmobs; kwargs...) # MAIN function
     return abmobs
 end
