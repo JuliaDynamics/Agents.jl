@@ -5,10 +5,7 @@ function Agents.space_axis_limits(space::Agents.AbstractGridSpace)
     return Tuple(zip(o, e))
 end
 
-function abmheatmap!(ax, abmobs::ABMObservable, space::Agents.AbstractGridSpace, heatarray, heatkwargs)
-    isnothing(heatarray) && return nothing
-    heatobs = @lift(abmplot_heatarray($(abmobs.model), heatarray))
-    # TODO: use surface!(heatobs) here?
+function abmheatmap!(ax, abmobs::ABMObservable, space::Agents.AbstractGridSpace, heatobs, heatkwargs)
     hmap = Makie.heatmap!(
         ax, heatobs;
         colormap=JULIADYNAMICS_CMAP, heatkwargs

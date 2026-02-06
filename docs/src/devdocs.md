@@ -100,10 +100,9 @@ spaceplot!
 #### Heatmap handling
 
 Heatmaps are extracted and plotted automatically, but your space may require some special handling for that. For example `ContinuousSpace` needs to map the finite heatmap matrix over the continuous space.
-If you require such handling, extend either of:
+If you require such handling, extend:
 
 ```@docs
-abmplot_heatarray
 abmheatmap!
 ```
 

@@ -309,9 +309,9 @@ Return agent sizes from the `model` given the `agent_size` keyword of `abmplot`.
 function abmplot_markersizes end
 
 """
-    abmheatmap!(ax, abmobs::ABMObservable, space, heatarray, add_colorbar, heatkwargs)
+    abmheatmap!(ax, abmobs::ABMObservable, space, heatobs, add_colorbar, heatkwargs)
 
-Plot as a heatmap the provided keyword `heatarray` (an observable matrix).
+Plot as a heatmap the provided `heatobs` (an observable matrix created from `heatarray`).
 """
 function abmheatmap! end
 
