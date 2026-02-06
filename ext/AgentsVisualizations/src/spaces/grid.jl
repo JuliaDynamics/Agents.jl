@@ -1,14 +1,12 @@
 ## Required
-
-Agents.space_axis_dimensionality(::Agents.AbstractGridSpace{D}) where {D} = D
-
 function Agents.space_axis_limits(space::Agents.AbstractGridSpace)
     e = size(space) .+ 0.5
     o = zero.(e) .+ 0.5
-    return o, e
+    return Tuple(zip(o, e))
 end
 
 function abmheatmap!(ax, abmobs::ABMObservable, space::Agents.AbstractGridSpace, heatarray, heatkwargs)
+    isnothing(heatarray) && return nothing
     heatobs = @lift(abmplot_heatarray($(abmobs.model), heatarray))
     # TODO: use surface!(heatobs) here?
     hmap = Makie.heatmap!(
@@ -18,13 +16,7 @@ function abmheatmap!(ax, abmobs::ABMObservable, space::Agents.AbstractGridSpace,
     return hmap
 end
 
-
-## Preplots
-
-## Lifting
-
-function Agents.abmplot_heatarray(model::ABM{<:Agents.AbstractGridSpace}, heatarray)
-    isnothing(heatarray) && return nothing
+function abmplot_heatarray(model::ABM{<:Agents.AbstractGridSpace}, heatarray)
     matrix = Agents.get_data(model, heatarray, identity)
     if !(matrix isa AbstractMatrix) || size(matrix) ≠ size(abmspace(model))
         error("The heat array property must yield a matrix of same size as the grid!")
@@ -33,7 +25,6 @@ function Agents.abmplot_heatarray(model::ABM{<:Agents.AbstractGridSpace}, heatar
 end
 
 ## Inspection
-
 function Agents.convert_element_pos(s::S, pos) where {S<:Agents.AbstractGridSpace}
     gridpos = pos[1:length(spacesize(s))]
     Tuple(round.(Int, gridpos)) # using round to handle positions with offset

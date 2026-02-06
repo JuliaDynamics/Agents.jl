@@ -75,7 +75,7 @@ function Agents.abmplot!(
             ax.aspect = :data # is this up-to-date?
         end
     end
-    set_axis_limits!(ax, model)
+    ax.limits = space_axis_limits(model)
 
     # These are all observables:
     pos, color, marker, markersize = lift_attributes(
@@ -107,21 +107,6 @@ function Agents.abmplot!(
     # enable_inspection && DataInspector(ax.parent)
 
     return abmobs
-end
-
-function set_axis_limits!(ax::Axis, model::ABM)
-    o, e = space_axis_limits(model)
-    xlims!(ax, o[1], e[1])
-    ylims!(ax, o[2], e[2])
-    return o, e
-end
-
-function set_axis_limits!(ax::Axis3, model::ABM)
-    o, e = space_axis_limits(model)
-    xlims!(ax, o[1], e[1])
-    ylims!(ax, o[2], e[2])
-    zlims!(ax, o[3], e[3])
-    return o, e
 end
 
 function lift_attributes(model, ac, as, am, offset)

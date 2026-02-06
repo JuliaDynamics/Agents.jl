@@ -1,6 +1,6 @@
 # v7
 
-# ## New features
+## New features
 
 This new version brings two powerful, but both **experimental** features:
 
@@ -11,9 +11,7 @@ These two features are labelled experimental because they did not yet undergo ex
 
 The experimental status allows us as developers to make breaking changes, if need be, to either feature, in order to fully stabilize them.
 
-Other notable changes:
-
-# ## Breaking changes
+## Breaking changes
 
 This new version also brings some breaking changes that we believe will not affect
 typical usage of Agents.jl:
@@ -21,7 +19,7 @@ typical usage of Agents.jl:
 1. All deprecations regarding Agents.jl have been completely removed. Use version v6.2 if you are not comfortable with this.
 1. All plotting related source code has been completely overhauled.
    - Main reason was the difficulty of maintaining the previous version which was relying on advanced Makie.jl features and was also significantly over-engineered.
-   - Data inspection is currently unavailable, and we welcome PRs to enable again data inspection in the new plotting code.
+   - Data inspection is currently unavailable, and we welcome PRs to enable again data inspection in the new plotting code which plots directly on `Axis/Axis3`.
    - All plotting-related deprecations have been removed. Incorrect code will now error.
    -  The dev-user-facing interface for how to extend plotting for a new space has also been reworked. It is simplified.
    -  The function `check_space_visualization_API` has been removed.

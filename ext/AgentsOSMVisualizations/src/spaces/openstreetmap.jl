@@ -1,7 +1,4 @@
 ## Required
-
-Agents.space_axis_dimensionality(::OSMSpace) = 2
-
 function Agents.space_axis_limits(model::ABM{<:OSMSpace})
     o = [Inf, Inf]
     e = [-Inf, -Inf]
@@ -12,7 +9,7 @@ function Agents.space_axis_limits(model::ABM{<:OSMSpace})
         e[1] = max(x, e[1])
         e[2] = max(y, e[2])
     end
-    return o, e
+    return ((o[1], e[1]), (o[2], e[2]))
 end
 
 ## Preplots

@@ -1,11 +1,8 @@
 ## Required
-
-Agents.space_axis_dimensionality(::ContinuousSpace{D}) where {D} = D
-
 function Agents.space_axis_limits(space::ContinuousSpace)
     e = space.extent
     o = zero.(e)
-    return o, e
+    return Tuple(zip(o, e))
 end
 
 ## Preplots

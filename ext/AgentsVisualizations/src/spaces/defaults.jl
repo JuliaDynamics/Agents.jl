@@ -22,14 +22,6 @@ function Agents.agentsplot!(ax::Axis3, space, pos, color, marker, markersize, ag
 end
 
 ## Lifting
-
-function abmplot_heatarray(model::ABM, heatarray)
-    isnothing(heatarray) && return nothing
-    # TODO: use surface!(heatobs) here?
-    matrix = Agents.get_data(model, heatarray, identity)
-    return matrix
-end
-
 function Agents.abmplot_pos(model::ABM, offset)
     postype = space_axis_dimensionality(abmspace(model)) == 3 ? Point3f : Point2f
     if isnothing(offset)

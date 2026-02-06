@@ -258,7 +258,7 @@ export translate_polygon, scale_polygon, rotate_polygon
 ## Methods to extend for space
 ############################################################################################
 """
-    space_axis_limits(space::AbstractSpace)
+    space_axis_limits(model::ABM{S}) where {S<:AbstractSpace}
 
 Return appropriate axis limits for given model.
 They have to be a 2- or 3- tuple as expected by Makie when setting axis limits.
@@ -281,7 +281,7 @@ By default these just map the `agent_color, agent_marker, agent_size` keywords o
 function agentsplot! end
 
 """
-    abmplot_pos(model::ABM{S<:AbstractSpace}, offset)
+    abmplot_pos(model::ABM{S}, offset)
 
 Return agent positions from the `model` given the `offset` keyword of `abmplot`.
 """
@@ -309,19 +309,9 @@ Return agent sizes from the `model` given the `agent_size` keyword of `abmplot`.
 function abmplot_markersizes end
 
 """
-    abmplot_heatarray(model::ABM{S}, heatarray)
-
-Return the matrix that will be plotted as a `heatmap`.
-By default this is just `Agents.get_data(model, heatarray, identity)`.
-"""
-function abmplot_heatarray(model::ABM, heatarray)
-    get_data(model, heatarray, identity)
-end
-
-"""
     abmheatmap!(ax, abmobs::ABMObservable, space, heatarray, add_colorbar, heatkwargs)
 
-Plot as a heatmap the obtained `heatarray` (an observable matrix).
+Plot as a heatmap the provided keyword `heatarray` (an observable matrix).
 """
 function abmheatmap! end
 
