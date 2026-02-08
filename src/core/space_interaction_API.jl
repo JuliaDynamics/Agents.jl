@@ -292,7 +292,12 @@ function add_agent!(
     else
         newagent = A(; id = id, pos = pos, kwargs...)
     end
-    add_agent_own_pos!(newagent, model)
+    try
+        add_agent_own_pos!(newagent, model)
+    catch err
+        remove_agent_from_container!(newagent, model)
+        rethrow(err)
+    end
 end
 
 #######################################################################################
