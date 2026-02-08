@@ -487,3 +487,13 @@ using StableRNGs
 end
 
 # TODO: Test nearby_ids(r = Tuple)
+@testset "out of bounds add_agent bug" begin
+    space = GridSpace((10, 10); periodic = false)
+    model = StandardABM(GridAgent{2}, space; warn_deprecation = false)
+
+    @test_throws BoundsError add_agent!((0, 0), model)
+
+    # Ensure NO agent was added after error
+    @test nagents(model) == 0
+end
+
