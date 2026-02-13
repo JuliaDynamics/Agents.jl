@@ -251,7 +251,7 @@ The `model` is the model _observable_ contained in [`ABMObservable`](@ref).
 
 ## Extending
 
-By default this function does a `scatter`-plot and ignores `abmobs`.
+By default this function does a `scatter`-plot and ignores `model`.
 Otherwise, it should be extended to dispatch on model space type. TO do this,
 use the signature:
 
