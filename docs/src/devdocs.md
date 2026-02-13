@@ -78,15 +78,11 @@ space_axis_limits
 
 #### Optional alternative agent plotting
 
-If your space does not visualize agents in the default way of one agent = one scattered marker, then you want to extend some or all of the following functions.
-For example, `GraphSpace` aggregates multiple agents into one scattered marker and is extending these functions.
+If your space does not visualize agents in the default way of one agent = one scattered marker, then you want to extend the function `agentsplot!`.
+For example, `GraphSpace` aggregates multiple agents into one scattered marker and is extending `agentsplot!`.
 
 ```@docs
 agentsplot!
-abmplot_pos
-abmplot_colors
-abmplot_markers
-abmplot_markersizes
 ```
 
 #### Optional pre-plotting

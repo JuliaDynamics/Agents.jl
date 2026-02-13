@@ -1,28 +1,14 @@
 ## Required
+Agents.space_axis_limits(::GraphSpace) = ((nothing, nothing),(nothing, nothing))
 
-Agents.space_axis_limits(model::ABM{<:GraphSpace}) = ((nothing, nothing),(nothing, nothing))
-
-function Agents.agentsplot!(ax::Axis, p::ABMP{<:GraphSpace})
+function Agents.agentsplot!(ax, model::Observable{ABM{GraphSpace}}, pos, color, marker, markersize, agentsplotkwargs)
     hidedecorations!(ax)
-    ec = get(p.agentsplotkwargs, :edge_color, Observable(:black))
+    ec = get(agentsplotkwargs, :edge_color, Observable(:black))
     edge_color = @lift(abmplot_edge_color($(p.abmobs[].model), $ec))
     ew = get(p.agentsplotkwargs, :edge_width, Observable(1))
     edge_width = @lift(abmplot_edge_width($(p.abmobs[].model), $ew))
-    Agents.graphplot!(p;
-        node_color=p.color, node_marker=p.marker, node_size=p.markersize,
-        p.agentsplotkwargs, # must come first to not overwrite lifted kwargs
-        edge_color, edge_width)
-    return p
-end
-
-function Agents.agentsplot!(ax::Axis3, p::ABMP{<:GraphSpace})
-    hidedecorations!(ax)
-    ec = get(p.agentsplotkwargs, :edge_color, Observable(:black))
-    edge_color = @lift(abmplot_edge_color($(p.abmobs[].model), $ec))
-    ew = get(p.agentsplotkwargs, :edge_width, Observable(1))
-    edge_width = @lift(abmplot_edge_width($(p.abmobs[].model), $ew))
-    Agents.graphplot!(p;
-        node_color=p.color, node_marker=p.marker, node_size=p.markersize,
+    Agents.graphplot!(ax, abmobs;
+        node_color = p.color, node_marker=p.marker, node_size=p.markersize,
         p.agentsplotkwargs, # must come first to not overwrite lifted kwargs
         edge_color, edge_width)
     return p
@@ -61,9 +47,9 @@ function Agents.abmplot_markersizes(model::ABM{<:GraphSpace}, as::Function)
 end
 
 ## Inspection
-
-function Makie.show_data(inspector::DataInspector,
-        p::ABMP{<:GraphSpace}, idx, source::Scatter)
+# TODO: Update this after v7
+function Makie.show_data(inspector::DataInspector, p, # ::ABMP{<:GraphSpace},
+    idx, source::Scatter)
     pos = Makie.position_on_plot(source, idx)
     proj_pos = Makie.shift_project(Makie.parent_scene(p), pos)
     Makie.update_tooltip_alignment!(inspector, proj_pos)

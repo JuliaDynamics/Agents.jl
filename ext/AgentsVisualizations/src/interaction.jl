@@ -1,4 +1,4 @@
-function Agents.add_interaction!(ax, abmobs, params, dt)
+function add_interaction!(ax, abmobs, params, dt)
     stepclick, resetclick = add_controls!(ax.parent, abmobs, dt)
     if !isempty(params)
         add_param_sliders!(ax.parent, abmobs.model, params, resetclick)

@@ -4,8 +4,11 @@ space_axis_dimensionality(space::Agents.AbstractSpace) = length(space_axis_limit
 Agents.spaceplot!(ax, model::ABM; kw...) = spaceplot!(ax, abmspace(model); kw...)
 Agents.spaceplot!(ax, model::Agents.AbstractSpace; kw...) = nothing
 
-function Agents.agentsplot!(ax::Axis, space, pos, color, marker, markersize, agentsplotkwargs)
-    if user_used_polygons(marker)
+function Agents.agentsplot!(ax, model::Observable{<:ABM}, agent_color, agent_size, agent_marker, offset, agentsplotkwargs)
+    pos, color, marker, markersize = lift_attributes(
+        model, agent_color, agent_size, agent_marker, offset
+    )
+    if user_used_polygons(marker) && ax <: Axis2
         poly!(ax, marker; color, agentsplotkwargs...)
     else
         scatter!(ax, pos; color, marker, markersize, agentsplotkwargs...)
@@ -13,12 +16,15 @@ function Agents.agentsplot!(ax::Axis, space, pos, color, marker, markersize, age
     return
 end
 
-function Agents.agentsplot!(ax::Axis3, space, pos, color, marker, markersize, agentsplotkwargs)
-    scatter!(ax, pos; color, marker, markersize, agentsplotkwargs...)
-    return
+## Default lifting
+function lift_attributes(model, ac, as, am, offset)
+    pos = lift((x, y) -> abmplot_pos(x, y), model, offset)
+    color = lift((x, y) -> abmplot_colors(x, y), model, ac)
+    marker = lift((x, y, z) -> abmplot_markers(x, y, z), model, am, pos)
+    markersize = lift((x, y) -> abmplot_markersizes(x, y), model, as)
+    return pos, color, marker, markersize
 end
 
-## Lifting
 function Agents.abmplot_pos(model::ABM, offset)
     postype = space_axis_dimensionality(abmspace(model)) == 3 ? Point3f : Point2f
     if isnothing(offset)
@@ -48,11 +54,12 @@ function Agents.abmplot_markers(model::ABM, am::Function, pos)
     return marker
 end
 
+Agents.abmplot_markersizes(model::ABM, as) = as
+Agents.abmplot_markersizes(model::ABM, as::Function) = [as(model[i]) for i in allids(model)]
+
+
 user_used_polygons(marker) = false
 user_used_polygons(marker::Makie.Polygon) = true
 user_used_polygons(marker::Observable{<:Makie.Polygon}) = true
 user_used_polygons(marker::Vector{<:Makie.Polygon}) = true
 user_used_polygons(marker::Observable{<:Vector{<:Makie.Polygon}}) = true
-
-Agents.abmplot_markersizes(model::ABM, as) = as
-Agents.abmplot_markersizes(model::ABM, as::Function) = [as(model[i]) for i in allids(model)]

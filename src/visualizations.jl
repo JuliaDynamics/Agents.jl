@@ -120,29 +120,6 @@ function abmplot! end
 export abmplot, abmplot!
 
 """
-Helper function to retrieve the automatically generated `ABMPlot` type from the
-`AgentsVisualizations` extension.
-Returns `nothing` if `AgentsVisualizations` was not loaded.
-"""
-function get_ABMPlot_type()
-  AgentsVisualizations = Base.get_extension(Agents, :AgentsVisualizations)
-  isnothing(AgentsVisualizations) && return nothing
-  return AgentsVisualizations._ABMPlot
-end
-
-"""
-    add_interaction!(ax)
-    add_interaction!(ax, p::_ABMPlot)
-
-Adds model control buttons and parameter sliders according to the plotting keywords
-`add_controls` (if true) and `params` (if not empty).
-Buttons and sliders are placed next to each other in a new layout position below the
-position of `ax`.
-"""
-function add_interaction! end
-export add_interaction!
-
-"""
     ABMObservable(model; adata, mdata, when = true) → abmobs
 
 `abmobs` contains all information necessary to step an agent based model interactively,
@@ -150,15 +127,13 @@ as well as collect data while stepping interactively.
 `ABMObservable` also returned by [`abmplot`](@ref).
 
 Calling `Agents.step!(abmobs, t)` will step the model for `t` time and collect data
-as in [`Agents.run!`](@ref).
-
+as in [`Agents.run!`](@ref), using the `adata, mdata, when` keywords.
 The fields `abmobs.model, abmobs.adf, abmobs.mdf` are _observables_ that contain
 the [`AgentBasedModel`](@ref), and the agent and model dataframes with collected data.
-All three observables are updated on stepping as long as data are collected.
-Data are collected as described in [`Agents.run!`](@ref) using the `adata, mdata, when`
-keywords.
+These observables are updated (and `notify`) during `step!`.
 
-All plotting and interactivity should be defined by `lift`-ing these observables.
+All plotting and interactivity should be defined by `lift`-ing (or `map`-ing) these observables
+according to the Observables.jl interface.
 """
 struct ABMObservable{M, AD, MD, ADF, MDF, W, S, K, OI}
     model::M # Observable{AgentBasedModel}
@@ -267,46 +242,31 @@ The `length` of the output of this function decides whether a 2D or 3D axis is u
 space_axis_limits(model::ABM) = space_axis_limits(abmspace(model))
 
 """
-    agentsplot!(ax, space::AbstractSpace, pos, color, marker, markersize, agentsplotkwargs)
+    agentsplot!(ax, model, pos, color, marker, markersize, agentsplotkwargs)
 
 Plot agents into `ax`, given positions, color, marker, and size.
-By default this function does a `scatter`-plot and ignores `space`.
+The `model` is the model _observable_ contained in [`ABMObservable`](@ref).
 
-Arguments `pos, color, marker, markersize` are generated from the `model`
+Arguments `pos, color, marker, markersize` are generated from `model`
 using the functions `abmplot_colors / _markers / _markersizes`, which you can also extend.
-By default these just map the `agent_color, agent_marker, agent_size` keywords of [`abmplot`](@ref).
+By default these just lift the `agent_color, agent_marker, agent_size` keywords of [`abmplot`](@ref).
 
 `agentsplotkwargs` is propagated from `abmplot`.
+
+## Extending
+
+By default this function does a `scatter`-plot and ignores `abmobs`.
+Otherwise, it should be extended to dispatch on model space type. TO do this,
+use the signature:
+
+```julia
+agentsplot!(ax, model::T, args...) where {T <: Observable{A} where {A <: ABM{<:GridSpaceSingle}}}
+```
+
+See the source code of the default implementation of `agentsplot!` for lifting
+e.g., the `agent_color` argument into the model.
 """
 function agentsplot! end
-
-"""
-    abmplot_pos(model::ABM{S}, offset)
-
-Return agent positions from the `model` given the `offset` keyword of `abmplot`.
-"""
-function abmplot_pos end
-
-"""
-  abmplot_colors(model::ABM{S}, agent_color)
-
-Return agent colors from the `model` given the `agent_color` keyword of `abmplot`.
-"""
-function abmplot_colors end
-
-"""
-    abmplot_markers(model::ABM{S}, agent_marker, pos)
-
-Return agent markers from the `model` given the `agent_marker` keyword of `abmplot`.
-"""
-function abmplot_markers end
-
-"""
-    abmplot_markersizes(model::ABM{S}, agent_size)
-
-Return agent sizes from the `model` given the `agent_size` keyword of `abmplot`.
-"""
-function abmplot_markersizes end
 
 """
     abmheatmap!(ax, abmobs::ABMObservable, space, heatobs, add_colorbar, heatkwargs)
@@ -330,7 +290,6 @@ function graphplot! end
 
 
 ###### Inspection, currently disabled
-
 """
     agent2string(agent::A)
 Convert agent data into a string which is used to display all agent variables and their

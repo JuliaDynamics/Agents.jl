@@ -1,7 +1,6 @@
 module AgentsVisualizations
 
 using Agents, Makie
-using Agents: add_interaction!
 # Pull API functions into extension module
 using Agents: space_axis_dimensionality, space_axis_limits, agentsplot!
 using Agents: spaceplot!

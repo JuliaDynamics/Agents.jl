@@ -76,11 +76,6 @@ function Agents.abmplot!(
     end
     ax.limits = space_axis_limits(model)
 
-    # These are all observables:
-    pos, color, marker, markersize = lift_attributes(
-        abmobs.model, agent_color, agent_size, agent_marker, offset
-    )
-
     # other plots
     spaceplot!(ax, model; spaceplotkwargs...)
     if !isnothing(heatarray)
@@ -97,6 +92,12 @@ function Agents.abmplot!(
     preplot!(ax, abmobs)
 
     # and finally the agent plot
+
+    # These are all observables:
+    pos, color, marker, markersize = lift_attributes(
+        abmobs.model, agent_color, agent_size, agent_marker, offset
+    )
+
     agentsplot!(ax, model, pos, color, marker, markersize, agentsplotkwargs)
 
     add_controls && add_interaction!(ax, abmobs, params, dt)
@@ -108,10 +109,3 @@ function Agents.abmplot!(
     return abmobs
 end
 
-function lift_attributes(model, ac, as, am, offset)
-    pos = lift((x, y) -> abmplot_pos(x, y), model, offset)
-    color = lift((x, y) -> abmplot_colors(x, y), model, ac)
-    marker = lift((x, y, z) -> abmplot_markers(x, y, z), model, am, pos)
-    markersize = lift((x, y) -> abmplot_markersizes(x, y), model, as)
-    return pos, color, marker, markersize
-end
