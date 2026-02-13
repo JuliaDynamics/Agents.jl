@@ -230,7 +230,7 @@ function scale_polygon end
 export translate_polygon, scale_polygon, rotate_polygon
 
 ############################################################################################
-## Methods to extend for space
+## Methods to extend for new spaces
 ############################################################################################
 """
     space_axis_limits(model::ABM{S}) where {S<:AbstractSpace}
@@ -242,16 +242,12 @@ The `length` of the output of this function also decides whether a 2D or 3D axis
 space_axis_limits(model::ABM) = space_axis_limits(abmspace(model))
 
 """
-    agentsplot!(ax, model, pos, color, marker, markersize, agentsplotkwargs)
+    agentsplot!(ax, model, agent_color, agent_size, agent_marker, offset, agentsplotkwargs)
 
-Plot agents into `ax`, given positions, color, marker, and size.
+Plot agents into `ax`, given model and
+`agent_color, agent_size, agent_marker, offset, agentsplotkwargs`
+which are obtained from the keywords given to [`abmplot`](@ref).
 The `model` is the model _observable_ contained in [`ABMObservable`](@ref).
-
-Arguments `pos, color, marker, markersize` are generated from `model`
-using the functions `abmplot_colors / _markers / _markersizes`, which you can also extend.
-By default these just lift the `agent_color, agent_marker, agent_size` keywords of [`abmplot`](@ref).
-
-`agentsplotkwargs` is propagated from `abmplot`.
 
 ## Extending
 
@@ -260,7 +256,7 @@ Otherwise, it should be extended to dispatch on model space type. TO do this,
 use the signature:
 
 ```julia
-agentsplot!(ax, model::T, args...) where {T <: Observable{A} where {A <: ABM{<:GridSpaceSingle}}}
+agentsplot!(ax, model::T, args...) where {T <: Observable{A} where {A <: ABM{<:YouSpaceType}}}
 ```
 
 See the source code of the default implementation of `agentsplot!` for lifting

@@ -602,7 +602,7 @@ groupmarker(a) = a.group == 1 ? :circle : :rect
 
 # We pass those functions to [`abmplot`](@ref)
 
-figure, ax, abmobs = abmplot(schelling;
+figure, _ = abmplot(schelling;
     agent_color = groupcolor, agent_marker = groupmarker
 )
 figure # returning the figure displays it

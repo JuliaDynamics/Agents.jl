@@ -65,7 +65,7 @@ function Agents.abmplot!(
         enable_inspection = add_controls,
     )
 
-    model = abmobs.model[]
+    space = abmspace(abmobs.model[])
 
     if adjust_aspect
         if ax isa Axis
@@ -74,10 +74,10 @@ function Agents.abmplot!(
             ax.aspect = :data # is this up-to-date?
         end
     end
-    ax.limits = space_axis_limits(model)
+    ax.limits = space_axis_limits(space)
 
     # other plots
-    spaceplot!(ax, model; spaceplotkwargs...)
+    spaceplot!(ax, space; spaceplotkwargs...)
     if !isnothing(heatarray)
         heatobs = @lift(abmplot_heatarray($(abmobs.model), heatarray))
         abmheatmap!(ax, abmobs, abmspace(model), heatobs, heatkwargs)
@@ -92,13 +92,7 @@ function Agents.abmplot!(
     preplot!(ax, abmobs)
 
     # and finally the agent plot
-
-    # These are all observables:
-    pos, color, marker, markersize = lift_attributes(
-        abmobs.model, agent_color, agent_size, agent_marker, offset
-    )
-
-    agentsplot!(ax, model, pos, color, marker, markersize, agentsplotkwargs)
+    agentsplot!(ax, abmobs.model, agent_color, agent_size, agent_marker, offset, agentsplotkwargs)
 
     add_controls && add_interaction!(ax, abmobs, params, dt)
 

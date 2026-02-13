@@ -4,11 +4,6 @@
 
 Agents.space_axis_limits(::Nothing) = ((nothing, nothing), (nothing, nothing))
 
-function Agents.Agents.agentsplot!(ax::Axis, space::Nothing, pos, color, marker, markersize, agentsplotkwargs)
-    s = scatter!(ax, pos)
-    s.visible[] = false
+function Agents.agentsplot!(ax, model::T, args...) where {T <: Observable{A} where {A <: ABM{<:Nothing}}}
     return nothing
 end
-
-# just a special case for the `nothing` space
-Agents.abmplot_pos(model::ABM{Nothing}, offset) = Point2f[(0.5, 0.5)]

@@ -2,11 +2,8 @@ module AgentsVisualizations
 
 using Agents, Makie
 # Pull API functions into extension module
-using Agents: space_axis_dimensionality, space_axis_limits, agentsplot!
-using Agents: spaceplot!
-using Agents: abmplot_heatarray, abmplot_pos, abmplot_colors, abmplot_markers,
-    abmplot_markersizes
-using Agents: convert_element_pos, ids_to_inspect
+using Agents: ABMObservable, space_axis_limits, agentsplot!
+# using Agents: convert_element_pos, ids_to_inspect # For inspection, currently disabled
 
 JULIADYNAMICS_COLORS = [
     "#7143E0",
