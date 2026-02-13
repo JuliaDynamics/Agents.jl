@@ -26,8 +26,9 @@ typical usage of Agents.jl:
    -  Instead, well structured developer docs exist.
 2. The `OpenStreetMapSpace` is now not available immediately after `using Agents`.
    - It is now a package extension. You need to be doing `using LightOSM` to access it.
+   - Functionality must be accessed and prefaced with `AgentsOSM` as a submodule code, e.g., `AgentsOSM.OSMAgent` or `AgentsOSM.test_map()`, etc.
    - This change was done because `LightOSM` has been an abandoned package for a long time now. We need to limit its hold over normal Agents.jl usage.
-   - We are currently debating amongst options to counteract this problem, such as porting the source code directly into Agents.jl, or forking the project and registering it under a new name, or trying to get ownership of the project.
+   - We are currently debating amongst options to counteract this problem, such as porting the LightOSM.jl source code directly into Agents.jl, or forking the project and registering it under a new name, or trying to get ownership of the project.
    - At least making this current breaking change means that whatever the future solution for `OpenStreetMapSpace` is, it will be non breaking.
 
 # v6.2

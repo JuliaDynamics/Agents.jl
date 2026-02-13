@@ -70,9 +70,6 @@ end
 struct SerializableGraphSpace{G}
     graph::G
 end
-struct SerializableOSMSpace
-    routes::Vector{Tuple{Int,OSM.OpenStreetMapPath}}
-end
 
 struct SerializableAStar{D,P,M,T,C}
     agent_paths::Vector{Tuple{Int,Vector{NTuple{D,T}}}}
@@ -107,7 +104,6 @@ to_serializable(t::ContinuousSpace{D,P,T}) where {D,P,T} =
 
 to_serializable(t::GraphSpace{G}) where {G} = SerializableGraphSpace{G}(t.graph)
 
-to_serializable(t::OSM.OpenStreetMapSpace) = SerializableOSMSpace([(k, v) for (k, v) in t.routes])
 
 JLD2.wconvert(::Type{SerializableAStar{D,P,M,T,C}}, t::Pathfinding.AStar{D,P,M,T,C}) where {D,P,M,T,C} =
     SerializableAStar{D,P,M,T,C}(
@@ -172,18 +168,6 @@ function from_serializable(t::SerializableContinuousSpace{D,P,T}; kwargs...) whe
 end
 
 from_serializable(t::SerializableGraphSpace; kwargs...) = GraphSpace(t.graph)
-
-function from_serializable(t::SerializableOSMSpace; kwargs...)
-    @assert haskey(kwargs, :map) "Path to OpenStreetMap not provided"
-
-    space = OSM.OpenStreetMapSpace(
-        get(kwargs, :map, OSM.test_map());   # Should never need default value
-    )
-    for (k, v) in t.routes
-        space.routes[k] = v
-    end
-    return space
-end
 
 JLD2.rconvert(::Type{Pathfinding.AStar{D,P,M,T,C}}, t::SerializableAStar{D,P,M,T,C}) where {D,P,M,T,C} =
     Pathfinding.AStar{D,P,M,T,C}(

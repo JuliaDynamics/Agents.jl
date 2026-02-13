@@ -33,6 +33,5 @@ function Agents.abmplot_pos(model::ABM{<:OSMSpace}, offset)
     end
 end
 
-## Inspection
-
-Agents.ids_to_inspect(model::ABM{<:OSMSpace}, pos) = nearby_ids(pos, model, 0.0)
+# Inspection, currently disabled
+# Agents.ids_to_inspect(model::ABM{<:OSMSpace}, pos) = nearby_ids(pos, model, 0.0)
