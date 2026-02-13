@@ -8,7 +8,7 @@ function Agents.agentsplot!(ax, model::Observable{<:ABM}, agent_color, agent_siz
     pos, color, marker, markersize = lift_attributes(
         model, agent_color, agent_size, agent_marker, offset
     )
-    if user_used_polygons(marker) && ax <: Axis2
+    if user_used_polygons(marker)
         poly!(ax, marker; color, agentsplotkwargs...)
     else
         scatter!(ax, pos; color, marker, markersize, agentsplotkwargs...)

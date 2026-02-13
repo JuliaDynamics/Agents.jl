@@ -71,7 +71,7 @@ function Agents.abmplot!(
         if ax isa Axis
             ax.aspect = DataAspect()
         elseif ax isa Axis3
-            ax.aspect = :data # is this up-to-date?
+            ax.aspect = :data # TODO: is this up-to-date?
         end
     end
     ax.limits = space_axis_limits(space)
