@@ -25,7 +25,7 @@ function lift_attributes(model, ac, as, am, offset)
     return pos, color, marker, markersize
 end
 
-function Agents.abmplot_pos(model::ABM, offset)
+function abmplot_pos(model::ABM, offset)
     postype = space_axis_dimensionality(abmspace(model)) == 3 ? Point3f : Point2f
     if isnothing(offset)
         return postype[postype(model[i].pos) for i in allids(model)]
@@ -34,10 +34,10 @@ function Agents.abmplot_pos(model::ABM, offset)
     end
 end
 
-Agents.abmplot_colors(model::ABM, ac) = to_color(ac)
-Agents.abmplot_colors(model::ABM, ac::Function) = to_color.([ac(model[i]) for i in allids(model)])
+abmplot_colors(model::ABM, ac) = to_color(ac)
+abmplot_colors(model::ABM, ac::Function) = to_color.([ac(model[i]) for i in allids(model)])
 
-function Agents.abmplot_markers(model::ABM, am, pos)
+function abmplot_markers(model::ABM, am, pos)
     if user_used_polygons(am)
         # for polygons we always need vector, even if all agents are same polygon
         return [translate_polygon(am, p) for p in pos]
@@ -46,7 +46,7 @@ function Agents.abmplot_markers(model::ABM, am, pos)
     end
 end
 
-function Agents.abmplot_markers(model::ABM, am::Function, pos)
+function abmplot_markers(model::ABM, am::Function, pos)
     marker = [am(model[i]) for i in allids(model)]
     if user_used_polygons(marker)
         marker = [translate_polygon(m, p) for (m, p) in zip(marker, pos)]
@@ -54,8 +54,8 @@ function Agents.abmplot_markers(model::ABM, am::Function, pos)
     return marker
 end
 
-Agents.abmplot_markersizes(model::ABM, as) = as
-Agents.abmplot_markersizes(model::ABM, as::Function) = [as(model[i]) for i in allids(model)]
+abmplot_markersizes(model::ABM, as) = as
+abmplot_markersizes(model::ABM, as::Function) = [as(model[i]) for i in allids(model)]
 
 
 user_used_polygons(marker) = false

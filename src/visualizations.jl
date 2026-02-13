@@ -237,7 +237,7 @@ export translate_polygon, scale_polygon, rotate_polygon
 
 Return appropriate axis limits for given model.
 They have to be a 2- or 3- tuple as expected by Makie when setting axis limits.
-The `length` of the output of this function decides whether a 2D or 3D axis is used.
+The `length` of the output of this function also decides whether a 2D or 3D axis is used.
 """
 space_axis_limits(model::ABM) = space_axis_limits(abmspace(model))
 
