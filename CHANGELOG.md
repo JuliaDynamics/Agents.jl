@@ -24,9 +24,11 @@ typical usage of Agents.jl:
    -  The dev-user-facing interface for how to extend plotting for a new space has also been reworked. It is simplified.
    -  The function `check_space_visualization_API` has been removed.
    -  Instead, well structured developer docs exist.
-2. The `OSMSpace` is now not available immediately after `using Agents`.
+2. The `OpenStreetMapSpace` is now not available immediately after `using Agents`.
    - It is now a package extension. You need to be doing `using LightOSM` to access it.
-   - This change was done because `LightOSM` is now an abandoned package. We need to limit its hold over normal Agents.jl usage.
+   - This change was done because `LightOSM` has been an abandoned package for a long time now. We need to limit its hold over normal Agents.jl usage.
+   - We are currently debating amongst options to counteract this problem, such as porting the source code directly into Agents.jl, or forking the project and registering it under a new name, or trying to get ownership of the project.
+   - At least making this current breaking change means that whatever the future solution for `OpenStreetMapSpace` is, it will be non breaking.
 
 # v6.2
 
