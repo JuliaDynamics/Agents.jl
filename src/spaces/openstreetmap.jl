@@ -63,8 +63,8 @@ All `kwargs` are propagated to
 
 ## Routing with OSM
 
-You can use [`plan_route!`](@ref) or [`plan_random_route!`](@ref) with open street maps!
-To actually move along a planned route use [`move_along_route!`](@ref).
+You can use [`OSM.plan_route!`](@ref) or [`OSM.plan_random_route!`](@ref) with open street maps!
+To actually move along a planned route use [`OSM.move_along_route!`](@ref).
 
 ## Additional functionality
 
@@ -75,6 +75,7 @@ submodule [`OSM`](@ref).
 - [`OSM.random_road_position`](@ref)
 - [`OSM.plan_route!`](@ref)
 - [`OSM.plan_random_route!`](@ref)
+- [`OSM.move_along_route!`](@ref)
 - [`OSM.distance`](@ref)
 - [`OSM.lonlat`](@ref)
 - [`OSM.nearest_node`](@ref)
@@ -107,7 +108,6 @@ Agents.@agent struct OSMAgent(NoSpaceAgent)
     pos::Tuple{Int,Int,Float64}
 end
 
-
 # Now all OSM-specific functions go into a submodule
 """
     Agents.OSM
@@ -120,10 +120,11 @@ module OSM
 export test_map,
     random_road_position,
     plan_route!,
+    plan_random_route!,
+    move_along_route!,
     distance,
     road_length,
     route_length,
-    plan_random_route!,
     lonlat,
     nearest_node,
     nearest_road,
@@ -276,19 +277,14 @@ function closest_node_on_edge end
 
 
 """
-    move_along_route!(agent, model::ABM{<:OpenStreetMapSpace}, distance::Real) → remaining
+    OSM.move_along_route!(agent, model::ABM{<:OpenStreetMapSpace}, distance::Real) → remaining
 
 Move an agent by `distance` along its planned route. Units of distance are as specified
 by the underlying graph's `weight_type`. If the provided `distance` is greater than the
 distance to the end of the route, return the remaining distance. Otherwise, return `0`.
 `0` is also returned if `is_stationary(agent, model)`.
 """
-function Agents.move_along_route!(
-        agent,
-        model::ABM{<:OpenStreetMapSpace},
-        distance,
-    )
-    error("You must load `LightOSM` first!")
-end
+function move_along_route! end
+
 
 end # submodule
