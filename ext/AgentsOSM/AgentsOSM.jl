@@ -1,4 +1,3 @@
-
 module AgentsOSM
 
 # export OpenStreetMapSpace, OSMSpace, OSM, OSMAgent
@@ -66,13 +65,7 @@ Agents.OSM.test_map() = joinpath(artifact"osm_map_gottingen", "osm_map_gottingen
 #######################################################################################
 # Route planning
 #######################################################################################
-"""
-    OSM.random_road_position(model::ABM{<:OpenStreetMapSpace})
-
-Similar to [`random_position`](@ref), but rather than providing only intersections, this method
-returns a location somewhere on a road heading in a random direction.
-"""
-function random_road_position(model::ABM{<:OpenStreetMapSpace})
+function Agents.OSM.random_road_position(model::ABM{<:OpenStreetMapSpace})
     # pick a random source and destination, and then a random distance on that edge
     s = Int(rand(abmrng(model), 1:Agents.nv(model)))
     if isempty(all_neighbors(abmspace(model).map.graph, s))
@@ -83,18 +76,7 @@ function random_road_position(model::ABM{<:OpenStreetMapSpace})
     return (s, d, dist)
 end
 
-"""
-    OSM.plan_random_route!(agent, model::ABM{<:OpenStreetMapSpace}; kwargs...) → success
-
-Plan a new random route for the agent, by selecting a random destination and
-planning a route from the agent's current position. Overwrite any existing route.
-
-The keyword `limit = 10` specifies the limit on the number of attempts at planning
-a random route, as no connection may be possible given the random destination.
-Return `true` if a route was successfully planned, `false` otherwise.
-All other keywords are passed to [`plan_route!`](@ref)
-"""
-function plan_random_route!(
+function Agents.OSM.plan_random_route!(
         agent::AbstractAgent,
         model::ABM{<:OpenStreetMapSpace};
         limit = 10,
@@ -112,26 +94,7 @@ function plan_random_route!(
     return false
 end
 
-"""
-    plan_route!(agent, dest, model::ABM{<:OpenStreetMapSpace};
-                return_trip = false, kwargs...) → success
-
-Plan a route from the current position of `agent` to the location specified in `dest`, which
-can be an intersection or a point on a road. Overwrite any existing route.
-
-If `return_trip = true`, a route will be planned from start ⟶ finish ⟶ start. All other
-keywords are passed to
-[`LightOSM.shortest_path`](https://deloittedigitalapac.github.io/LightOSM.jl/docs/shortest_path/#LightOSM.shortest_path).
-
-Return `true` if a path to `dest` exists, and hence the route planning was successful.
-Otherwise return `false`. When `dest` is an invalid position, i.e. if it contains node
-indices that are not in the graph, or if the distance along the road is not between zero and
-the length of the road, return `false` as well.
-
-Specifying `return_trip = true` also requires the existence of a return path for a route to
-be planned.
-"""
-function Agents.plan_route!(
+function Agents.OSM.plan_route!(
         agent::AbstractAgent,
         dest::Tuple{Int,Int,Float64},
         model::ABM{<:OpenStreetMapSpace};
@@ -274,19 +237,11 @@ function isa_valid_position(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreet
 end
 
 # Allows passing destination as a node number
-Agents.plan_route!(agent::AbstractAgent, dest::Int, model; kwargs...) =
+plan_route!(agent::AbstractAgent, dest::Int, model; kwargs...) =
     plan_route!(agent, (dest, dest, 0.0), model; kwargs...)
 
-"""
-    OSM.distance(pos_1, pos_2, model::ABM{<:OpenStreetMapSpace}; kwargs...)
 
-Return the distance between the two positions along the shortest path joining them in the given
-model. Return `Inf` if no such path exists.
-
-All keywords are passed to
-[`LightOSM.shortest_path`](https://deloittedigitalapac.github.io/LightOSM.jl/docs/shortest_path/#LightOSM.shortest_path).
-"""
-function distance(
+function OSM.distance(
         pos_1::Tuple{Int,Int,Float64},
         pos_2::Tuple{Int,Int,Float64},
         model::ABM{<:OpenStreetMapSpace};
@@ -394,16 +349,10 @@ function distance(
     distance(pos_1, (pos_2, pos_2, 0.0), model)
 end
 
-"""
-    OSM.lonlat(pos, model)
-    OSM.lonlat(agent, model)
-
-Return `(longitude, latitude)` of current road or intersection position.
-"""
-lonlat(pos::Int, model::ABM{<:OpenStreetMapSpace}) =
+Agents.OSM.lonlat(pos::Int, model::ABM{<:OpenStreetMapSpace}) =
     Tuple(reverse(abmspace(model).map.node_coordinates[pos]))
 
-function lonlat(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace})
+function Agents.OSM.lonlat(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace})
     # extra checks to ensure consistency between both versions of `lonlat`
     if pos[3] == 0.0 || pos[1] == pos[2]
         return lonlat(pos[1], model)
@@ -419,21 +368,15 @@ function lonlat(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace})
     end
 end
 
-lonlat(agent::AbstractAgent, model::ABM{<:OpenStreetMapSpace}) = lonlat(agent.pos, model)
+Agents.OSM.lonlat(agent::AbstractAgent, model::ABM{<:OpenStreetMapSpace}) = lonlat(agent.pos, model)
 
-latlon(pos::Int, model::ABM{<:OpenStreetMapSpace}) =
+Agents.OSM.latlon(pos::Int, model::ABM{<:OpenStreetMapSpace}) =
     Tuple(abmspace(model).map.node_coordinates[pos])
-latlon(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace}) =
+Agents.OSM.latlon(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace}) =
     reverse(lonlat(pos, model))
-latlon(agent::AbstractAgent, model::ABM{<:OpenStreetMapSpace}) = latlon(agent.pos, model)
+Agents.OSM.latlon(agent::AbstractAgent, model::ABM{<:OpenStreetMapSpace}) = latlon(agent.pos, model)
 
-"""
-    OSM.nearest_node(lonlat::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
-
-Return the nearest intersection position to **(longitude, latitude)**.
-Quicker, but less precise than [`OSM.nearest_road`](@ref).
-"""
-function nearest_node(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
+function Agents.OSM.nearest_node(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
     ll = reverse(ll)
     nearest_node_id = LightOSM.nearest_node(abmspace(model).map,
         [GeoLocation(ll..., 0.0)])[1][1][1]
@@ -441,13 +384,7 @@ function nearest_node(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpac
     return (vert, vert, 0.0)
 end
 
-"""
-    OSM.nearest_road(lonlat::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
-
-Return a location on a road nearest to **(longitude, latitude)**. Slower, but more
-precise than [`OSM.nearest_node`](@ref).
-"""
-function nearest_road(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
+function Agents.OSM.nearest_road(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
     geoloc = GeoLocation(ll[2], ll[1], 0.0)
 
     _, _, closest_point = LightOSM.nearest_way(abmspace(model).map, geoloc)
@@ -464,19 +401,10 @@ function nearest_road(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpac
     return (start_index, end_index, position)
 end
 
-"""
-    OSM.road_length(start::Int, finish::Int, model)
-    OSM.road_length(pos::Tuple{Int,Int,Float64}, model)
-
-Return the road length between two intersections. This takes into account the
-direction of the road, so `OSM.road_length(pos_1, pos_2, model)` may not be the
-same as `OSM.road_length(pos_2, pos_1, model)`. Units of the returned quantity
-are as specified by the underlying graph's `weight_type`. If `start` and `finish`
-are the same or `pos[1]` and `pos[2]` are the same, then return 0.
-"""
-road_length(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace}) =
+Agents.OSM.road_length(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace}) =
     road_length(pos[1], pos[2], model)
-function road_length(p1::Int, p2::Int, model::ABM{<:OpenStreetMapSpace})
+
+function Agents.OSM.road_length(p1::Int, p2::Int, model::ABM{<:OpenStreetMapSpace})
     p1 == p2 && return 0.0
     len = abmspace(model).map.weights[p1, p2]
     if len == 0.0 || len == Inf
@@ -489,13 +417,7 @@ function Agents.is_stationary(agent::AbstractAgent, model::ABM{<:OpenStreetMapSp
     return !haskey(abmspace(model).routes, Agents.getid(agent))
 end
 
-"""
-    OSM.route_length(agent, model::ABM{<:OpenStreetMapSpace})
-Return the length of the route planned for the given `agent`, correctly taking
-into account the amount of route already traversed by the `agent`.
-Return 0 if `is_stationary(agent, model)`.
-"""
-function route_length(agent::AbstractAgent, model::ABM{<:OpenStreetMapSpace})
+function Agents.OSM.route_length(agent::AbstractAgent, model::ABM{<:OpenStreetMapSpace})
     is_stationary(agent, model) && return 0.0
     prev_node, next_node = agent.pos
     length = road_length(prev_node, next_node, model)
@@ -510,28 +432,13 @@ function route_length(agent::AbstractAgent, model::ABM{<:OpenStreetMapSpace})
 end
 
 
-"""
-    OSM.get_geoloc(pos::Int, model::ABM{<:OpenStreetMapSpace})
-
-Return `GeoLocation` corresponding to node `pos`.
-"""
-get_geoloc(pos::Int, model::ABM{<:OpenStreetMapSpace}) =
+Agents.OSM.get_geoloc(pos::Int, model::ABM{<:OpenStreetMapSpace}) =
     GeoLocation(abmspace(model).map.node_coordinates[pos]..., 0.0)
 
-"""
-    OSM.get_reverse_direction(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace})
-
-Return the same position, but with `pos[1]` and `pos[2]` swapped and `pos[3]` updated.
-"""
 get_reverse_direction(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace}) =
     (pos[2], pos[1], road_length(pos, model) - pos[3])
 
-"""
-    OSM.same_position(a::Tuple{Int,Int,Float64}, b::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace})
-
-Return `true` if the given positions `a` and `b` are (approximately) identical
-"""
-same_position(a::Tuple{Int,Int,Float64}, b::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace}) =
+Agents.OSM.same_position(a::Tuple{Int,Int,Float64}, b::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace}) =
     _same_position_node(a, b, model) || _same_position_node(b, a, model) ||
     _same_position_edge(a, b, model) || _same_position_internal(a, b, model)
 
@@ -590,21 +497,11 @@ function _same_position_internal(
     (a[1] == b[2] && a[2] == b[1] && a[3] ≈ road_length(a, model) - b[3])
 end
 
-"""
-    OSM.same_road(a::Tuple{Int,Int,Float64}, b::Tuple{Int,Int,Float64})
-
-Return `true` if both points lie on the same road of the graph
-"""
-same_road(
+Agents.OSM.same_road(
     a::Tuple{Int,Int,Float64},
     b::Tuple{Int,Int,Float64},
 ) = (a[1] == b[1] && a[2] == b[2]) || (a[1] == b[2] && a[2] == b[1])
 
-"""
-    OSM.closest_node_on_edge(a::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace})
-
-Return the node that the given point is closest to on its edge
-"""
 function closest_node_on_edge(a::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace})
     if a[1] == a[2] || 2.0 * a[3] < road_length(a, model)
         return a[1]

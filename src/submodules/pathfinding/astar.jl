@@ -214,6 +214,7 @@ Base.isempty(id::Int, pathfinder::AStar) =
 
 """
     is_stationary(agent, astar::AStar)
+
 Same, but for pathfinding with A*.
 """
 Agents.is_stationary(

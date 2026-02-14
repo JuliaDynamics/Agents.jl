@@ -99,11 +99,6 @@ plan_route!(agent, dest, model_or_pathfinder; kwargs...) =
 plan_best_route!(agent, dests, model_or_pathfinder; kwargs...) =
     notimplemented(model_or_pathfinder)
 
-# """
-#     move_along_route!(agent, model, args...; kwargs...)
-# Move `agent` along the route planned for it. Used in situations like path-finding
-# or open street map space movement.
-# """
 move_along_route!(agent, model, args...; kwargs...) = notimplemented(model)
 
 """
@@ -263,7 +258,7 @@ function add_agent!(model::ABM, args::Vararg{Any, N}; kwargs...) where {N}
     add_agent!(A, model, args...; kwargs...)
 end
 
-function add_agent!(A::Union{Function, Type}, model::ABM, 
+function add_agent!(A::Union{Function, Type}, model::ABM,
         args::Vararg{Any, N}; kwargs...) where {N}
     add_agent!(random_position(model), A, model, args...; kwargs...)
 end

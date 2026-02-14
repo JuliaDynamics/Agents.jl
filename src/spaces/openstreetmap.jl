@@ -3,6 +3,7 @@ export OSM # submodule
 
 """
     OpenStreetMapSpace(path::AbstractString; kwargs...)
+
 Create a space residing on the Open Street Map (OSM) file provided via `path`.
 This space represents the underlying map as a *continuous* entity choosing accuracy over
 performance. The map is represented as a graph, consisting of nodes connected by edges.
@@ -10,10 +11,10 @@ Nodes are not necessarily intersections, and there may be multiple nodes on a ro
 two intersections.
 Agents move along the available roads of the map using routing, see below.
 
-The functionality related to Open Street Map spaces is in the submodule `OSM`.
-An example of its usage can be found in [Zombie Outbreak in a City](@ref).
+An example of using Open Street Map spaces can be found in [Zombie Outbreak in a City](@ref).
 
 ## The `OSMAgent`
+
 The base properties for an agent residing on an `OSMSpace` are as follows:
 ```julia
 mutable struct Agent <: AbstractAgent
@@ -31,17 +32,16 @@ The distance travelled is in the units of `weight_type`. This ensures that the m
 is a *continuous* kind of space, as an agent can truly be at any possible point on
 an existing road.
 
-Use [`OSMAgent`](@ref OSM.OSMAgent) for convenience.
+Use [`OSMAgent`](@refOSMAgent) for convenience.
 
 ## Obtaining map files
+
 Maps files can be downloaded using the functions provided by
 [LightOSM.jl](https://github.com/DeloitteDigitalAPAC/LightOSM.jl).
-Agents.jl also re-exports [`OSM.download_osm_network`](@ref), the main function used
-to download maps and provides a test map in [`OSM.test_map`](@ref).
-An example usage to download the map of London to `"london.json"`:
+The function you'd typically want to use is `download_osm_network`:
 
 ```julia
-OSM.download_osm_network(
+LightOSM.download_osm_network(
     :place_name;
     place_name = "London",
     save_to_file_location = "london.json"
@@ -65,6 +65,25 @@ All `kwargs` are propagated to
 
 You can use [`plan_route!`](@ref) or [`plan_random_route!`](@ref) with open street maps!
 To actually move along a planned route use [`move_along_route!`](@ref).
+
+## Additional functionality
+
+Additional functionality specific to Open Street Map spaces is contained in the
+submodule [`OSM`](@ref).
+
+- [`OSM.test_map`](@ref)
+- [`OSM.random_road_position`](@ref)
+- [`OSM.plan_route!`](@ref)
+- [`OSM.plan_random_route!`](@ref)
+- [`OSM.distance`](@ref)
+- [`OSM.lonlat`](@ref)
+- [`OSM.nearest_node`](@ref)
+- [`OSM.road_length`](@ref)
+- [`OSM.route_length`](@ref)
+- [`OSM.get_geoloc`](@ref)
+- [`OSM.same_position`](@ref)
+- [`OSM.same_road`](@ref)
+- [`OSM.closest_node_on_edge`](@ref)
 """
 struct OpenStreetMapSpace{G,P} <: Agents.AbstractSpace
     map::G # <: OSMGraph
@@ -108,7 +127,10 @@ export test_map,
     lonlat,
     nearest_node,
     nearest_road,
+    road_length,
+    route_length,
     same_position,
+    closest_node_on_edge,
     same_road
 
 
@@ -123,5 +145,150 @@ to [`OpenStreetMapSpace`](@ref OSM.OpenStreetMapSpace). The unit of distance use
 """
 function test_map end
 
+"""
+    OSM.random_road_position(model::ABM{<:OpenStreetMapSpace})
+
+Similar to [`random_position`](@ref), but rather than providing only intersections, this method
+returns a location somewhere on a road heading in a random direction.
+"""
+function random_road_position end
+
+"""
+    OSM.plan_random_route!(agent, model::ABM{<:OpenStreetMapSpace}; kwargs...) → success
+
+Plan a new random route for the agent, by selecting a random destination and
+planning a route from the agent's current position. Overwrite any existing route.
+
+The keyword `limit = 10` specifies the limit on the number of attempts at planning
+a random route, as no connection may be possible given the random destination.
+Return `true` if a route was successfully planned, `false` otherwise.
+All other keywords are passed to [`plan_route!`](@ref)
+"""
+function plan_random_route! end
+
+
+"""
+    OSM.plan_route!(agent, dest, model::ABM{<:OpenStreetMapSpace}; kw...)
+
+Plan a route from the current position of `agent` to the location specified in `dest`, which
+can be an intersection or a point on a road. Overwrite any existing route.
+
+Return `true` if a path to `dest` exists, and hence the route planning was successful.
+Otherwise return `false`. When `dest` is an invalid position, i.e. if it contains node
+indices that are not in the graph, or if the distance along the road is not between zero and
+the length of the road, return `false` as well.
+
+
+## Keyword arguments
+
+* `return_trip = true`: if true, a route will be planned from start ⟶ finish ⟶ start.
+  Specifying `return_trip = true` also requires the existence of a return path for a route to
+  be planned.
+* All other keywords are passed to
+  [`LightOSM.shortest_path`](https://deloittedigitalapac.github.io/LightOSM.jl/docs/shortest_path/#LightOSM.shortest_path).
+"""
+function plan_route! end
+
+
+"""
+    OSM.distance(pos_1, pos_2, model::ABM{<:OpenStreetMapSpace}; kwargs...)
+
+Return the distance between the two positions along the shortest path joining them in the given
+model. Return `Inf` if no such path exists.
+
+All keywords are passed to
+[`LightOSM.shortest_path`](https://deloittedigitalapac.github.io/LightOSM.jl/docs/shortest_path/#LightOSM.shortest_path).
+"""
+function distance end
+
+"""
+    OSM.lonlat(pos, model)
+    OSM.lonlat(agent, model)
+
+Return `(longitude, latitude)` of current road or intersection position.
+"""
+function lonlat end
+
+"""
+    OSM.nearest_node(lonlat::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
+
+Return the nearest intersection position to **(longitude, latitude)**.
+Quicker, but less precise than [`OSM.nearest_road`](@ref).
+"""
+function nearest_node end
+
+"""
+    OSM.nearest_road(lonlat::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
+
+Return a location on a road nearest to **(longitude, latitude)**. Slower, but more
+precise than [`OSM.nearest_node`](@ref).
+"""
+function nearest_road end
+
+"""
+    OSM.road_length(start::Int, finish::Int, model)
+    OSM.road_length(pos::Tuple{Int,Int,Float64}, model)
+
+Return the road length between two intersections. This takes into account the
+direction of the road, so `OSM.road_length(pos_1, pos_2, model)` may not be the
+same as `OSM.road_length(pos_2, pos_1, model)`. Units of the returned quantity
+are as specified by the underlying graph's `weight_type`. If `start` and `finish`
+are the same or `pos[1]` and `pos[2]` are the same, then return 0.
+"""
+function road_length end
+
+"""
+    OSM.route_length(agent, model::ABM{<:OpenStreetMapSpace})
+Return the length of the route planned for the given `agent`, correctly taking
+into account the amount of route already traversed by the `agent`.
+Return 0 if `is_stationary(agent, model)`.
+"""
+function route_length end
+
+"""
+    OSM.get_geoloc(pos::Int, model::ABM{<:OpenStreetMapSpace})
+
+Return `GeoLocation` corresponding to node `pos`.
+"""
+function get_geoloc end
+
+"""
+    OSM.same_position(a::Tuple{Int,Int,Float64}, b::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace})
+
+Return `true` if the given positions `a` and `b` are (approximately) identical
+"""
+function same_position end
+
+
+"""
+    OSM.same_road(a::Tuple{Int,Int,Float64}, b::Tuple{Int,Int,Float64})
+
+Return `true` if both points lie on the same road of the graph
+"""
+function same_road end
+
+"""
+    OSM.closest_node_on_edge(a::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace})
+
+Return the node that the given point is closest to on its edge
+"""
+function closest_node_on_edge end
+
+
+"""
+    move_along_route!(agent, model::ABM{<:OpenStreetMapSpace}, distance::Real) → remaining
+
+Move an agent by `distance` along its planned route. Units of distance are as specified
+by the underlying graph's `weight_type`. If the provided `distance` is greater than the
+distance to the end of the route, return the remaining distance. Otherwise, return `0`.
+`0` is also returned if `is_stationary(agent, model)`.
+"""
+function Agents.move_along_route!(
+        agent,
+        model::ABM{<:OpenStreetMapSpace},
+        distance,
+    )
+    error("You must load `LightOSM` first!")
+end
 
 end # submodule
