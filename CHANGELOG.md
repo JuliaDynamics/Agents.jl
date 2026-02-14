@@ -27,6 +27,7 @@ typical usage of Agents.jl:
 2. The `OpenStreetMapSpace` is now not available immediately after `using Agents`.
    - It is now a package extension. You need to be doing `using LightOSM` to access it.
    - The submodule `OSM` still exists to enable as much backwards compatibility as possible, so `OSM.test_map()` will work as usual after `using LightOSM`.
+   - Additionally, now all functionality that is exclusive to OSM is behind the `OSM` module, with the exception of the core types `OpenStreetMapSpace, OpenStreetMapPath, OSMAgent`. Thus you must now do `OSM.is_stationary`, `OSM.plan_route!`, etc. Route-planning shared the same API with A-star pathfinding, but this is no longer possible due to package extensions. So now `Agents.plan_route!` is pathfinidng, while `Agents.OSM.plan_route!` is open street map route finding.
    - This change was done because `LightOSM` has been an abandoned package for a long time now. We need to limit its hold over normal Agents.jl usage.
    - We are currently debating amongst options to counteract this problem, such as porting the LightOSM.jl source code directly into Agents.jl, or forking the project and registering it under a new name, or trying to get ownership of the project.
    - Function `download_osm_network` is no longer re-exported from LightOSM.jl.
