@@ -1,8 +1,7 @@
 module AgentsOSM
 
-# export OpenStreetMapSpace, OSMSpace, OSM, OSMAgent
-
 using Agents
+using Agents.OSM
 using LightOSM
 using Agents.Graphs
 using LazyArtifacts
@@ -13,43 +12,12 @@ using Downloads
 ###########################################################################################
 # Type definitions
 ###########################################################################################
-"""
-    OpenStreetMapPath
-
-This struct stores information about the path of an agent via route planning.
-It also serves as developer's docs for some of the internals of `OpenStreetMapSpace`.
-
-## Storage of map nodes
-Each node has a node ID from the OpenStreetMap API.
-The map is stored as a `Graph` by `LightOSM`, and hence each node also has a vertex index
-corresponding to the vertex representing it in this graph. Hence each node can be referred
-to by either the node ID or its graph index, and we can convert either way, using
-the function `LightOSM.index_to_node`.
-We use graph vertex indices consistently in [`OpenStreetMapSpace`](@ref OSM.OpenStreetMapSpace), because
-we access graph data more often than OSM data.
-
-## Fields of `OpenStreetMapPath`
-- `route::Vector{Int}`: Vertex indices along the planned route. They are
-  actually stored in inverse sequence, from `dest` to `start`, because it is more efficient
-  to pop the off this way while traversing the route.
-- `start::Tuple{Int,Int,Float64}`: Initial position of the agent.
-- `dest::Tuple{Int,Int,Float64}`: Destination.
-- `return_route::Vector{Int}`: Same as `route` but for the return trip.
-- `has_to_return::Bool`: `true` if there is an actual return trip.
-"""
-struct OpenStreetMapPath
-    route::Vector{Int}
-    start::Tuple{Int,Int,Float64}
-    dest::Tuple{Int,Int,Float64}
-    return_route::Vector{Int}
-    has_to_return::Bool
-end
-
 function Agents.OpenStreetMapSpace(path::AbstractString; kwargs...)
     m = graph_from_file(path; weight_type = :distance, kwargs...)
     LightOSM.add_rtree!(m)
     agent_positions = [Int[] for _ in 1:Agents.nv(m.graph)]
-    return OpenStreetMapSpace(m, agent_positions, Dict())
+    routes = Dict{Int, OpenStreetMapPath}()
+    return OpenStreetMapSpace{typeof(m)}(m, agent_positions, routes)
 end
 
 function Base.show(io::IO, s::OpenStreetMapSpace)
@@ -84,7 +52,7 @@ function Agents.OSM.plan_random_route!(
     )
     tries = 0
     while tries < limit
-        success = plan_route!(agent, random_road_position(model), model; kwargs...)
+        success = Agents.OSM.plan_route!(agent, random_road_position(model), model; kwargs...)
         if success
             return true
         else
@@ -237,8 +205,8 @@ function isa_valid_position(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreet
 end
 
 # Allows passing destination as a node number
-plan_route!(agent::AbstractAgent, dest::Int, model; kwargs...) =
-    plan_route!(agent, (dest, dest, 0.0), model; kwargs...)
+Agents.OSM.plan_route!(agent::AbstractAgent, dest::Int, model; kwargs...) =
+    Agents.OSM.plan_route!(agent, (dest, dest, 0.0), model; kwargs...)
 
 
 function OSM.distance(
@@ -333,7 +301,7 @@ end
 ###########################################################################################
 # Distances, road lengths, nearest roads
 ###########################################################################################
-function distance(
+function OSM.distance(
         pos_1::Int,
         pos_2::Tuple{Int,Int,Float64},
         model::ABM{<:OpenStreetMapSpace};
@@ -341,7 +309,7 @@ function distance(
     distance((pos_1, pos_1, 0.0), pos_2, model)
 end
 
-function distance(
+function OSM.distance(
         pos_1,
         pos_2::Int,
         model::ABM{<:OpenStreetMapSpace}
@@ -370,11 +338,11 @@ end
 
 Agents.OSM.lonlat(agent::AbstractAgent, model::ABM{<:OpenStreetMapSpace}) = lonlat(agent.pos, model)
 
-Agents.OSM.latlon(pos::Int, model::ABM{<:OpenStreetMapSpace}) =
+latlon(pos::Int, model::ABM{<:OpenStreetMapSpace}) =
     Tuple(abmspace(model).map.node_coordinates[pos])
-Agents.OSM.latlon(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace}) =
+latlon(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace}) =
     reverse(lonlat(pos, model))
-Agents.OSM.latlon(agent::AbstractAgent, model::ABM{<:OpenStreetMapSpace}) = latlon(agent.pos, model)
+latlon(agent::AbstractAgent, model::ABM{<:OpenStreetMapSpace}) = latlon(agent.pos, model)
 
 function Agents.OSM.nearest_node(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
     ll = reverse(ll)
@@ -413,7 +381,7 @@ function Agents.OSM.road_length(p1::Int, p2::Int, model::ABM{<:OpenStreetMapSpac
     return len
 end
 
-function Agents.is_stationary(agent::AbstractAgent, model::ABM{<:OpenStreetMapSpace})
+function Agents.OSM.is_stationary(agent::AbstractAgent, model::ABM{<:OpenStreetMapSpace})
     return !haskey(abmspace(model).routes, Agents.getid(agent))
 end
 
@@ -502,7 +470,7 @@ Agents.OSM.same_road(
     b::Tuple{Int,Int,Float64},
 ) = (a[1] == b[1] && a[2] == b[2]) || (a[1] == b[2] && a[2] == b[1])
 
-function closest_node_on_edge(a::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace})
+function Agents.OSM.closest_node_on_edge(a::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace})
     if a[1] == a[2] || 2.0 * a[3] < road_length(a, model)
         return a[1]
     else
@@ -562,7 +530,7 @@ function Agents.OSM.move_along_route!(
         distance::Real,
     )
 
-    (is_stationary(agent, model) || distance == 0) && return 0.0
+    (OSM.is_stationary(agent, model) || distance == 0) && return 0.0
 
     # branching here corresponds to nesting of the following cases:
     # - Is the agent moving to the end of the road or somewhere in the middle (isempty(osmpath.route))

@@ -1,6 +1,6 @@
 function Agents.CommonSolve.step!(model::ReinforcementLearningABM, n::Union{Real,Function}=1)
-    agent_step! = Agents.agent_step_field(model)
-    model_step! = Agents.model_step_field(model)
+    agent_step! = getfield(model, :agent_step)
+    model_step! = getfield(model, :model_step)
     t = getfield(model, :time)
     Agents.step_ahead_rl!(model, agent_step!, model_step!, n, t)
     return model

@@ -1,5 +1,37 @@
-export OpenStreetMapSpace, OSMAgent, OSMSpace
+export OpenStreetMapSpace, OpenStreetMapPath, OSMAgent, OSMSpace
 export OSM # submodule
+
+"""
+    OpenStreetMapPath
+
+This struct stores information about the path of an agent via route planning.
+It also serves as developer's docs for some of the internals of `OpenStreetMapSpace`.
+
+## Storage of map nodes
+Each node has a node ID from the OpenStreetMap API.
+The map is stored as a `Graph` by `LightOSM`, and hence each node also has a vertex index
+corresponding to the vertex representing it in this graph. Hence each node can be referred
+to by either the node ID or its graph index, and we can convert either way, using
+the function `LightOSM.index_to_node`.
+We use graph vertex indices consistently in [`OpenStreetMapSpace`](@ref OSM.OpenStreetMapSpace), because
+we access graph data more often than OSM data.
+
+## Fields of `OpenStreetMapPath`
+- `route::Vector{Int}`: Vertex indices along the planned route. They are
+  actually stored in inverse sequence, from `dest` to `start`, because it is more efficient
+  to pop the off this way while traversing the route.
+- `start::Tuple{Int,Int,Float64}`: Initial position of the agent.
+- `dest::Tuple{Int,Int,Float64}`: Destination.
+- `return_route::Vector{Int}`: Same as `route` but for the return trip.
+- `has_to_return::Bool`: `true` if there is an actual return trip.
+"""
+struct OpenStreetMapPath
+    route::Vector{Int}
+    start::Tuple{Int,Int,Float64}
+    dest::Tuple{Int,Int,Float64}
+    return_route::Vector{Int}
+    has_to_return::Bool
+end
 
 """
     OpenStreetMapSpace(path::AbstractString; kwargs...)
@@ -22,7 +54,7 @@ mutable struct Agent <: AbstractAgent
     pos::Tuple{Int,Int,Float64}
 end
 ```
-
+which are captured by the `OSMAgent` basic agent type.
 Current `pos`ition tuple is represented as
 (first intersection index, second intersection index, distance travelled).
 The indices are the indices of the nodes of the graph that internally represents the map.
@@ -31,8 +63,6 @@ can help find those node indices from a (lon, lat) real world coordinate.
 The distance travelled is in the units of `weight_type`. This ensures that the map
 is a *continuous* kind of space, as an agent can truly be at any possible point on
 an existing road.
-
-Use [`OSMAgent`](@refOSMAgent) for convenience.
 
 ## Obtaining map files
 
@@ -86,11 +116,12 @@ submodule [`OSM`](@ref).
 - [`OSM.same_road`](@ref)
 - [`OSM.closest_node_on_edge`](@ref)
 """
-struct OpenStreetMapSpace{G,P} <: Agents.AbstractSpace
+struct OpenStreetMapSpace{G} <: Agents.AbstractSpace
     map::G # <: OSMGraph
     s::Vector{Vector{Int}}
-    routes::Dict{Int,P} # maps agent ID to corresponding path, P = OpenStreetMapPath
+    routes::Dict{Int,OpenStreetMapPath} # maps agent ID to corresponding path
 end
+
 
 function OpenStreetMapSpace(args...; kw...)
     error("Package `LightOSM` needs to be loaded to access `OpenStreetMapSpace`")
@@ -242,9 +273,11 @@ function road_length end
     OSM.route_length(agent, model::ABM{<:OpenStreetMapSpace})
 Return the length of the route planned for the given `agent`, correctly taking
 into account the amount of route already traversed by the `agent`.
-Return 0 if `is_stationary(agent, model)`.
+Return 0 if `OSM.is_stationary(agent, model)`.
 """
 function route_length end
+
+function is_stationary end
 
 """
     OSM.get_geoloc(pos::Int, model::ABM{<:OpenStreetMapSpace})
@@ -271,7 +304,7 @@ function same_road end
 """
     OSM.closest_node_on_edge(a::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace})
 
-Return the node that the given point is closest to on its edge
+Return the node that the given point is closest to on its edge.
 """
 function closest_node_on_edge end
 
