@@ -55,6 +55,7 @@ function Agents.abmplot!(
         heatkwargs=NamedTuple(),
         preplot! = (args...,) -> nothing,
         add_colorbar=true,
+        colorbar_label = "",
         adjust_aspect=true,
         spaceplotkwargs = NamedTuple(),
 
@@ -80,7 +81,7 @@ function Agents.abmplot!(
     if !isnothing(heatarray)
         heatobs = @lift(abmplot_heatarray($(modelobs), heatarray))
         abmheatmap!(ax, abmobs, abmspace(modelobs[]), heatobs, heatkwargs)
-        add_colorbar && Colorbar(ax.parent[1, 1][1, 2], hmap, width=20)
+        add_colorbar && Colorbar(ax.parent[1, 1][1, 2], hmap; width=20, label = colorbar_label)
         # TODO: Set colorbar to be "glued" to axis
         # Problem with the following code, which comes from the tutorial
         # https://makie.juliaplots.org/stable/tutorials/aspect-tutorial/ ,

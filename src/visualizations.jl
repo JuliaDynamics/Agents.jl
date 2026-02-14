@@ -64,6 +64,7 @@ to `abmplot` directly.
   heatmap if `heatarray` is not nothing. It is strongly recommended to use `abmplot`
   instead of the `abmplot!` method if you use `heatarray`, so that a colorbar can be
   placed naturally.
+* `colorbar_label = ""` : Label to add to the colorbar, if any.
 * `preplot!` : A function `f(ax, abmobs)` that plots something after the heatmap,
   and after space-specific plotting, but before the agents.
 * `spaceplotkwargs = NamedTuple()`: keywords utilized when plotting the space.
