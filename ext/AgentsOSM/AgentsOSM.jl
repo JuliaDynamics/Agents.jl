@@ -327,8 +327,8 @@ function Agents.OSM.lonlat(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetM
     elseif pos[3] == road_length(pos, model)
         return lonlat(pos[2], model)
     else
-        gloc1 = get_geoloc(pos[1], model)
-        gloc2 = get_geoloc(pos[2], model)
+        gloc1 = OSM.get_geoloc(pos[1], model)
+        gloc2 = OSM.get_geoloc(pos[2], model)
         dist = norm(LightOSM.to_cartesian(gloc1) .- LightOSM.to_cartesian(gloc2))
         dir = heading(gloc1, gloc2)
         geoloc = calculate_location(gloc1, dir, pos[3] / road_length(pos, model) * dist)
