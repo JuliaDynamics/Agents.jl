@@ -1,8 +1,4 @@
-"""
-    AgentsOSM
-Extension module for functionality related to [`OpenStreetMapSpace`](@ref).
-See the docstring of the space for more info.
-"""
+
 module AgentsOSM
 
 # export OpenStreetMapSpace, OSMSpace, OSM, OSMAgent
@@ -10,30 +6,17 @@ module AgentsOSM
 using Agents
 using LightOSM
 using Agents.Graphs
-using Agents.LazyArtifacts
+using LazyArtifacts
 using Agents.DataStructures
 using LinearAlgebra: dot, norm
 using Downloads
-
-export test_map,
-    random_road_position,
-    plan_route!,
-    distance,
-    road_length,
-    route_length,
-    plan_random_route!,
-    lonlat,
-    nearest_node,
-    nearest_road,
-    same_position,
-    same_road,
-    download_osm_network    # re-exported from LightOSM.jl
 
 ###########################################################################################
 # Type definitions
 ###########################################################################################
 """
     OpenStreetMapPath
+
 This struct stores information about the path of an agent via route planning.
 It also serves as developer's docs for some of the internals of `OpenStreetMapSpace`.
 
@@ -78,25 +61,7 @@ function Base.show(io::IO, s::OpenStreetMapSpace)
     )
 end
 
-"""
-    OSMAgent <: AbstractAgent
-The minimal agent struct for usage with [`OpenStreetMapSpace`](@ref OSM.OpenStreetMapSpace).
-It has an additional field `pos::Tuple{Int,Int,Float64}`. See also [`@agent`](@ref).
-"""
-Agents.@agent struct OSMAgent(NoSpaceAgent)
-    pos::Tuple{Int,Int,Float64}
-end
-
-"""
-    OSM.test_map()
-
-Download a small test map of [Göttingen](https://www.openstreetmap.org/export#map=16/51.5333/9.9363)
-as an artifact. Return a path to the downloaded file.
-
-Using this map requires `network_type = :none` to be passed as a keyword
-to [`OpenStreetMapSpace`](@ref OSM.OpenStreetMapSpace). The unit of distance used for this map is `:time`.
-"""
-test_map() = joinpath(artifact"osm_map_gottingen", "osm_map_gottingen.json")
+Agents.OSM.test_map() = joinpath(artifact"osm_map_gottingen", "osm_map_gottingen.json")
 
 #######################################################################################
 # Route planning

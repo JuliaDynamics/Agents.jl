@@ -1,4 +1,5 @@
-# NOTE: All positions are indexed by vertex number and _not_ OSM node id
+export OpenStreetMapSpace, OSMAgent, OSMSpace
+export OSM # submodule
 
 """
     OpenStreetMapSpace(path::AbstractString; kwargs...)
@@ -61,7 +62,8 @@ All `kwargs` are propagated to
 [`LightOSM.graph_from_file`](https://deloittedigitalapac.github.io/LightOSM.jl/docs/create_graph/#LightOSM.graph_from_file).
 
 ## Routing with OSM
-You can use [`plan_route!`](@ref) or [`plan_random_route!`](@ref).
+
+You can use [`plan_route!`](@ref) or [`plan_random_route!`](@ref) with open street maps!
 To actually move along a planned route use [`move_along_route!`](@ref).
 """
 struct OpenStreetMapSpace{G,P} <: Agents.AbstractSpace
@@ -73,3 +75,53 @@ end
 function OpenStreetMapSpace(args...; kw...)
     error("Package `LightOSM` needs to be loaded to access `OpenStreetMapSpace`")
 end
+
+const OSMSpace = OpenStreetMapSpace
+
+# NOTE: All positions are indexed by vertex number and _not_ OSM node id
+"""
+    OSMAgent <: AbstractAgent
+The minimal agent struct for usage with [`OpenStreetMapSpace`](@ref).
+It has an additional field `pos::Tuple{Int,Int,Float64}`. See also [`@agent`](@ref).
+"""
+Agents.@agent struct OSMAgent(NoSpaceAgent)
+    pos::Tuple{Int,Int,Float64}
+end
+
+
+# Now all OSM-specific functions go into a submodule
+"""
+    Agents.OSM
+Extension module for functionality related to [`OpenStreetMapSpace`](@ref).
+See the docstring of the space for more info.
+"""
+module OSM
+
+# Space specifics:
+export test_map,
+    random_road_position,
+    plan_route!,
+    distance,
+    road_length,
+    route_length,
+    plan_random_route!,
+    lonlat,
+    nearest_node,
+    nearest_road,
+    same_position,
+    same_road
+
+
+"""
+    OSM.test_map()
+
+Download a small test map of [Göttingen](https://www.openstreetmap.org/export#map=16/51.5333/9.9363)
+as an artifact. Return a path to the downloaded file.
+
+Using this map requires `network_type = :none` to be passed as a keyword
+to [`OpenStreetMapSpace`](@ref OSM.OpenStreetMapSpace). The unit of distance used for this map is `:time`.
+"""
+function test_map end
+
+
+end # submodule
