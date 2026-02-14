@@ -65,8 +65,6 @@ function Agents.abmplot!(
         enable_inspection = add_controls,
     )
 
-    space = abmspace(abmobs.model[])
-
     if adjust_aspect
         if ax isa Axis
             ax.aspect = DataAspect()
@@ -74,13 +72,14 @@ function Agents.abmplot!(
             ax.aspect = :data # TODO: is this up-to-date?
         end
     end
-    ax.limits = space_axis_limits(space)
+    modelobs = abmobs.model
+    ax.limits = space_axis_limits(modelobs[])
 
     # other plots
-    spaceplot!(ax, space; spaceplotkwargs...)
+    Agents.spaceplot!(ax, abmspace(modelobs[]); spaceplotkwargs...)
     if !isnothing(heatarray)
-        heatobs = @lift(abmplot_heatarray($(abmobs.model), heatarray))
-        abmheatmap!(ax, abmobs, abmspace(model), heatobs, heatkwargs)
+        heatobs = @lift(abmplot_heatarray($(modelobs), heatarray))
+        abmheatmap!(ax, abmobs, abmspace(modelobs[]), heatobs, heatkwargs)
         add_colorbar && Colorbar(ax.parent[1, 1][1, 2], hmap, width=20)
         # TODO: Set colorbar to be "glued" to axis
         # Problem with the following code, which comes from the tutorial
@@ -92,7 +91,7 @@ function Agents.abmplot!(
     preplot!(ax, abmobs)
 
     # and finally the agent plot
-    agentsplot!(ax, abmobs.model, agent_color, agent_size, agent_marker, offset, agentsplotkwargs)
+    agentsplot!(ax, modelobs, agent_color, agent_size, agent_marker, offset, agentsplotkwargs)
 
     add_controls && add_interaction!(ax, abmobs, params, dt)
 

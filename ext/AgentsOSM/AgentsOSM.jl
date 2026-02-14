@@ -386,7 +386,7 @@ function Agents.OSM.is_stationary(agent::AbstractAgent, model::ABM{<:OpenStreetM
 end
 
 function Agents.OSM.route_length(agent::AbstractAgent, model::ABM{<:OpenStreetMapSpace})
-    is_stationary(agent, model) && return 0.0
+    Agents.OSM.is_stationary(agent, model) && return 0.0
     prev_node, next_node = agent.pos
     length = road_length(prev_node, next_node, model)
     for node in reverse(abmspace(model).routes[Agents.getid(agent)].route)
@@ -530,7 +530,7 @@ function Agents.OSM.move_along_route!(
         distance::Real,
     )
 
-    (OSM.is_stationary(agent, model) || distance == 0) && return 0.0
+    (Agents.OSM.is_stationary(agent, model) || distance == 0) && return 0.0
 
     # branching here corresponds to nesting of the following cases:
     # - Is the agent moving to the end of the road or somewhere in the middle (isempty(osmpath.route))

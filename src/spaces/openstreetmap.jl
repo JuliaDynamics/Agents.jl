@@ -43,7 +43,7 @@ Nodes are not necessarily intersections, and there may be multiple nodes on a ro
 two intersections.
 Agents move along the available roads of the map using routing, see below.
 
-An example of using Open Street Map spaces can be found in [Zombie Outbreak in a City](@ref).
+An example of using Open Street Map spaces can be found in the [Zombie Outbreak](@ref osm_examle) tutorial.
 
 ## The `OSMAgent`
 
@@ -121,13 +121,12 @@ struct OpenStreetMapSpace{G} <: Agents.AbstractSpace
     s::Vector{Vector{Int}}
     routes::Dict{Int,OpenStreetMapPath} # maps agent ID to corresponding path
 end
-
+const OSMSpace = OpenStreetMapSpace
 
 function OpenStreetMapSpace(args...; kw...)
     error("Package `LightOSM` needs to be loaded to access `OpenStreetMapSpace`")
 end
 
-const OSMSpace = OpenStreetMapSpace
 
 # NOTE: All positions are indexed by vertex number and _not_ OSM node id
 """

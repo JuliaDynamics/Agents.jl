@@ -1,4 +1,4 @@
-## Required
+# Required
 function Agents.space_axis_limits(space::Agents.AbstractGridSpace)
     e = size(space) .+ 0.5
     o = zero.(e) .+ 0.5
