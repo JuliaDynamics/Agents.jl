@@ -306,7 +306,7 @@ function OSM.distance(
         pos_2::Tuple{Int,Int,Float64},
         model::ABM{<:OpenStreetMapSpace};
     )
-    distance((pos_1, pos_1, 0.0), pos_2, model)
+    OSM.distance((pos_1, pos_1, 0.0), pos_2, model)
 end
 
 function OSM.distance(
@@ -314,7 +314,7 @@ function OSM.distance(
         pos_2::Int,
         model::ABM{<:OpenStreetMapSpace}
     )
-    distance(pos_1, (pos_2, pos_2, 0.0), model)
+    OSM.distance(pos_1, (pos_2, pos_2, 0.0), model)
 end
 
 Agents.OSM.lonlat(pos::Int, model::ABM{<:OpenStreetMapSpace}) =
@@ -337,12 +337,6 @@ function Agents.OSM.lonlat(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetM
 end
 
 Agents.OSM.lonlat(agent::AbstractAgent, model::ABM{<:OpenStreetMapSpace}) = lonlat(agent.pos, model)
-
-latlon(pos::Int, model::ABM{<:OpenStreetMapSpace}) =
-    Tuple(abmspace(model).map.node_coordinates[pos])
-latlon(pos::Tuple{Int,Int,Float64}, model::ABM{<:OpenStreetMapSpace}) =
-    reverse(lonlat(pos, model))
-latlon(agent::AbstractAgent, model::ABM{<:OpenStreetMapSpace}) = latlon(agent.pos, model)
 
 function Agents.OSM.nearest_node(ll::Tuple{Float64,Float64}, model::ABM{<:OpenStreetMapSpace})
     ll = reverse(ll)
