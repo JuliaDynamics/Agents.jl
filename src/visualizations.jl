@@ -67,10 +67,8 @@ to `abmplot` directly.
 * `colorbar_label = ""` : Label to add to the colorbar, if any.
 * `preplot!` : A function `f(ax, abmobs)` that plots something after the heatmap,
   and after space-specific plotting, but before the agents.
-* `spaceplotkwargs = NamedTuple()`: keywords utilized when plotting the space.
-  Directly passed to
-  * `OSMMakie.osmplot!` if model space is `OpenStreetMapSpace`.
-  * `GraphMakie.graphplot!` if model space is `GraphSpace`.
+* `spaceplotkwargs = NamedTuple()`: keywords utilized when plotting the space,
+  if the space extends the `spaceplot!` function (currently only `OpenStreetMapSpace`).
 * `adjust_aspect = true`: Adjust axis aspect ratio to be the model's space data aspect ratio.
 
 The stand-alone function `abmplot` also takes two optional `NamedTuple`s named `figure` and
