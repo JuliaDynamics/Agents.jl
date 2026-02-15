@@ -12,9 +12,9 @@ function Agents.agentsplot!(ax, model::T, agent_color, agent_size, agent_marker,
     marker = @lift(graph_marker($model, agent_marker))
     size = @lift(graph_size($model, agent_size))
     # Also lift properties of edges, if any
-    ec = get(agentsplotkwargs, :edge_color, Observable(:black))
+    ec = get(agentsplotkwargs, :edge_color, :black)
     edge_color = @lift(abmplot_edge_color($(model), ec))
-    ew = get(agentsplotkwargs, :edge_width, Observable(1))
+    ew = get(agentsplotkwargs, :edge_width, 1)
     edge_width = @lift(abmplot_edge_width($(model), ew))
 
     GraphMakie.graphplot!(ax, abmspace(model[]).graph;
