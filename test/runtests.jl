@@ -4,6 +4,7 @@ using Agents.Graphs, Agents.DataFrames
 using StatsBase: mean
 using StableRNGs
 using AgentsExampleZoo
+AStar = Agents.AStar
 
 using Distributed
 addprocs(2)
@@ -166,8 +167,8 @@ end
     include("grid_space_tests.jl")
     include("collect_tests.jl")
     include("continuous_space_tests.jl")
-    include("osm_tests.jl")
     include("astar_tests.jl")
+    include("osm_tests.jl")
     include("graph_tests.jl")
     include("csv_tests.jl")
     include("jld2_tests.jl")

@@ -181,9 +181,10 @@ end
 function migrate!(agent, model)
     pid = agent.pos
     m = sample(abmrng(model), 1:(model.C), Weights(model.migration_rates[pid, :]))
-    return if m ≠ pid
+    if m ≠ pid
         move_agent!(agent, m, model)
     end
+    return
 end
 
 function transmit!(agent, model)
