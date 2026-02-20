@@ -28,12 +28,12 @@ The following keywords modify the `ensemblerun!` function:
 All other keywords are propagated to [`run!`](@ref) as-is.
 """
 function ensemblerun!(
-    models::Vector_or_Tuple,
-    n::Union{Function, Int};
-    showprogress = false,
-    parallel = false,
-    kwargs...,
-)
+        models::Vector_or_Tuple,
+        n::Union{Function, Int};
+        showprogress = false,
+        parallel = false,
+        kwargs...,
+    )
     if parallel
         return parallel_ensemble(models, n;
                                  showprogress, kwargs...)
@@ -51,13 +51,13 @@ the provided `generator` which is a one-argument function whose input is a seed.
 This method has additional keywords `ensemble = 5, seeds = rand(UInt32, ensemble)`.
 """
 function ensemblerun!(
-    generator;
-    ensemble = 5,
-    seeds = rand(UInt32, ensemble),
-    kwargs...,
-)
+        generator, n;
+        ensemble = 5,
+        seeds = rand(UInt32, ensemble),
+        kwargs...,
+    )
     models = [generator(seed) for seed in seeds]
-    ensemblerun!(models; kwargs...)
+    ensemblerun!(models, n; kwargs...)
 end
 
 function series_ensemble(models, n;
