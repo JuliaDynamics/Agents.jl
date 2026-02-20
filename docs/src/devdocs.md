@@ -15,13 +15,20 @@ wanted to add a new space, they would **not** have to care about neither
 the model stepping dynamics, nor the majority of the remaining Agents.jl
 API, such as sampling, data collection, etc. etc.
 
-## Cloning the repository
+## Cloning the repository and formatting
 
 Since we include documentation with many animated gifs and videos in the repository, a standard clone can be larger than expected.
 If you wish to do any development work, it is better to use
 
 ```bash
 git clone https://github.com/JuliaDynamics/Agents.jl.git --single-branch
+```
+
+Agents.jl uses the Runic.jl formatter. Make sure your contributions apply it!
+To apply the formatter use
+```bash
+shell> julia --project=@runic --startup-file=no -e 'using Pkg; Pkg.add("Runic")'
+shell> julia --project=@runic --startup-file=no -e 'using Runic; exit(Runic.main(ARGS))' -- --inplace path/to/developed/Agents
 ```
 
 ## [Creating a new model type](@id make_new_model)
