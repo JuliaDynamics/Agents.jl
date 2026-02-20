@@ -374,13 +374,12 @@ animalcolor(a::Hawk) = :blue
 # We use `surface!` to plot the terrain as a mesh, and colour it using the `:terrain`
 # colormap. Since the heightmap dimensions don't correspond to the dimensions of the space,
 # we explicitly provide ranges to specify where the heightmap should be plotted.
-const ABMPlot = Agents.get_ABMPlot_type()
-function Agents.static_preplot!(ax::Axis3, p::ABMPlot)
+function preplot!(ax::Axis3, abmobs)
     surface!(
         ax,
         (100/205):(100/205):100,
         (100/205):(100/205):100,
-        p.abmobs[].model[].heightmap;
+        abmobs.model[].heightmap;
         colormap=:terrain
     )
 end
@@ -394,6 +393,7 @@ end
 #     framerate = 15,
 #     agent_color = animalcolor,
 #     agent_size = 1.0,
+#     preplot!,
 #     title = "Rabbit Fox Hawk with pathfinding"
 # )
 # ```

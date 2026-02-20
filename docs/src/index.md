@@ -10,29 +10,19 @@ using CairoMakie, Agents
     If you have found this package useful, please consider starring it on [GitHub](https://github.com/JuliaDynamics/Agents.jl).
     This gives us an accurate lower bound of the (satisfied) user count.
 
-!!! tip "Latest news: Agents.jl v6.0"
-    This is a new major release of Agents.jl with great new content
-    and massive performance increases all across the board!
-    Please see the online [CHANGELOG](https://github.com/JuliaDynamics/Agents.jl/blob/main/CHANGELOG.md) for a full list of changes.
-    The most noteworthy ones are:
+!!! tip "Latest news: Agents.jl v7"
+    This new version brings two powerful and experimental features:
 
-    - A new macro `@multiagent` allows to run multi-agent simulations more efficiently.
-    - A new experimental model type `EventQueueABM` has been implemented. It operates in continuous time through the scheduling of events at arbitrary time points. It is a generalization of "Gillespie-like" models.
-    - `AgentBasedModel` defines an API that can be extended by other models.
-    - Stronger inheritance capabilities in `@agent`.
-    - Manually setting or altering the ids of agents is no longer allowed. The agent id is now considered a read-only field, and is set internally by Agents.jl.
+    1. Allowing the agent container to be based on `StructVectors`, using a Struct-of-Arrays internal layout. This can increase simulation computational performance however it currently only supports single agent types. To use this, pass `container = StructVector` to `StandardABM` or `EventQueueABM` constructors, as well as use the helper construct `SoAType{A}` for dispatch purposes instead of your agent type `A` (read the docstring of `SoAType`).
+    2. Native integration of ABMs with Reinforcement Learning is now provided by the new model type `ReinforcementLearningABM`. To learn how to use this functionality checkout the new tutorial on the Boltzmann Wealth Model with Reinforcement Learning.
+
+    There is also a minor breaking change: the internal code for plotting has been
+    fully reworked. This does not affect typical users, as all plotting API remains
+    identical, but it does affect users that were extending plotting for custom spaces. As a result of this change, data inspection is currently disabled.
+
 
 
 ## Highlights
-
-### Software quality
-
-* Free and open source.
-* Small learning curve due to intuitive design based on a modular space-agnostic function-based modelling implementation.
-* Extremely high performance when compared to other open source frameworks, routinely being 100x faster versus other ABM frameworks ([proof](https://github.com/JuliaDynamics/ABM_Framework_Comparisons))
-* User-created models typically have much smaller source code versus implementations in other open source ABM frameworks ([proof](https://github.com/JuliaDynamics/ABM_Framework_Comparisons))
-* High quality, extensive documentation featuring tutorials, example ABM implementations, an [extra zoo of ABM examples](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/), and integration examples with other Julia packages
-
 
 ```@raw html
 <video width="auto" controls autoplay loop>
@@ -40,21 +30,31 @@ using CairoMakie, Agents
 </video>
 ```
 
+### Software quality
 
-### Agent based modelling
+* Free and open source.
+* Small learning curve due to intuitive design based on a modular space-agnostic functional modelling implementation.
+* User-created models typically have much smaller source code versus implementations in other open source ABM frameworks ([proof](https://github.com/JuliaDynamics/ABM_Framework_Comparisons)), making them faster to prototype and modify.
+* Excellent computational performance, typically [faster than established competitors](https://github.com/JuliaDynamics/ABMFrameworksComparison).
+* High quality, extensive documentation featuring tutorials, example ABM implementations, an [extra zoo of ABM examples](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/), integration examples with other Julia packages, and developer's docs.
+
+### Agent based modelling specifically
 
 * Universal model structure where agents are identified by a unique id: [`AgentBasedModel`](@ref).
 * Extendable [API](@ref) that provides out of the box thousands of possible agent actions.
 * Support for many types of space: arbitrary graphs, regular grids, continuous space
-* Support for simulations on Open Street Maps including support for utilizing the road's max speed limit, finding nearby agents/roads/destinations and pathfinding
-* Multi-agent support, for interactions between disparate agent species
-* Scheduler interface (with default schedulers), making it easy to activate agents in a specific order (e.g. by the value of some property)
-* Automatic data collection in a `DataFrame` at desired intervals
-* Aggregating collected data during model evolution
-* Distributed computing
-* Batch running and batch data collection
-* Extensive pathfinding capabilities in continuous or discrete spaces
-* Customizable visualization support for all kinds of models via the [Makie](https://makie.juliaplots.org/stable/) ecosystem: publication-quality graphics and video output
+* Support for simulations on Open Street Maps including support for utilizing the road's max speed limit, finding nearby agents/roads/destinations and pathfinding.
+* Modular design allows the creation of entirely new types of space configurations that can be integrated fully with the rest of Agents.jl API with only a few lines of code.
+* Multi-agent support, for interactions between disparate agent species.
+* Support for both discrete time and continuous time (event queue or jump processes) type of simulations.
+* Scheduler interface (with default schedulers), making it easy to activate agents in a specific order (e.g. by the value of some property).
+* Automatic data collection in a `DataFrame` at desired intervals.
+* Aggregating collected data during model evolution.
+* Distributed computing.
+* Batch running and batch data collection.
+* Extensive pathfinding capabilities in continuous or discrete spaces.
+* Reinforcement learning native integration.
+* Customizable visualization support for all kinds of models via the [Makie](https://makie.juliaplots.org/stable/) ecosystem: publication-quality graphics and video output.
 * Interactive applications for any agent based models, which are created with only 5 lines of code and look like this:
 
 ```@raw html
@@ -88,15 +88,13 @@ To learn how to use Agents.jl, please visit the [Tutorial](@ref) before anything
 
 Agents.jl was designed with the following philosophy in mind:
 
-**Simple to learn and use, yet extendable and highly performant, allowing for fast and scalable model creation and evolution.**
-
-
+**Simple to learn and use, yet extendable and highly performant, allowing for fast and scalable model creation and simulation.**
 
 There are multiple examples that highlight this core design principle, that one will quickly encounter when scanning through our [API](@ref) page. Here we just give two quick examples: first, there exists a universal function [`nearby_agents`](@ref), which returns the agents nearby a given agent and within a given "radius". What is special for this function, which is allowed by Julia's Multiple Dispatch, is that `nearby_agents` will work for any space type the model has, reducing the learning curve of finding neighbors in ABMs made with Agents.jl. An even better example is perhaps our treatment of spaces. A user may create an entirely new kind of space (e.g. one representing a planet, or whatever else) by only extending 5 functions, as discussed in our [Creating a new space type](@ref make_new_space) documentation. Indeed, the simplicity of Agents.jl is due to the intuitive space-agnostic modelling approach we have implemented: agent actions are specified using generically named functions (such as "move agent" or "find nearby agents") that do not depend on the actual space the agents exist in, nor on the properties of the agents themselves. Overall this leads to ultra fast model prototyping where even changing the space the agents live in is matter of only a couple of lines of code.
 
 Many other agent-based modeling frameworks have been constructed to ease the process of building and analyzing ABMs (see e.g. [here](http://dx.doi.org/10.1016/j.cosrev.2017.03.001) for an outdated review), spanning a varying degree of complexity.
 In the page [ABM Framework Comparison](@ref) we compare how our design philosophy puts us into comparison with other well accepted ABM software.
-**Fascinatingly, even though the main focus of Agents.jl is simplicity and ease of use, it outperforms all software we compared it with.**
+**Fascinatingly, even though the main focus of Agents.jl is simplicity, ease of use, and extendability, it runs faster than all software we compared it with.**
 
 ## Crash course on agent based modeling
 

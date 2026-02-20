@@ -304,13 +304,13 @@
             start = random_position(model)
             finish = OSM.random_road_position(model)
             human = add_agent!(start, Zombiee, model, false)
-            plan_route!(human, finish, model)
+            OSM.plan_route!(human, finish, model)
         end
 
         start = OSM.nearest_road((51.530876112711745, 9.945125635913511), model)
         finish = OSM.nearest_node((51.5328328, 9.9351811), model)
         zombie = add_agent!(start, model, true)
-        plan_route!(zombie, finish, model)
+        OSM.plan_route!(zombie, finish, model)
 
         AgentsIO.save_checkpoint("test.jld2", model)
         @test_throws AssertionError AgentsIO.load_checkpoint("test.jld2", warn_deprecation = false)
@@ -319,7 +319,7 @@
         # agent data
         @test nagents(other) == nagents(model)
         @test all(haskey(Agents.agent_container(other), i) for i in allids(model))
-        @test all(OSM.latlon(model[i].pos, model) == OSM.latlon(other[i].pos, other) for i in allids(model))
+        @test all(OSM.lonlat(model[i].pos, model) == OSM.lonlat(other[i].pos, other) for i in allids(model))
         @test all(model[i].infected == other[i].infected for i in allids(model))
         # model data
         test_model_data(model, other)

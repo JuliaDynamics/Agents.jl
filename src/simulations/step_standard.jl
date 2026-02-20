@@ -1,6 +1,6 @@
 function CommonSolve.step!(model::StandardABM, n::Union{Real, Function} = 1)
-    agent_step! = agent_step_field(model)
-    model_step! = model_step_field(model)
+    agent_step! = getfield(model, :agent_step)
+    model_step! = getfield(model, :model_step)
     t = getfield(model, :time)
     step_ahead!(model, agent_step!, model_step!, n, t)
     return model

@@ -1,96 +1,7 @@
-Agents.agents_space_dimensionality(model::ABM) = 
-    Agents.agents_space_dimensionality(abmspace(model))
-
-function Agents.agentsplot!(ax::Axis, p::ABMP)
-    if user_used_polygons(p.agent_marker[], p.marker[])
-        poly!(p, p.marker; p.color, p.agentsplotkwargs...)
-    else
-        scatter!(p, p.pos; p.color, p.marker, p.markersize, p.agentsplotkwargs...)
-    end
-    return p
-end
-
-"Plot agents into a 3D space."
-function Agents.agentsplot!(ax::Axis3, p::_ABMPlot)
-    if p.agent_marker[] === :circle 
-        p.agent_marker[], p.marker[] = :Sphere, Sphere(Point3f(0), 1)
-    end
-    meshscatter!(p, p.pos; p.color, p.marker, p.markersize, p.agentsplotkwargs...)
-    return p
-end
-
-## Preplots
-
-Agents.spaceplot!(ax::Axis, p::_ABMPlot; spaceplotkwargs...) = nothing
-Agents.spaceplot!(ax::Axis3, p::_ABMPlot; spaceplotkwargs...) = nothing
-
-function Agents.static_preplot!(ax::Axis, p::_ABMPlot)
-    hasproperty(p, :static_preplot!) && return old_static_preplot!(ax, p.abmobs[].model, p)
-    return nothing
-end
-
-function Agents.static_preplot!(ax::Axis3, p::_ABMPlot)
-    hasproperty(p, :static_preplot!) && return old_static_preplot!(ax, p.abmobs[].model, p)
-    return nothing
-end
-
-function old_static_preplot!(ax, model, p)
-    @warn "Usage of the static_preplot! kwarg is deprecated. " *
-        "Please remove it from the call to abmplot and define a custom method for " *
-        "Agents.static_preplot!(ax, model, p) instead." maxlog=1
-    return p.static_preplot![](ax, model)
-end
-
-## Lifting
-
-function Agents.abmplot_heatobs(model::ABM, heatarray)
-    isnothing(heatarray) && return nothing
-    # TODO: use surface!(heatobs) here?
-    matrix = Agents.get_data(model, heatarray, identity)
-    return matrix
-end
-
-function Agents.abmplot_pos(model::ABM, offset)
-    postype = agents_space_dimensionality(abmspace(model)) == 3 ? Point3f : Point2f
-    if isnothing(offset)
-        return postype[postype(model[i].pos) for i in allids(model)]
-    else
-        return postype[postype(model[i].pos .+ offset(model[i])) for i in allids(model)]
-    end
-end
-
-Agents.abmplot_colors(model::ABM, ac) = to_color(ac)
-Agents.abmplot_colors(model::ABM, ac::Function) = 
-    to_color.([ac(model[i]) for i in allids(model)])
-
-function Agents.abmplot_markers(model::ABM, am, pos)
-    marker = am
-    if user_used_polygons(am, marker)
-        # for polygons we always need vector, even if all agents are same polygon
-        marker = [translate(am, p) for p in pos]
-    end
-    return marker
-end
-
-function Agents.abmplot_markers(model::ABM, am::Function, pos)
-    marker = [am(model[i]) for i in allids(model)]
-    if user_used_polygons(am, marker)
-        marker = [translate_polygon(m, p) for (m, p) in zip(marker, pos)]
-    end
-    return marker
-end
-
-user_used_polygons(am, marker) = false
-user_used_polygons(am::Makie.Polygon, marker) = true
-user_used_polygons(am::Function, marker::Vector{<:Makie.Polygon}) = true
-
-Agents.abmplot_markersizes(model::ABM, as) = as
-Agents.abmplot_markersizes(model::ABM, as::Function) = [as(model[i]) for i in allids(model)]
-
-## Inspection
+# Note: currently this file is not included in the source code.
 
 # 2D space
-function Makie.show_data(inspector::DataInspector, 
+function Makie.show_data(inspector::DataInspector,
         p::ABMP{<:Agents.AbstractSpace}, idx, source::Scatter)
     pos = Makie.position_on_plot(source, idx)
     proj_pos = Makie.shift_project(Makie.parent_scene(p), pos)
@@ -186,3 +97,25 @@ end
 Agents.convert_element_pos(::S, pos) where {S<:Agents.AbstractSpace} = Tuple(pos)
 
 Agents.ids_to_inspect(model::ABM, pos) = ids_in_position(pos, model)
+
+##########################################################################################
+# Space specific inspection
+##########################################################################################
+
+# Nothing
+
+function Makie.show_data(inspector::DataInspector,
+        p::ABMP{<:Nothing}, idx, source::Scatter)
+    pos = Makie.position_on_plot(source, idx)
+    proj_pos = Makie.shift_project(Makie.parent_scene(p), pos)
+    Makie.update_tooltip_alignment!(inspector, proj_pos)
+
+    model = p.abmobs[].model[]
+    a = inspector.plot.attributes
+    a.text[] = Agents.agent2string(model, p.pos[][idx]) # weird af special case
+    a.visible[] = true
+
+    return true
+end
+
+Agents.ids_to_inspect(model::ABM{Nothing}, pos) = []

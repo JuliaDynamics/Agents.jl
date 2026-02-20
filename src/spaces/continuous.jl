@@ -1,5 +1,4 @@
 export ContinuousSpace, ContinuousAgent
-export nearby_ids_exact, nearby_agents_exact
 export nearest_neighbor, elastic_collision!, interacting_pairs
 
 struct ContinuousSpace{D,P,T<:AbstractFloat,F} <: AbstractSpace
@@ -65,10 +64,10 @@ Distances specified by `r` in functions like [`nearby_ids`](@ref) are always bas
 on the Euclidean distance between two points in `ContinuousSpace`.
 
 In `ContinuousSpace` `nearby_*` searches are accelerated using a grid system; see
-discussion around the keyword `spacing` below. By default, `nearby_*` has the keyword 
-`search` set to `:approximate`, which means that it doesn't do an exact search, but 
-can be a possible overestimation, including agent IDs whose distance slightly exceeds 
-`r` with "slightly" being as much as `spacing`. If you want exact searches set the keyword 
+discussion around the keyword `spacing` below. By default, `nearby_*` has the keyword
+`search` set to `:approximate`, which means that it doesn't do an exact search, but
+can be a possible overestimation, including agent IDs whose distance slightly exceeds
+`r` with "slightly" being as much as `spacing`. If you want exact searches set the keyword
 `search` to `:exact` in `nearby_*`.
 
 ## Keywords
@@ -398,7 +397,7 @@ The following keywords can be used:
   for the agents may give different results (if `b` is the nearest agent for `a`, but
   `a` is not the nearest agent for `b`, whether you get the pair `(a, b)` or not depends
   on whether `a` was scheduler first or not).
-- `search = :exact` decides how to find nearby IDs in the `:all, :types` cases. 
+- `search = :exact` decides how to find nearby IDs in the `:all, :types` cases.
   Must be `:exact` or `:approximate`.
 
 Example usage in [Bacterial Growth](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/growing_bacteria/)

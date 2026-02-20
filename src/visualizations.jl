@@ -3,12 +3,17 @@
     abmplot!(ax::Axis/Axis3, model::ABM; kwargs...) → abmobs
 
 Plot an agent based model by plotting each individual agent as a marker and using
-the agent's position field as its location on the plot. The same function is used
-to make custom composite plots and animations for the model evolution
-using the returned `abmobs`. `abmplot` is also used to launch interactive GUIs for
+the agent's position field as its location on the plot.
+`abmplot` is also used to launch interactive GUIs for
 evolving agent based models, see "Interactivity" below.
 
 See also [`abmvideo`](@ref) and [`abmexploration`](@ref).
+
+`abmplot` returns an instance of [`ABMObservable`](@ref) that can be used to manually
+animate the model evolution, or make custom composite plots and videos.
+See the online documentation for examples on using this.
+Instead of `model::ABM`, an instance of [`ABMObservable`](@ref) can also be given
+to `abmplot` directly.
 
 ## Keyword arguments
 
@@ -20,17 +25,17 @@ See also [`abmvideo`](@ref) and [`abmexploration`](@ref).
   uses a `GraphSpace`, `agent_color, agent_size, agent_marker` functions instead take an *iterable of agents* in each
   position (i.e. node of the graph).
 
-  Using constants: `agent_color = "#338c54", agent_size = 15, agent_marker = :diamond`
+  Example using constants: `agent_color = "#338c54", agent_size = 15, agent_marker = :diamond`
 
-  Using functions:
+  Example using functions:
   ```julia
   agent_color(a) = a.status == :S ? "#2b2b33" : a.status == :I ? "#bf2642" : "#338c54"
   agent_size(a) = 10rand()
   agent_marker(a) = a.status == :S ? :circle : a.status == :I ? :diamond : :rect
   ```
-  Notice that for 2D models, `agent_marker` can be/return a `Makie.Polygon` instance, which plots each agent
+  For 2D models, `agent_marker` can be/return a `Makie.Polygon` instance, which plots each agent
   as an arbitrary polygon. It is assumed that the origin (0, 0) is the agent's position when
-  creating the polygon. In this case, the keyword `agent_size` is meaningless, as each polygon has
+  creating the polygon. In this case, the keyword `agent_size` is ignored, as each polygon has
   its own size. Use the functions `scale, rotate_polygon` to transform this polygon.
 
   3D models currently do not support having different markers. As a result, `agent_marker` cannot be
@@ -38,10 +43,10 @@ See also [`abmvideo`](@ref) and [`abmexploration`](@ref).
 * `offset = nothing` : If not `nothing`, it must be a function taking as an input an
   agent and outputting an offset position tuple to be added to the agent's position
   (which matters only if there is overlap).
-* `agentsplotkwargs = ()` : Additional keyword arguments propagated to the function that
+* `agentsplotkwargs = NamedTuple()` : Additional keyword arguments propagated to the function that
   plots the agents (typically `scatter!`).
 
-### Preplot related
+### Extra plots related
 
 * `heatarray = nothing` : A keyword that plots a model property (that is a matrix)
   as a heatmap over the space.
@@ -59,16 +64,12 @@ See also [`abmvideo`](@ref) and [`abmexploration`](@ref).
   heatmap if `heatarray` is not nothing. It is strongly recommended to use `abmplot`
   instead of the `abmplot!` method if you use `heatarray`, so that a colorbar can be
   placed naturally.
-* `static_preplot!` : A function `f(ax, abmplot)` that plots something after the heatmap
-  but before the agents.
-* `spaceplotkwargs = NamedTuple()` : keywords utilized when plotting the space.
-  Directly passed to
-  * `OSMMakie.osmplot!` if model space is `OpenStreetMapSpace`.
-  * [`GraphMakie.graphplot!`](https://graph.makie.org/stable/#GraphMakie.graphplot)
-  if model space is `GraphSpace`.
-* `adjust_aspect = true`: Adjust axis aspect ratio to be the model's space aspect ratio.
-* `enable_space_checks = true`: Set to `false` to disable checks related to the model
-  space.
+* `colorbar_label = ""` : Label to add to the colorbar, if any.
+* `preplot!` : A function `f(ax, abmobs)` that plots something after the heatmap,
+  and after space-specific plotting, but before the agents.
+* `spaceplotkwargs = NamedTuple()`: keywords utilized when plotting the space,
+  if the space extends the `spaceplot!` function (currently only `OpenStreetMapSpace`).
+* `adjust_aspect = true`: Adjust axis aspect ratio to be the model's space data aspect ratio.
 
 The stand-alone function `abmplot` also takes two optional `NamedTuple`s named `figure` and
 `axis` which can be used to change the automatically created `Figure` and `Axis` objects.
@@ -99,6 +100,7 @@ The stand-alone function `abmplot` also takes two optional `NamedTuple`s named `
   slides is only propagated to the actual model after a press of the "update" button.
 
 ## Data collection related
+
 * `adata, mdata, when`: Same as the keyword arguments of `Agents.run!`. If either or both
   `adata, mdata` are given, data are collected and stored in the `abmobs`,
   see [`ABMObservable`](@ref). The same keywords provide the data plots
@@ -117,46 +119,22 @@ function abmplot! end
 export abmplot, abmplot!
 
 """
-Helper function to retrieve the automatically generated `ABMPlot` type from the
-`AgentsVisualizations` extension.
-Returns `nothing` if `AgentsVisualizations` was not loaded.
-"""
-function get_ABMPlot_type()
-  AgentsVisualizations = Base.get_extension(Agents, :AgentsVisualizations)
-  isnothing(AgentsVisualizations) && return nothing
-  return AgentsVisualizations._ABMPlot
-end
-
-"""
-    add_interaction!(ax)
-    add_interaction!(ax, p::_ABMPlot)
-
-Adds model control buttons and parameter sliders according to the plotting keywords
-`add_controls` (if true) and `params` (if not empty).
-Buttons and sliders are placed next to each other in a new layout position below the
-position of `ax`.
-"""
-function add_interaction! end
-export add_interaction!
-
-"""
-    ABMObservable(model; adata, mdata, when) → abmobs
+    ABMObservable(model; adata, mdata, when = true) → abmobs
 
 `abmobs` contains all information necessary to step an agent based model interactively,
 as well as collect data while stepping interactively.
 `ABMObservable` also returned by [`abmplot`](@ref).
 
 Calling `Agents.step!(abmobs, t)` will step the model for `t` time and collect data
-as in [`Agents.run!`](@ref).
-
+as in [`Agents.run!`](@ref), using the `adata, mdata, when` keywords.
 The fields `abmobs.model, abmobs.adf, abmobs.mdf` are _observables_ that contain
 the [`AgentBasedModel`](@ref), and the agent and model dataframes with collected data.
-Data are collected as described in [`Agents.run!`](@ref) using the `adata, mdata, when`
-keywords. All three observables are updated on stepping (when it makes sense).
+These observables are updated (and `notify`) during `step!`.
 
-All plotting and interactivity should be defined by `lift`ing these observables.
+All plotting and interactivity should be defined by `lift`-ing (or `map`-ing) these observables
+according to the Observables.jl interface.
 """
-struct ABMObservable{M, AD, MD, ADF, MDF, W, S, K}
+struct ABMObservable{M, AD, MD, ADF, MDF, W, S, K, OI}
     model::M # Observable{AgentBasedModel}
     adata::AD
     mdata::MD
@@ -166,6 +144,8 @@ struct ABMObservable{M, AD, MD, ADF, MDF, W, S, K}
     t_last_collect::S # observable of last timepoint where data was collected (for `when`)
     offset_time_adf::K
     offset_time_mdf::K
+    stepclick::OI # Observable{Int}
+    resetclick::OI
 end
 export ABMObservable
 
@@ -229,6 +209,83 @@ function abmvideo end
 export abmvideo
 
 """
+    translate_polygon(p::Polygon, point)
+
+Translate given polygon by given `point`.
+"""
+function translate_polygon end
+"""
+    rotate_polygon(p::Polygon, θ)
+
+Rotate given polygon counter-clockwise by `θ` (in radians).
+"""
+function rotate_polygon end
+"""
+    scale_polygon(p::Polygon, s)
+
+Scale given polygon by `s`, assuming polygon's center of reference is the origin.
+"""
+function scale_polygon end
+export translate_polygon, scale_polygon, rotate_polygon
+
+############################################################################################
+## Methods to extend for new spaces
+############################################################################################
+"""
+    space_axis_limits(model::ABM{S}) where {S<:AbstractSpace}
+
+Return appropriate axis limits for given model.
+They have to be a 2- or 3- tuple as expected by Makie when setting axis limits.
+The `length` of the output of this function also decides whether a 2D or 3D axis is used.
+"""
+space_axis_limits(model::ABM) = space_axis_limits(abmspace(model))
+
+"""
+    agentsplot!(ax, model, agent_color, agent_size, agent_marker, offset, agentsplotkwargs)
+
+Plot agents into `ax`, given model and
+`agent_color, agent_size, agent_marker, offset, agentsplotkwargs`
+which are obtained from the keywords given to [`abmplot`](@ref).
+The `model` is the model _observable_ contained in [`ABMObservable`](@ref).
+
+## Extending
+
+By default this function does a `scatter`-plot and ignores `model`.
+Otherwise, it should be extended to dispatch on model space type. TO do this,
+use the signature:
+
+```julia
+agentsplot!(ax, model::T, args...) where {T <: Observable{A} where {A <: ABM{<:YouSpaceType}}}
+```
+
+See the source code of the default implementation of `agentsplot!` for lifting
+e.g., the `agent_color` argument into the model.
+"""
+function agentsplot! end
+
+"""
+    abmheatmap!(ax, abmobs::ABMObservable, space, heatobs, add_colorbar, heatkwargs)
+
+Plot as a heatmap the provided `heatobs` (an observable matrix created from `heatarray`).
+"""
+function abmheatmap! end
+
+"""
+    spaceplot!(ax, space::AbstractSpace; spaceplotkwargs...)
+
+Add a space-dependent plot to `ax`. `spaceplotkwargs` is propagated
+from [`abmplot`](@ref). By default this function does nothing.
+"""
+function spaceplot! end
+
+# Some cheat functions that only exist so that we can have
+# a conditional dependency on OSMMakie and GraphMakie
+function osmplot! end
+function graphplot! end
+
+
+###### Inspection, currently disabled
+"""
     agent2string(agent::A)
 Convert agent data into a string which is used to display all agent variables and their
 values in the tooltip on mouse hover. Concatenates strings if there are multiple agents
@@ -250,98 +307,6 @@ end
 """
 function agent2string end
 
-"""
-    translate_polygon(p::Polygon, point)
-Translate given polygon by given `point`.
-"""
-function translate_polygon end
-"""
-    rotate_polygon(p::Polygon, θ)
-Rotate given polygon counter-clockwise by `θ` (in radians).
-"""
-function rotate_polygon end
-"""
-    scale_polygon(p::Polygon, s)
-Scale given polygon by `s`, assuming polygon's center of reference is the origin.
-"""
-function scale_polygon end
-export translate_polygon, scale_polygon, rotate_polygon
-
-############################################################################################
-## Visualization API
-############################################################################################
-
-"""
-    check_space_visualization_API(model::ABM)
-
-Checks whether all the necessary method extensions indicated in
-[`space-visualization-API.jl`](../ext/AgentsVisualizations/space-visualization-API.jl)
-have been defined.
-"""
-function check_space_visualization_API end
-
-## Required
-
-"""
-    agents_space_dimensionality(space::S) where {S<:Agents.AbstractSpace}
-
-Return dimensionality of given model space.
-"""
-function agents_space_dimensionality end
-
-"""
-    get_axis_limits(model::ABM{S}) where {S<:Agents.AbstractSpace}
-
-Return appropriate axis limits for given model.
-Return `nothing, nothing` if you want to disable this.
-"""
-function get_axis_limits end
-
-"""
-    agentsplot!(ax, p::ABMPlot)
-
-Plot agents at their positions.
-"""
-function agentsplot! end
-
-## Preplots
-
-"""
-    spaceplot!(ax, p::ABMPlot; spaceplotkwargs...)
-
-Create a space-dependent preplot.
-"""
-function spaceplot! end
-
-function static_preplot! end
-
-## Lifting
-
-"""
-    abmplot_heatobs(model::ABM{S}, heatarray)
-"""
-function abmplot_heatobs end
-"""
-    abmplot_pos(model::ABM{S}, offset)
-"""
-function abmplot_pos end
-"""
-  abmplot_colors(model::ABM{S}, agent_color)
-  abmplot_colors(model::ABM{S}, agent_color::Function)
-"""
-function abmplot_colors end
-"""
-    abmplot_markers(model::ABM{S}, agent_marker, pos)
-    abmplot_markers(model::ABM{S}, agent_marker::Function, pos)
-"""
-function abmplot_markers end
-"""
-    abmplot_markersizes(model::ABM{S}, agent_size)
-    abmplot_markersizes(model::ABM{S}, agent_size::Function)
-"""
-function abmplot_markersizes end
-
-## Inspection
 
 """
     convert_element_pos(::S, pos)
@@ -353,11 +318,8 @@ the given space `S`.
 function convert_element_pos end
 
 """
-    ids_to_inspect(model::ABM{S}, pos)
+    ids_to_inspect(model::ABM, pos)
+
+Return `ids` that should be shown in the data inspection (hover).
 """
 function ids_to_inspect end
-
-# Some cheat functions that only exist so that we can have
-# a conditional dependency on OSMMakie and GraphMakie
-function osmplot! end
-function graphplot! end

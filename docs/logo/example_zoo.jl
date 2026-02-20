@@ -368,7 +368,7 @@ plotkw = (
     scatterkwargs = (strokecolor = :white, strokewidth = 2),
     heatarray = model -> penaltymap(model.pathfinder),
     heatkwargs = (colormap = :terrain,),
-    static_preplot! = runners_preplot!,
+    preplot! = runners_preplot!,
 )
 
 runners_obs = abmplot!(axs[3], runners_model;

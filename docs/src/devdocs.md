@@ -49,112 +49,58 @@ The rest of the methods by default return a "not implemented" error message
 
 ## [Creating a new space type](@id make_new_space)
 
-Creating a new space type within Agents.jl is quite simple and requires the extension of only 5 methods to support the entire Agents.jl API. The exact specifications on how to create a new space type are contained within the source file: [`src/core/space_interaction_API.jl`](https://github.com/JuliaDynamics/Agents.jl/blob/main/src/core/space_interaction_API.jl).
-
-In principle, the following should be done:
+Creating a new space type within Agents.jl is quite simple and requires the extension of only 5 methods to support the entire Agents.jl API.
+Here are the steps to follow to create a new space:
 
 1. Think about what the agent position type should be.
 2. Think about how the space type will keep track of the agent positions, so that it is possible to implement the function [`nearby_ids`](@ref).
-3. Implement the `struct` that represents your new space, while making it a subtype of `AbstractSpace`.
-4. Extend `random_position(model)`.
-5. Extend `add_agent_to_space!(agent, model), remove_agent_from_space!(agent, model)`. This already provides access to `add_agent!, kill_agent!` and `move_agent!`.
-6. Extend `nearby_ids(pos, model, r)`.
-7. Create a new "minimal" agent type to be used with [`@agent`](@ref) (see the source code of [`GraphAgent`](@ref) for an example).
+3. Create the `struct` that represents your new space, while making it a subtype of `Agents.AbstractSpace`. Let now `const ABMS = ABM{<:YourSpaceType}`.
+4. Extend `random_position(model::ABMS)`.
+5. Extend `add_agent_to_space!(agent, model::ABMS), remove_agent_from_space!(agent, model::ABMS)`. This already provides access to `add_agent!, kill_agent!` and `move_agent!`.
+6. Extend `nearby_ids(pos, model::ABMS, r; kw...)`.
+7. Create a new "minimal" agent type to be used with [`@agent`](@ref) (see the source code of e.g., [`GraphAgent`](@ref) for an example).
 
-And that's it! Every function of the main API will now work. In some situations you might want to explicitly extend other functions such as `move_agent!` or `remove_all_from_space!` for performance reasons.
+And that's it! Every function of the main API will now work. In some situations you might want to explicitly extend other functions such as `move_agent!` or `remove_all_from_space!` for performance reasons, but they will work out of the box with a generic implementation.
 
 ### Visualization of a custom space
 
-Visualization of a new space type within Agents.jl works in a very similar fashion to
+Visualization of a new space type within Agents.jl works in a similar fashion to
 creating a new space type.
-As before, all custom space types should implement this API and be subtypes of
-`AbstractSpace`.
-To implement this API for your custom space:
+One your space works with the general Agents.jl API, you only need to extend a few functions for it to work automatically with the existing plotting and animation infrastructure.
 
-1. Copy the methods from the list below.
-    Make sure to also copy the first line defining the `ABMPlot` type in your working
-    environment which is necessary to be able to extend the API.
-    Inside `ABMPlot` you can find all the plot args and kwargs as well as the plot
-    properties that have been lifted from them (see the "Lifting" section of this API).
-    You can then easily access them inside your functions via the dot syntax, e.g. with
-    `p.color` or `p.plotkwargs`, and use them as needed.
-1. Replace `Agents.AbstractSpace` with the name of your space type.
-1. Implement at least the required methods.
-1. Implement optional methods as needed.
-    Some methods DO NOT need to be implemented for every space, they are optional.
-    The necessity to implement these methods depends on the supertypes of your custom type.
-    For example, you will get a lot of methods "for free" if your `CustomType` is a subtype
-    of `Agents.AbstractGridSpace`.
-    As a general rule of thumb: The more abstract your `CustomSpace`'s supertype is, the
-    more methods you will have to extend/adapt.
+#### Mandatory methods
 
-!!! info "Checking for missing methods"
-    We provide a convenient function `Agents.check_space_visualization_API(::ABM)` to check
-    for the availability of methods used to plot ABMs with custom spaces via `abmplot`.
-    By default, the function is called whenever you want to plot a custom space.
-    This behavior can be disabled by passing `enable_space_checks = false` as a keyword
-    argument to `abmplot`.
+You must extend the following function
 
-The methods to be extended for visualization of a new space type are structured into four
-groups:
-
-```julia
-## Required
-const ABMPlot = Agents.get_ABMPlot_type()
-
-function Agents.agents_space_dimensionality(space::Agents.AbstractSpace)
-end
-
-function Agents.get_axis_limits(model::ABM{<:Agents.AbstractSpace})
-end
-
-function Agents.agentsplot!(ax, p::ABMPlot)
-end
-
-## Preplots (optional)
-
-function Agents.spaceplot!(ax, p::ABMPlot; spaceplotkwargs...)
-end
-
-function Agents.static_preplot!(ax, p::ABMPlot)
-end
-
-## Lifting (optional)
-
-function Agents.abmplot_heatobs(model::ABM{<:Agents.AbstractSpace}, heatarray)
-end
-
-function Agents.abmplot_pos(model::ABM{<:Agents.AbstractSpace}, offset)
-end
-
-function Agents.abmplot_colors(model::ABM{<:Agents.AbstractSpace}, ac)
-end
-function Agents.abmplot_colors(model::ABM{<:Agents.AbstractSpace}, ac::Function)
-end
-
-function Agents.abmplot_markers(model::ABM{<:Agents.AbstractSpace}, am, pos)
-end
-function Agents.abmplot_markers(model::ABM{<:Agents.AbstractSpace}, am::Function, pos)
-end
-
-function Agents.abmplot_markersizes(model::ABM{<:Agents.AbstractSpace}, as)
-end
-function Agents.abmplot_markersizes(model::ABM{<:Agents.AbstractSpace}, as::Function)
-end
-
-#### Inspection (optional)
-
-function Agents.convert_element_pos(::S, pos) where {S<:Agents.AbstractSpace}
-end
-
-function Agents.ids_to_inspect(model::ABM{<:Agents.AbstractSpace}, pos)
-end
+```@docs
+space_axis_limits
 ```
 
-!!! tip "Changing visualization of existing space types"
-    The same approach outlined above also applies in cases when you want to overwrite the
-    default methods for an already existing space type.
-    For instance, this might often be the case for models with `Nothing` space.
+#### Optional alternative agent plotting
+
+If your space does not visualize agents in the default way of one agent = one scattered marker, then you want to extend the function `agentsplot!`.
+For example, `GraphSpace` aggregates multiple agents into a graph plot and is extending `agentsplot!`.
+
+```@docs
+agentsplot!
+```
+
+#### Optional pre-plotting
+
+Some spaces, like the `OSMSpace`, need to plot some elements before the agents can be plotted and animated. If that's the case, extend the following:
+
+```@docs
+spaceplot!
+```
+
+#### Heatmap handling
+
+Heatmaps are extracted and plotted automatically, but your space may require some special handling for that. For example `ContinuousSpace` needs to map the finite heatmap matrix over the continuous space.
+If you require such handling, extend:
+
+```@docs
+abmheatmap!
+```
 
 ## Designing a new Pathfinder Cost Metric
 

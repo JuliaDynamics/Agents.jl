@@ -23,6 +23,7 @@ with a `GraphSpace` to obtain the number of nodes or edges in the graph.
 The underlying graph can be altered using [`add_vertex!`](@ref) and [`rem_vertex!`](@ref).
 
 An example using `GraphSpace` is [SIR model for the spread of COVID-19](@ref).
+To visualize this space with [`abmplot`](@ref) you need to be `using GraphMakie`.
 
 !!! note "Not for social networks!"
     `GraphSpace` is not intended for "social-network-like" agent based
@@ -30,10 +31,10 @@ An example using `GraphSpace` is [SIR model for the spread of COVID-19](@ref).
     the graph represents connections between agents. Rather, `GraphSpace` is
     suitable for when the coordinates of spatial locations are not as important as the
     connections between them. `GraphSpace` is suited for e.g., modelling cities
-    where each can host many agents.
+    where each can host many agents and agents may move between cities.
 
     If you want to make a "social-network" like simulation, see [the integration with
-    Graphs.jl example](@ref social_networks). Typically you won't need a space structure at all!
+    Graphs.jl example](@ref social_networks). Likely you won't need a space structure at all!
 
 
 ## Distance specification

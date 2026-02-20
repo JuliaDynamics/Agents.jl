@@ -335,7 +335,7 @@ using LinearAlgebra: norm, dot
         @test model[2].f1 == 1
         @test model[3].f1 == 2
         @test model[4].f1 == 3
-        
+
         space = ContinuousSpace((1,1); spacing = 0.02, periodic = false)
         model = StandardABM(ContinuousAgent{2,Float64}, space, warn_deprecation = false)
         pos = SVector.([(0.30386961108678245, 0.17690859963285543),(0.33020500850053125, 0.178391311081449)])
@@ -680,7 +680,7 @@ end
 ac = (a) -> colors[a.id]
 am = (a) -> markers[a.id]
 
-static_preplot! = (ax, p) -> begin
+preplot! = (ax, p) -> begin
     xs = 0:spacing:extent[1]
     vlines!(ax, xs; ymin = 0, ymax = extent[2], color = :gray)
     ys = 0:spacing:extent[2]
@@ -689,7 +689,7 @@ static_preplot! = (ax, p) -> begin
     scatter!(ax, vec(cell_centers); marker=:circle, color=:gray, markersize=5)
 end
 
-fig, ax = abmplot(model; static_preplot!, ac, am, as = 12)
+fig, ax = abmplot(model; preplot!, ac, am, as = 12)
 display(fig)
 
 # plot radius from agent

@@ -9,19 +9,20 @@ function Agents.abmexploration(model;
         kwargs...
     )
     fig, ax, abmobs = abmplot(model;
-        figure, axis, warn_deprecation = false, add_controls = true, kwargs...
+        figure, axis, add_controls = true, kwargs...
     )
-    p = first_abmplot_in(ax)
 
     adata, mdata = abmobs.adata, abmobs.mdata
-    !isnothing(adata) && @assert eltype(adata)<:Tuple "Only aggregated agent data are allowed."
+    !isnothing(adata) && @assert eltype(adata) <: Tuple "Only aggregated agent data are allowed."
     !isnothing(alabels) && @assert length(alabels) == length(adata)
     !isnothing(mlabels) && @assert length(mlabels) == length(mdata)
-    init_abm_data_plots!(fig, abmobs, adata, mdata, alabels, mlabels, plotkwargs, p.stepclick, p.resetclick)
+    init_abm_data_plots!(fig, abmobs, adata, mdata, alabels, mlabels, plotkwargs)
+    display(fig)
     return fig, abmobs
 end
 
-function init_abm_data_plots!(fig, abmobs, adata, mdata, alabels, mlabels, plotkwargs, stepclick, resetclick)
+function init_abm_data_plots!(fig, abmobs, adata, mdata, alabels, mlabels, plotkwargs)
+    stepclick, resetclick = abmobs.stepclick, abmobs.resetclick
     La = isnothing(adata) ? 0 : size(abmobs.adf[])[2]-1
     Lm = isnothing(mdata) ? 0 : size(abmobs.mdf[])[2]-1
     La + Lm == 0 && return nothing # failsafe; don't add plots if dataframes are empty
@@ -32,7 +33,7 @@ function init_abm_data_plots!(fig, abmobs, adata, mdata, alabels, mlabels, plotk
     for i in 1:La # add adata plots
         y_label = dataname(adata[i])
         # string(adata[i][2]) * "_" * string(adata[i][1])
-        points = @lift(Point2f.(apply_offsets($(abmobs.adf).time, $(abmobs.offset_time_adf)), 
+        points = @lift(Point2f.(apply_offsets($(abmobs.adf).time, $(abmobs.offset_time_adf)),
                                 $(abmobs.adf)[:, y_label]))
         ax = plotlayout[i, :] = Axis(fig)
         push!(axs, ax)
@@ -46,7 +47,7 @@ function init_abm_data_plots!(fig, abmobs, adata, mdata, alabels, mlabels, plotk
 
     for i in 1:Lm # add mdata plots
         y_label = string(mdata[i])
-        points = @lift(Point2f.(apply_offsets($(abmobs.mdf).time, $(abmobs.offset_time_mdf)), 
+        points = @lift(Point2f.(apply_offsets($(abmobs.mdf).time, $(abmobs.offset_time_mdf)),
                                 $(abmobs.mdf)[:,y_label]))
         ax = plotlayout[i+La, :] = Axis(fig)
         push!(axs, ax)
@@ -72,7 +73,6 @@ function init_abm_data_plots!(fig, abmobs, adata, mdata, alabels, mlabels, plotk
         end
     end
     on(resetclick) do clicks
-
         for ax in axs
             vlines!(ax, [abmobs.offset_time_adf[][1][]], color = "#c41818")
         end
@@ -112,8 +112,7 @@ function Agents.abmvideo(file, model;
         t = title
     end
     axis = (title = t, titlealign = :left, axis...)
-    fig, ax, abmobs = abmplot(model;
-    add_controls = false, warn_deprecation = false, figure, axis, kwargs...)
+    fig, ax, abmobs = abmplot(model; add_controls = false, figure, axis, kwargs...)
 
     resize_to_layout!(fig)
 

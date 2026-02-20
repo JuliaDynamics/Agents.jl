@@ -8,8 +8,8 @@ Use this method in conjunction with [`move_along_route!`](@ref).
 function Agents.plan_route!(
     agent::AbstractAgent,
     dest::Dims{D},
-    pathfinder::AStar{D},
-) where {D}
+    pathfinder::AStar{D,P,M,Int64},
+) where {D, P, M}
     path = find_path(pathfinder, agent.pos, dest)
     isnothing(path) && return
     pathfinder.agent_paths[Agents.getid(agent)] = path

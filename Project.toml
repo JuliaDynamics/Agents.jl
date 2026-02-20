@@ -1,7 +1,7 @@
 name = "Agents"
 uuid = "46ada45e-f475-11e8-01d0-f70cc89e6671"
 authors = ["George Datseris", "Tim DuBois", "Aayush Sabharwal", "Ali Vahdati", "Adriano Meligrana"]
-version = "6.3.1"
+version = "7.0.0"
 
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
@@ -14,7 +14,6 @@ Downloads = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
 JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
 LazyArtifacts = "4af54fe1-eca0-43a8-85a7-787d91b784e3"
-LightOSM = "d1922b25-af4e-4ba3-84af-fe9bea896051"
 LightSumTypes = "f56206fc-af4c-5561-a72a-43fe2ca5a923"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 MacroTools = "1914dd2f-81c6-5fcd-8719-6d5c9610ff09"
@@ -34,13 +33,15 @@ Crux = "e51cc422-768a-4345-bb8e-2246287ae729"
 Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c"
 GraphMakie = "1ecd5474-83a3-4783-bb4f-06765db800d2"
 Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
+LightOSM = "d1922b25-af4e-4ba3-84af-fe9bea896051"
 OSMMakie = "76b6901f-8821-46bb-9129-841bc9cfe677"
 POMDPs = "a93abf59-7444-517b-a68a-c42f96afdd7d"
 
 [extensions]
+AgentsOSM = "LightOSM"
 AgentsArrow = "Arrow"
 AgentsGraphVisualizations = ["Makie", "GraphMakie"]
-AgentsOSMVisualizations = ["Makie", "OSMMakie"]
+AgentsOSMVisualizations = ["Makie", "LightOSM", "OSMMakie"]
 AgentsVisualizations = "Makie"
 AgentsRL = ["Crux", "POMDPs", "Flux"]
 

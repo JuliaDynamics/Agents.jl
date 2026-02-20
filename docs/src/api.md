@@ -198,17 +198,20 @@ manhattan_distance
 
 ```@docs
 OSM
+OSM.test_map
+OSM.random_road_position
+OSM.plan_route!
+OSM.plan_random_route!
+OSM.move_along_route!
+OSM.distance
 OSM.lonlat
 OSM.nearest_node
-OSM.nearest_road
-OSM.random_road_position
-OSM.plan_random_route!
 OSM.road_length
 OSM.route_length
+OSM.get_geoloc
 OSM.same_position
 OSM.same_road
-OSM.test_map
-OSM.download_osm_network
+OSM.closest_node_on_edge
 ```
 
 ## Nearby Agents

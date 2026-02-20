@@ -3,7 +3,6 @@ using CSV, Arrow
 using Agents.Graphs, Agents.DataFrames
 using StatsBase: mean
 using StableRNGs
-
 using AgentsExampleZoo
 
 using Distributed
@@ -23,32 +22,32 @@ end
 @agent struct Agent1(GridAgent{2})
 end
 
-@agent struct Agent2(NoSpaceAgent) 
+@agent struct Agent2(NoSpaceAgent)
     weight::Float64
 end
 
-@agent struct Agent3(GridAgent{2}) 
+@agent struct Agent3(GridAgent{2})
     weight::Float64 = 2.0
 end
 
-@agent struct Agent4(GridAgent{2}) 
+@agent struct Agent4(GridAgent{2})
     p::Int
 end
 
-@agent struct Agent5(GraphAgent) 
+@agent struct Agent5(GraphAgent)
     weight::Float64
 end
 
-@agent struct Agent6(ContinuousAgent{2,Float64}) 
+@agent struct Agent6(ContinuousAgent{2,Float64})
     weight::Float64
 end
 
-@agent struct Agent7(GraphAgent) 
+@agent struct Agent7(GraphAgent)
     f1::Bool
     f2::Int
 end
 
-@agent struct Agent8(ContinuousAgent{2,Float64}) 
+@agent struct Agent8(ContinuousAgent{2,Float64})
     f1::Bool
     f2::Int
 end
@@ -73,8 +72,8 @@ function schelling_model(ModelType, SpaceType, ContainerType; numagents = 30, gr
     @assert numagents < prod(griddims)
     space = SpaceType(griddims, periodic = false)
     properties = Dict(:min_to_be_happy => min_to_be_happy)
-    model = ModelType(SchellingAgent, space, agent_step! = schelling_model_agent_step!, 
-                      properties = properties, scheduler = Schedulers.Randomly(), 
+    model = ModelType(SchellingAgent, space, agent_step! = schelling_model_agent_step!,
+                      properties = properties, scheduler = Schedulers.Randomly(),
                       container = ContainerType, rng = StableRNG(10))
     for n in 1:numagents
         add_agent_single!(SchellingAgent, model, false, n < numagents / 2 ? 1 : 2)
