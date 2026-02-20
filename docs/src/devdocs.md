@@ -54,11 +54,11 @@ Here are the steps to follow to create a new space:
 
 1. Think about what the agent position type should be.
 2. Think about how the space type will keep track of the agent positions, so that it is possible to implement the function [`nearby_ids`](@ref).
-3. Implement the `struct` that represents your new space, while making it a subtype of `Agents.AbstractSpace`.
-4. Extend `random_position(model::ABM{YourSpaceType})`.
-5. Extend `add_agent_to_space!(agent, model), remove_agent_from_space!(agent, model)`. This already provides access to `add_agent!, kill_agent!` and `move_agent!`.
-6. Extend `nearby_ids(pos, model, r)`.
-7. Create a new "minimal" agent type to be used with [`@agent`](@ref) (see the source code of [`GraphAgent`](@ref) for an example).
+3. Create the `struct` that represents your new space, while making it a subtype of `Agents.AbstractSpace`. Let now `const ABMS = ABM{<:YourSpaceType}`.
+4. Extend `random_position(model::ABMS)`.
+5. Extend `add_agent_to_space!(agent, model::ABMS), remove_agent_from_space!(agent, model::ABMS)`. This already provides access to `add_agent!, kill_agent!` and `move_agent!`.
+6. Extend `nearby_ids(pos, model::ABMS, r; kw...)`.
+7. Create a new "minimal" agent type to be used with [`@agent`](@ref) (see the source code of e.g., [`GraphAgent`](@ref) for an example).
 
 And that's it! Every function of the main API will now work. In some situations you might want to explicitly extend other functions such as `move_agent!` or `remove_all_from_space!` for performance reasons, but they will work out of the box with a generic implementation.
 
@@ -79,7 +79,7 @@ space_axis_limits
 #### Optional alternative agent plotting
 
 If your space does not visualize agents in the default way of one agent = one scattered marker, then you want to extend the function `agentsplot!`.
-For example, `GraphSpace` aggregates multiple agents into one scattered marker and is extending `agentsplot!`.
+For example, `GraphSpace` aggregates multiple agents into a graph plot and is extending `agentsplot!`.
 
 ```@docs
 agentsplot!
