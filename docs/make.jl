@@ -20,7 +20,7 @@ pages = [
         "examples.md",
     ],
     "api.md",
-    "Plotting and Interactivity" => "agents_visualizations.md",
+    "Plotting and Interactivity" => "examples/agents_visualizations.md",
     "Ecosystem Integration" => [
         "BlackBoxOptim.jl" => "examples/optim.md",
         "DifferentialEquations.jl" => "examples/diffeq.md",
