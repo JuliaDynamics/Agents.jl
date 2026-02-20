@@ -1,10 +1,11 @@
 # Convenience functions that propagate stuff to the main function
-function Agents.abmplot(either;
+function Agents.abmplot(
+        either;
         # These keywords are about the `ABM`
-        adata=nothing, mdata=nothing, when=true,
-        axis=NamedTuple(),
-        add_controls=false,
-        figure=NamedTuple(),
+        adata = nothing, mdata = nothing, when = true,
+        axis = NamedTuple(),
+        add_controls = false,
+        figure = NamedTuple(),
         kwargs...
     )
     size = add_controls ? (800, 600) : (800, 800)
@@ -19,7 +20,8 @@ function Agents.abmplot(either;
     return fig, ax, abmobs
 end
 
-function Agents.abmplot!(ax, model::ABM;
+function Agents.abmplot!(
+        ax, model::ABM;
         # These keywords are about the `ABM`
         adata = nothing, mdata = nothing, when = true,
         # While all the rest are plotting related:
@@ -34,7 +36,7 @@ function axistype(model::ABM)
     D = space_axis_dimensionality(model)
     D == 3 && return Axis3
     D == 2 && return Axis
-    @error """Invalid axis dimensionality $(D)."""
+    return @error """Invalid axis dimensionality $(D)."""
 end
 
 ###########################################################################################
@@ -44,25 +46,25 @@ function Agents.abmplot!(
         ax::Union{Axis, Axis3}, abmobs::ABMObservable;
 
         # Agent
-        agent_color=JULIADYNAMICS_COLORS[1],
-        agent_size=15,
-        agent_marker=:circle,
-        offset=nothing,
+        agent_color = JULIADYNAMICS_COLORS[1],
+        agent_size = 15,
+        agent_marker = :circle,
+        offset = nothing,
         agentsplotkwargs = NamedTuple(),
 
         # Preplot
-        heatarray=nothing,
-        heatkwargs=NamedTuple(),
+        heatarray = nothing,
+        heatkwargs = NamedTuple(),
         preplot! = (args...,) -> nothing,
-        add_colorbar=true,
+        add_colorbar = true,
         colorbar_label = "",
-        adjust_aspect=true,
+        adjust_aspect = true,
         spaceplotkwargs = NamedTuple(),
 
         # Interactivity
-        params=Dict(),
+        params = Dict(),
         add_controls = !isempty(params),
-        dt=nothing, # animation evolution speed
+        dt = nothing, # animation evolution speed
         enable_inspection = add_controls,
     )
 
@@ -81,7 +83,7 @@ function Agents.abmplot!(
     if !isnothing(heatarray)
         heatobs = @lift(abmplot_heatarray($(modelobs), heatarray))
         abmheatmap!(ax, abmobs, abmspace(modelobs[]), heatobs, heatkwargs)
-        add_colorbar && Colorbar(ax.parent[1, 1][1, 2], hmap; width=20, label = colorbar_label)
+        add_colorbar && Colorbar(ax.parent[1, 1][1, 2], hmap; width = 20, label = colorbar_label)
         # TODO: Set colorbar to be "glued" to axis
         # Problem with the following code, which comes from the tutorial
         # https://makie.juliaplots.org/stable/tutorials/aspect-tutorial/ ,
@@ -102,4 +104,3 @@ function Agents.abmplot!(
 
     return abmobs
 end
-

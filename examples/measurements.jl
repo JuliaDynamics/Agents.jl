@@ -22,7 +22,7 @@ yval = 5.0
 import Measurements
 x = Measurements.measurement(xval, σ)
 y = Measurements.measurement(yval, σ)
-sqrt(x^2 - 2x*y + y^2)
+sqrt(x^2 - 2x * y + y^2)
 
 # or
 
@@ -30,7 +30,7 @@ import MonteCarloMeasurements
 using Distributions: Normal, Cosine # can use any distributions
 x = MonteCarloMeasurements.Particles(100, Normal(xval, σ))
 y = MonteCarloMeasurements.Particles(100, Normal(yval, σ))
-sqrt(x^2 - 2x*y + y^2)
+sqrt(x^2 - 2x * y + y^2)
 
 # For convience we will define two functions that will give the mean and std
 # of an uncertain numeric type irrespectively of type used
@@ -81,7 +81,7 @@ function daisy_step!(agent::Daisy, model)
     pos = agent.pos
     temperature = meanval(model.temperature[pos...]) # can't use uncertainty in Boolean operations
     seed_threshold = (0.1457 * temperature - 0.0032 * temperature^2) - 0.6443
-    if rand(abmrng(model)) < seed_threshold
+    return if rand(abmrng(model)) < seed_threshold
         empty_near_pos = random_nearby_position(pos, model, 1, npos -> isempty(npos, model))
         if !isnothing(empty_near_pos)
             add_agent!(empty_near_pos, model, agent.breed, 0, agent.albedo)
@@ -96,6 +96,7 @@ function daisyworld_step!(model)
         update_surface_temperature!(p, model)
         diffuse_temperature!(p, model)
     end
+    return
 end
 
 function update_surface_temperature!(pos, model)
@@ -108,14 +109,14 @@ function update_surface_temperature!(pos, model)
     ## Here we changed the rule to not use `log` because it isn't defined for negative numbers!
     ## We also need to somehow extract a number from the uncertain number, because boolean
     ## comparisons are not defined on uncertain numbers.
-    local_heating = meanval(absorbed_luminosity) > 0 ? 72 *(2absorbed_luminosity - 1.8) + 80 : 80
-    model.temperature[pos...] = (model.temperature[pos...] + local_heating) / 2
+    local_heating = meanval(absorbed_luminosity) > 0 ? 72 * (2absorbed_luminosity - 1.8) + 80 : 80
+    return model.temperature[pos...] = (model.temperature[pos...] + local_heating) / 2
 end
 
 function diffuse_temperature!(pos, model)
     ratio = model.ratio # diffusion ratio
     npos = nearby_positions(pos, model)
-    model.temperature[pos...] =
+    return model.temperature[pos...] =
         (1 - ratio) * model.temperature[pos...] +
         sum(model.temperature[p...] for p in npos) * 0.125 * ratio
 end
@@ -142,9 +143,10 @@ function daisyworld(;
 
     rng = Xoshiro(seed)
     space = GridSpaceSingle(griddims)
-    properties = (; # named tuple
+    properties = (;
+        # named tuple
         max_age, surface_albedo, solar_luminosity,
-        ratio = 0.5, temperature = fill(starting_temperature, griddims)
+        ratio = 0.5, temperature = fill(starting_temperature, griddims),
     )
 
     T = typeof(albedo_black)
@@ -153,13 +155,13 @@ function daisyworld(;
     ## populate the model with random white daisies
     grid = collect(positions(model))
     L = length(grid)
-    white_positions = sample(rng, grid, round(Int, init_white*L); replace = false)
+    white_positions = sample(rng, grid, round(Int, init_white * L); replace = false)
     for wp in white_positions
         add_agent!(wp, model, :white, rand(abmrng(model), 0:max_age), albedo_white)
     end
     ## and black daisies
     possible_black = setdiff(grid, white_positions)
-    black_positions = sample(rng, possible_black, Int(init_black*L); replace = false)
+    black_positions = sample(rng, possible_black, Int(init_black * L); replace = false)
     for bp in black_positions
         add_agent!(bp, model, :black, rand(abmrng(model), 0:max_age), albedo_black)
     end

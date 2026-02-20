@@ -96,11 +96,11 @@ function __init__()
     (and see the CHANGELOG.md file online for a list of changes!)
     """
 
-    if display_update
+    return if display_update
         # Get scratch space for this package
         versions_dir = @get_scratch!("versions")
         if !isfile(joinpath(versions_dir, update_name))
-            printstyled(stdout, "\n" * update_message; color=:light_magenta)
+            printstyled(stdout, "\n" * update_message; color = :light_magenta)
             touch(joinpath(versions_dir, update_name))
         end
     end

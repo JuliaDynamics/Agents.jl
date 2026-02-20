@@ -86,17 +86,18 @@ function initialize_model(;
         countdown = zeros(Int, dims),
         regrowth_time = regrowth_time,
     )
-    model = StandardABM(Union{Sheep, Wolf}, space;
+    model = StandardABM(
+        Union{Sheep, Wolf}, space;
         agent_step! = sheepwolf_step!, model_step! = grass_step!,
         properties, rng, scheduler = Schedulers.Randomly(), warn = false
     )
     ## Add agents
     for _ in 1:n_sheep
-        energy = rand(abmrng(model), 1:(Δenergy_sheep*2)) - 1
+        energy = rand(abmrng(model), 1:(Δenergy_sheep * 2)) - 1
         add_agent!(Sheep, model, energy, sheep_reproduce, Δenergy_sheep)
     end
     for _ in 1:n_wolves
-        energy = rand(abmrng(model), 1:(Δenergy_wolf*2)) - 1
+        energy = rand(abmrng(model), 1:(Δenergy_wolf * 2)) - 1
         add_agent!(Wolf, model, energy, wolf_reproduce, Δenergy_wolf)
     end
     ## Add grass with random initial growth
@@ -126,14 +127,14 @@ function sheepwolf_step!(sheep::Sheep, model)
         return
     end
     eat!(sheep, model)
-    if rand(abmrng(model)) ≤ sheep.reproduction_prob
+    return if rand(abmrng(model)) ≤ sheep.reproduction_prob
         sheep.energy /= 2
         replicate!(sheep, model)
     end
 end
 
 function sheepwolf_step!(wolf::Wolf, model)
-    randomwalk!(wolf, model; ifempty=false)
+    randomwalk!(wolf, model; ifempty = false)
     wolf.energy -= 1
     if wolf.energy < 0
         remove_agent!(wolf, model)
@@ -142,7 +143,7 @@ function sheepwolf_step!(wolf::Wolf, model)
     ## If there is any sheep on this grid cell, it's dinner time!
     dinner = first_sheep_in_position(wolf.pos, model)
     !isnothing(dinner) && eat!(wolf, dinner, model)
-    if rand(abmrng(model)) ≤ wolf.reproduction_prob
+    return if rand(abmrng(model)) ≤ wolf.reproduction_prob
         wolf.energy /= 2
         replicate!(wolf, model)
     end
@@ -151,7 +152,7 @@ end
 function first_sheep_in_position(pos, model)
     ids = ids_in_position(pos, model)
     j = findfirst(id -> model[id] isa Sheep, ids)
-    isnothing(j) ? nothing : model[ids[j]]::Sheep
+    return isnothing(j) ? nothing : model[ids[j]]::Sheep
 end
 
 # Sheep and wolves have separate `eat!` functions. If a sheep eats grass, it will acquire
@@ -175,7 +176,7 @@ end
 # Otherwise, it cannot be consumed until it regrows after a delay specified by
 # `regrowth_time`. The dynamics of the grass is our `model_step!` function.
 function grass_step!(model)
-    @inbounds for p in positions(model) # we don't have to enable bound checking
+    return @inbounds for p in positions(model) # we don't have to enable bound checking
         if !(model.fully_grown[p...])
             if model.countdown[p...] ≤ 0
                 model.fully_grown[p...] = true
@@ -199,7 +200,7 @@ CairoMakie.activate!() # hide
 
 # To view our starting population, we can build an overview plot using [`abmplot`](@ref).
 # We define the plotting details for the wolves and sheep:
-offset(a) = a isa Sheep ? (-0.1, -0.1*rand()) : (+0.1, +0.1*rand())
+offset(a) = a isa Sheep ? (-0.1, -0.1 * rand()) : (+0.1, +0.1 * rand())
 ashape(a) = a isa Sheep ? :circle : :utriangle
 acolor(a) = a isa Sheep ? RGBAf(1.0, 1.0, 1.0, 0.8) : RGBAf(0.2, 0.2, 0.3, 0.8)
 
@@ -246,7 +247,7 @@ function plot_population_timeseries(adf, mdf)
     wolfl = lines!(ax, adf.time, adf.count_wolf, color = RGBAf(0.2, 0.2, 0.3))
     grassl = lines!(ax, mdf.time, mdf.count_grass, color = :green)
     figure[1, 2] = Legend(figure, [sheepl, wolfl, grassl], ["Sheep", "Wolves", "Grass"])
-    figure
+    return figure
 end
 
 plot_population_timeseries(adf, mdf)
@@ -265,7 +266,7 @@ stable_params = (;
     seed = 71758,
 )
 
-sheepwolfgrass = initialize_model(;stable_params...)
+sheepwolfgrass = initialize_model(; stable_params...)
 adf, mdf = run!(sheepwolfgrass, 2000; adata, mdata)
 plot_population_timeseries(adf, mdf)
 
@@ -276,7 +277,7 @@ plot_population_timeseries(adf, mdf)
 
 # ## Video
 # Given that we have defined plotting functions, making a video is as simple as
-sheepwolfgrass = initialize_model(;stable_params...)
+sheepwolfgrass = initialize_model(; stable_params...)
 
 abmvideo(
     "sheepwolf.mp4",

@@ -55,24 +55,24 @@ using CairoMakie
 end
 
 function model_initiation(;
-    Ns,
-    migration_rates,
-    β_und,
-    β_det,
-    infection_period = 30,
-    reinfection_probability = 0.05,
-    detection_time = 14,
-    death_rate = 0.02,
-    Is = [zeros(Int, length(Ns) - 1)..., 1],
-    seed = 0,
-)
+        Ns,
+        migration_rates,
+        β_und,
+        β_det,
+        infection_period = 30,
+        reinfection_probability = 0.05,
+        detection_time = 14,
+        death_rate = 0.02,
+        Is = [zeros(Int, length(Ns) - 1)..., 1],
+        seed = 0,
+    )
 
     rng = Xoshiro(seed)
     @assert length(Ns) ==
-    length(Is) ==
-    length(β_und) ==
-    length(β_det) ==
-    size(migration_rates, 1) "length of Ns, Is, and B, and number of rows/columns in migration_rates should be the same "
+        length(Is) ==
+        length(β_und) ==
+        length(β_det) ==
+        size(migration_rates, 1) "length of Ns, Is, and B, and number of rows/columns in migration_rates should be the same "
     @assert size(migration_rates, 1) == size(migration_rates, 2) "migration_rates rates should be a square matrix"
 
     C = length(Ns)
@@ -126,15 +126,15 @@ end
 using LinearAlgebra: diagind
 
 function create_params(;
-    C,
-    max_travel_rate,
-    infection_period = 30,
-    reinfection_probability = 0.05,
-    detection_time = 14,
-    death_rate = 0.02,
-    Is = [zeros(Int, C - 1)..., 1],
-    seed = 19,
-)
+        C,
+        max_travel_rate,
+        infection_period = 30,
+        reinfection_probability = 0.05,
+        detection_time = 14,
+        death_rate = 0.02,
+        Is = [zeros(Int, C - 1)..., 1],
+        seed = 19,
+    )
 
     Random.seed!(seed)
     Ns = rand(50:5000, C)
@@ -175,13 +175,13 @@ function agent_step!(agent, model)
     migrate!(agent, model)
     transmit!(agent, model)
     update!(agent, model)
-    recover_or_die!(agent, model)
+    return recover_or_die!(agent, model)
 end
 
 function migrate!(agent, model)
     pid = agent.pos
     m = sample(abmrng(model), 1:(model.C), Weights(model.migration_rates[pid, :]))
-    if m ≠ pid
+    return if m ≠ pid
         move_agent!(agent, m, model)
     end
 end
@@ -200,18 +200,19 @@ function transmit!(agent, model)
     for contactID in ids_in_position(agent, model)
         contact = model[contactID]
         if contact.status == :S ||
-           (contact.status == :R && rand(abmrng(model)) ≤ model.reinfection_probability)
+                (contact.status == :R && rand(abmrng(model)) ≤ model.reinfection_probability)
             contact.status = :I
             n -= 1
             n <= 0 && return
         end
     end
+    return
 end
 
 update!(agent, model) = agent.status == :I && (agent.days_infected += 1)
 
 function recover_or_die!(agent, model)
-    if agent.days_infected ≥ model.infection_period
+    return if agent.days_infected ≥ model.infection_period
         if rand(abmrng(model)) ≤ model.death_rate
             remove_agent!(agent, model)
         else
@@ -239,7 +240,7 @@ infected_fractions(m) = [infected_fraction(m, ids_in_position(p, m)) for p in po
 fracs = lift(infected_fractions, abmobs.model)
 color = lift(fs -> [cgrad(:inferno)[f] for f in fs], fracs)
 title = lift(
-    (m) -> "step = $(abmtime(m)), infected = $(round(Int, 100*infected_fraction(m, allids(m))))%",
+    (m) -> "step = $(abmtime(m)), infected = $(round(Int, 100 * infected_fraction(m, allids(m))))%",
     abmobs.model
 )
 

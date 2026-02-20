@@ -22,7 +22,7 @@ end
 for w in ("light", "dark")
     header = read(joinpath(@__DIR__, "juliadynamics-style.scss"), String)
     theme = read(joinpath(@__DIR__, "juliadynamics-$(w)defs.scss"), String)
-    write(joinpath(@__DIR__, "juliadynamics-$(w).scss"), header*"\n"*theme)
+    write(joinpath(@__DIR__, "juliadynamics-$(w).scss"), header * "\n" * theme)
 end
 
 # compile the themes
@@ -46,7 +46,8 @@ to expand and cross-referrence docstrings from other modules.
 `kw` are propagated to `makedocs` while `htmlkw` are propagated to
 `Documenter.HTML`.
 """
-function build_docs_with_style(pages, modules...;
+function build_docs_with_style(
+        pages, modules...;
         bib = nothing, authors = "George Datseris", draft = false,
         htmlkw = NamedTuple(), kwargs...
     )
@@ -55,7 +56,7 @@ function build_docs_with_style(pages, modules...;
         format = Documenter.HTML(;
             prettyurls = CI,
             assets = [
-                asset("https://fonts.googleapis.com/css?family=Montserrat|Source+Code+Pro&display=swap", class=:css),
+                asset("https://fonts.googleapis.com/css?family=Montserrat|Source+Code+Pro&display=swap", class = :css),
             ],
             collapselevel = 3,
             htmlkw...,
@@ -69,16 +70,16 @@ function build_docs_with_style(pages, modules...;
         linkcheck_timeout = 2,
         # The following Documenter fails will NOT ERROR the docbuild!
         warnonly = [:doctest, :missing_docs],
-        kwargs...
+        kwargs...,
     )
 
     if isnothing(bib)
         makedocs(; settings...)
     else
-        makedocs(; plugins=[bib], settings...)
+        makedocs(; plugins = [bib], settings...)
     end
 
-    if CI
+    return if CI
         deploydocs(
             repo = "github.com/JuliaDynamics/$(modules[1]).jl.git",
             target = "build",

@@ -424,7 +424,7 @@ schelling = StandardABM(
     SchellingAgent, space;
     ## keyword arguments
     properties, # in Julia if the input variable and keyword are named the same,
-                ## you don't need to repeat the keyword!
+    ## you don't need to repeat the keyword!
     agent_step! = schelling_step!
 )
 
@@ -541,7 +541,7 @@ function initialize(; total_agents = 320, gridsize = (20, 20), min_to_be_happy =
     )
     ## populate the model with agents, adding equal amount of the two types of agents
     ## at random positions in the model. At the start all agents are unhappy.
-    groups = shuffle!(vcat(fill(1, total_agents÷2), fill(2, total_agents÷2)))
+    groups = shuffle!(vcat(fill(1, total_agents ÷ 2), fill(2, total_agents ÷ 2)))
     for n in 1:total_agents
         add_agent_single!(model; mood = false, group = groups[n])
     end
@@ -567,7 +567,7 @@ step!(schelling, 3)
 # the current model time evaluates to `true`.
 # For example, lets step until at least 90% of the agents are happy.
 
-happy90(model, time) = count(a -> a.mood == true, allagents(model))/nagents(model) ≥ 0.9
+happy90(model, time) = count(a -> a.mood == true, allagents(model)) / nagents(model) ≥ 0.9
 
 step!(schelling, happy90)
 
@@ -602,7 +602,8 @@ groupmarker(a) = a.group == 1 ? :circle : :rect
 
 # We pass those functions to [`abmplot`](@ref)
 
-figure, _ = abmplot(schelling;
+figure, _ = abmplot(
+    schelling;
     agent_color = groupcolor, agent_marker = groupmarker
 )
 figure # returning the figure displays it
@@ -645,7 +646,7 @@ adata = [:pos, :mood, :group]
 
 schelling = initialize()
 adf, mdf = run!(schelling, 5; adata) # run for 5 steps
-adf[end-10:end, :] # display only the last few rows
+adf[(end - 10):end, :] # display only the last few rows
 
 # [`run!`](@ref) collects data in the form of a `DataFrame` which is Julia's
 # premier format for tabular data (and you probably need to learn how to use it independently
@@ -658,7 +659,7 @@ x(agent) = agent.pos[1]
 schelling = initialize()
 adata = [x, :mood, :group]
 adf, mdf = run!(schelling, 5; adata)
-adf[end-10:end, :] # display only the last few rows
+adf[(end - 10):end, :] # display only the last few rows
 
 # With the above `adata` vector, we collected all agent's data.
 # We can instead collect aggregated data for the agents.

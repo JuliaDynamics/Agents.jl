@@ -15,8 +15,9 @@
 
 # The docs are built using versions:
 import Pkg
-Pkg.status(["Agents", "CairoMakie"];
-    mode = PKGMODE_MANIFEST, io=stdout
+Pkg.status(
+    ["Agents", "CairoMakie"];
+    mode = PKGMODE_MANIFEST, io = stdout
 )
 
 # ## Static plotting of ABMs
@@ -43,7 +44,8 @@ daisycolor(a) = a.breed
 agent_size = 20
 agent_marker = '✿'
 agentsplotkwargs = (strokewidth = 1.0,) # add stroke around each agent
-fig, ax, abmobs = abmplot(model;
+fig, ax, abmobs = abmplot(
+    model;
     agent_color = daisycolor, agent_size, agent_marker, agentsplotkwargs
 )
 fig # returning the figure displays it
@@ -63,7 +65,7 @@ heatkwargs = (colorrange = (-20, 60), colormap = :thermal)
 plotkwargs = (;
     agent_color = daisycolor, agent_size, agent_marker,
     agentsplotkwargs = (strokewidth = 1.0,),
-    heatarray, heatkwargs
+    heatarray, heatkwargs,
 )
 
 fig, ax, abmobs = abmplot(model; plotkwargs...)
@@ -107,8 +109,9 @@ white(a) = a.breed == :white
 adata = [(black, count), (white, count)]
 temperature(model) = mean(model.temperature)
 mdata = [temperature, :solar_luminosity]
-fig, abmobs = abmexploration(model;
-    params, plotkwargs...,  adata, alabels = ["Black daisys", "White daisys"],
+fig, abmobs = abmexploration(
+    model;
+    params, plotkwargs..., adata, alabels = ["Black daisys", "White daisys"],
     mdata, mlabels = ["T", "L"]
 )
 nothing #hide
@@ -176,8 +179,9 @@ abmvideo("daisyworld.mp4", model; title = "Daisy World", frames = 150, plotkwarg
 
 # create a basic abmplot with controls and sliders
 model = AgentsExampleZoo.daisyworld(; solar_luminosity = 1.0, solar_change = 0.0, scenario = :change)
-fig, ax, abmobs = abmplot(model; params, plotkwargs...,
-    adata, mdata, figure = (; size = (1600,800))
+fig, ax, abmobs = abmplot(
+    model; params, plotkwargs...,
+    adata, mdata, figure = (; size = (1600, 800))
 )
 fig
 
@@ -188,30 +192,35 @@ abmobs
 #
 
 # create a new layout to add new plots to the right of the abmplot
-plot_layout = fig[:,end+1] = GridLayout()
+plot_layout = fig[:, end + 1] = GridLayout()
 
 # create a sublayout on its first row and column
-count_layout = plot_layout[1,1] = GridLayout()
+count_layout = plot_layout[1, 1] = GridLayout()
 
 # collect tuples with x and y values for black and white daisys
 blacks = @lift(Point2f.($(abmobs.adf).time, $(abmobs.adf).count_black))
 whites = @lift(Point2f.($(abmobs.adf).time, $(abmobs.adf).count_white))
 
 # create an axis to plot into and style it to our liking
-ax_counts = Axis(count_layout[1,1];
-    backgroundcolor = :lightgrey, ylabel = "Number of daisies by color")
+ax_counts = Axis(
+    count_layout[1, 1];
+    backgroundcolor = :lightgrey, ylabel = "Number of daisies by color"
+)
 
 # plot the data as scatterlines and color them accordingly
 scatterlines!(ax_counts, blacks; color = :black, label = "black")
 scatterlines!(ax_counts, whites; color = :white, label = "white")
 
 # add a legend to the right side of the plot
-Legend(count_layout[1,2], ax_counts; bgcolor = :lightgrey)
+Legend(count_layout[1, 2], ax_counts; bgcolor = :lightgrey)
 
 # and another plot, written in a more condensed format
-ax_hist = Axis(plot_layout[2,1];
-    ylabel = "Distribution of mean temperatures\nacross all time steps")
-hist!(ax_hist, @lift($(abmobs.mdf).temperature);
+ax_hist = Axis(
+    plot_layout[2, 1];
+    ylabel = "Distribution of mean temperatures\nacross all time steps"
+)
+hist!(
+    ax_hist, @lift($(abmobs.mdf).temperature);
     bins = 50, color = :red,
     strokewidth = 2, strokecolor = (:black, 0.5),
 )
@@ -235,7 +244,9 @@ end
 
 # and then marvel at everything being auto-updated by calling `step!` :)
 
-for i in 1:100; step!(abmobs, 1); end
+for i in 1:100
+    step!(abmobs, 1)
+end
 fig
 
 # ## GraphSpace models
@@ -282,7 +293,7 @@ agentsplotkwargs = (
     arrow_show = false, # hide directions of graph edges
     edge_color = edge_color, # change edge colors and widths with own functions
     edge_width = edge_width,
-    edge_plottype = :linesegments # needed for tapered edge widths
+    edge_plottype = :linesegments, # needed for tapered edge widths
 )
 
 fig, ax, abmobs = abmplot(sir_model; agent_size = city_size, agent_color = city_color, agentsplotkwargs)

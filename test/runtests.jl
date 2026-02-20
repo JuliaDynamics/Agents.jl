@@ -38,7 +38,7 @@ end
     weight::Float64
 end
 
-@agent struct Agent6(ContinuousAgent{2,Float64})
+@agent struct Agent6(ContinuousAgent{2, Float64})
     weight::Float64
 end
 
@@ -47,7 +47,7 @@ end
     f2::Int
 end
 
-@agent struct Agent8(ContinuousAgent{2,Float64})
+@agent struct Agent8(ContinuousAgent{2, Float64})
     f1::Bool
     f2::Int
 end
@@ -59,7 +59,7 @@ Agent8(id, pos; f1, f2) = Agent8(id, pos, f1, f2)
     group::Int
 end
 
-@agent struct Bird(ContinuousAgent{2,Float64})
+@agent struct Bird(ContinuousAgent{2, Float64})
     speed::Float64
     cohere_factor::Float64
     separation::Float64
@@ -72,9 +72,11 @@ function schelling_model(ModelType, SpaceType, ContainerType; numagents = 30, gr
     @assert numagents < prod(griddims)
     space = SpaceType(griddims, periodic = false)
     properties = Dict(:min_to_be_happy => min_to_be_happy)
-    model = ModelType(SchellingAgent, space, agent_step! = schelling_model_agent_step!,
-                      properties = properties, scheduler = Schedulers.Randomly(),
-                      container = ContainerType, rng = StableRNG(10))
+    model = ModelType(
+        SchellingAgent, space, agent_step! = schelling_model_agent_step!,
+        properties = properties, scheduler = Schedulers.Randomly(),
+        container = ContainerType, rng = StableRNG(10)
+    )
     for n in 1:numagents
         add_agent_single!(SchellingAgent, model, false, n < numagents / 2 ? 1 : 2)
     end
@@ -89,7 +91,7 @@ function schelling_model_agent_step!(agent, model)
             count_neighbors_same_group += 1
         end
     end
-    if count_neighbors_same_group ≥ model.min_to_be_happy
+    return if count_neighbors_same_group ≥ model.min_to_be_happy
         agent.mood = true
     else
         move_agent_single!(agent, model)
@@ -97,21 +99,23 @@ function schelling_model_agent_step!(agent, model)
 end
 
 function flocking_model(
-    ModelType, ContainerType;
-    n_birds = 10,
-    speed = 1.0,
-    cohere_factor = 0.25,
-    separation = 4.0,
-    separate_factor = 0.25,
-    match_factor = 0.01,
-    visual_distance = 2.0,
-    extent = (10, 10),
-    spacing = visual_distance,
-)
+        ModelType, ContainerType;
+        n_birds = 10,
+        speed = 1.0,
+        cohere_factor = 0.25,
+        separation = 4.0,
+        separate_factor = 0.25,
+        match_factor = 0.01,
+        visual_distance = 2.0,
+        extent = (10, 10),
+        spacing = visual_distance,
+    )
     space2d = ContinuousSpace(extent; spacing)
-    model = ModelType(Bird, space2d, agent_step! = flocking_model_agent_step!,
-                      scheduler = Schedulers.Randomly(), rng = StableRNG(10),
-                      container = ContainerType)
+    model = ModelType(
+        Bird, space2d, agent_step! = flocking_model_agent_step!,
+        scheduler = Schedulers.Randomly(), rng = StableRNG(10),
+        container = ContainerType
+    )
     for _ in 1:n_birds
         vel = rand(abmrng(model), SVector{2}) .* 2 .- 1
         add_agent!(
@@ -148,7 +152,7 @@ function flocking_model_agent_step!(bird, model)
     match = match ./ N .* bird.match_factor
     bird.vel = (bird.vel .+ cohere .+ separate .+ match) ./ 2
     bird.vel = bird.vel ./ norm(bird.vel)
-    move_agent!(bird, model, bird.speed)
+    return move_agent!(bird, model, bird.speed)
 end
 
 @testset "Agents.jl Tests" begin

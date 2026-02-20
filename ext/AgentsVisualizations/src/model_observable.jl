@@ -1,4 +1,5 @@
-function Agents.ABMObservable(model::AgentBasedModel;
+function Agents.ABMObservable(
+        model::AgentBasedModel;
         adata = nothing, mdata = nothing, when = true,
     )
     adf = mdf = nothing
@@ -63,5 +64,5 @@ function Base.show(io::IO, abmobs::ABMObservable)
     print(io, abmobs.model[])
     print(io, "\nand with data collection:\n")
     print(io, " adata: $(abmobs.adata)\n")
-    print(io, " mdata: $(abmobs.mdata)")
+    return print(io, " mdata: $(abmobs.mdata)")
 end

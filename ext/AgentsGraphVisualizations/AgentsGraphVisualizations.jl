@@ -3,7 +3,7 @@ module AgentsGraphVisualizations
 using Agents, Makie, GraphMakie
 
 # Required
-Agents.space_axis_limits(::GraphSpace) = ((nothing, nothing),(nothing, nothing))
+Agents.space_axis_limits(::GraphSpace) = ((nothing, nothing), (nothing, nothing))
 
 function Agents.agentsplot!(ax, model::T, agent_color, agent_size, agent_marker, offset, agentsplotkwargs) where {T <: Observable{A} where {A <: ABM{<:GraphSpace}}}
     hidedecorations!(ax)
@@ -17,8 +17,9 @@ function Agents.agentsplot!(ax, model::T, agent_color, agent_size, agent_marker,
     ew = get(agentsplotkwargs, :edge_width, 1)
     edge_width = @lift(abmplot_edge_width($(model), ew))
 
-    GraphMakie.graphplot!(ax, abmspace(model[]).graph;
-        node_color = color, node_marker=marker, node_size=size,
+    GraphMakie.graphplot!(
+        ax, abmspace(model[]).graph;
+        node_color = color, node_marker = marker, node_size = size,
         agentsplotkwargs..., # must come first to not overwrite lifted kwargs
         edge_color, edge_width
     )
@@ -29,7 +30,7 @@ end
 graph_color(model, ac) = ac
 function graph_color(model, ac::Function)
     nodes = eachindex(abmspace(model).stored_ids)
-    to_color.(ac(model[id] for id in abmspace(model).stored_ids[n]) for n in nodes)
+    return to_color.(ac(model[id] for id in abmspace(model).stored_ids[n]) for n in nodes)
 end
 graph_marker(model, am) = am
 function graph_marker(model, am::Function)

@@ -5,7 +5,7 @@ end
 
 function initialize_dict()
     model = Dict{NTuple{2, Int}, DictAgent}()
-    N = grid_size[1]*grid_size[2]*grid_occupation
+    N = grid_size[1] * grid_size[2] * grid_occupation
     for n in 1:N
         group = n < N / 2 ? 1 : 2
         pos = (rand(1:grid_size[1]), rand(1:grid_size[2]))
@@ -45,6 +45,7 @@ function simulation_step!(model)
             delete!(model, pos)
         end
     end
+    return
 end
 
 model_dict = initialize_dict()

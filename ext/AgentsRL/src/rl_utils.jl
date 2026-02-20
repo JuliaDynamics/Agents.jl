@@ -28,7 +28,7 @@ The wrapper implements the complete POMDPs interface including:
 - `isterminal(env, state)`: Termination conditions
 - `discount(env)`: Discount factor
 """
-struct RLEnvironmentWrapper{M<:ReinforcementLearningABM} <: POMDPs.POMDP{Vector{Float32},Int,Vector{Float32}}
+struct RLEnvironmentWrapper{M <: ReinforcementLearningABM} <: POMDPs.POMDP{Vector{Float32}, Int, Vector{Float32}}
     model::M
 end
 
@@ -216,7 +216,7 @@ function POMDPs.gen(wrapper::RLEnvironmentWrapper, s, action::Int, rng::Abstract
         # Episode terminated
         obs_space = POMDPs.observations(wrapper)
         obs_dims = Crux.dim(obs_space)
-        return (sp=s, o=zeros(Float32, obs_dims...), r=-10.0)
+        return (sp = s, o = zeros(Float32, obs_dims...), r = -10.0)
     end
 
     config = model.rl_config[]
@@ -237,7 +237,7 @@ function POMDPs.gen(wrapper::RLEnvironmentWrapper, s, action::Int, rng::Abstract
     sp = s  # Dummy state
     o = POMDPs.observation(wrapper, sp)
 
-    return (sp=sp, o=o, r=reward)
+    return (sp = sp, o = o, r = reward)
 end
 
 """
@@ -339,7 +339,7 @@ function advance_simulation!(model::ReinforcementLearningABM)
     # Move to next agent of the training type
     agents_of_type = [a for a in allagents(model) if typeof(a) == current_agent_type]
 
-    if !isempty(agents_of_type)
+    return if !isempty(agents_of_type)
         model.current_training_agent_id[] += 1
 
         # If we've cycled through all agents of this type, run other agents and environment step

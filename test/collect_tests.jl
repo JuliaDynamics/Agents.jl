@@ -64,7 +64,7 @@ using CSV, Arrow
             "text/csv",
             describe(init_agent_dataframe(model, props), :eltype),
         ) ==
-              "\"variable\",\"eltype\"\n\"time\",\"Int64\"\n\"id\",\"Int64\"\n\"weight\",\"Float64\"\n"
+            "\"variable\",\"eltype\"\n\"time\",\"Int64\"\n\"id\",\"Int64\"\n\"weight\",\"Float64\"\n"
         props = [:year]
         @test sprint(
             show,
@@ -202,7 +202,7 @@ using CSV, Arrow
         _, model_data = run!(
             model,
             365 * 5;
-            when_model = [365 * 3, 365*4],
+            when_model = [365 * 3, 365 * 4],
             mdata = [:deep],
             obtainer = deepcopy,
         )
@@ -216,7 +216,7 @@ using CSV, Arrow
             init = false,
             mdata = [(m) -> (m.deep.data[i]) for i in 1:length(model.deep.data)],
         )
-        @test Array{Float64,1}(model_data[1, 2:end]) == model.deep.data
+        @test Array{Float64, 1}(model_data[1, 2:end]) == model.deep.data
 
         @testset "Writing to file while running" begin
             # ensure we are clean: there are no files leftover
@@ -227,7 +227,8 @@ using CSV, Arrow
             @testset "CSV" begin
                 # CSV
                 model = initialize()
-                offline_run!(model, 365 * 5;
+                offline_run!(
+                    model, 365 * 5;
                     when_model = each_year,
                     when = six_months,
                     mdata = [:flag, :year],
@@ -258,7 +259,8 @@ using CSV, Arrow
                 end
 
                 model = initialize()
-                offline_run!(model, 365 * 5;
+                offline_run!(
+                    model, 365 * 5;
                     when_model = each_year,
                     when = six_months,
                     backend = :arrow,
@@ -296,7 +298,8 @@ using CSV, Arrow
             # just ensure we end clean
             for file in ("adata.csv", "mdata.csv", "adata.arrow", "mdata.arrow")
                 if isfile(file)
-                    try rm(file)
+                    try
+                        rm(file)
                     catch
                     end
                 end
@@ -360,7 +363,7 @@ using CSV, Arrow
     end
 
     @testset "Mixed-ABM collections" begin
-        model = StandardABM(Union{AgentWeight,AgentInteger}, GridSpace((10, 10)); warn = false, warn_deprecation = false)
+        model = StandardABM(Union{AgentWeight, AgentInteger}, GridSpace((10, 10)); warn = false, warn_deprecation = false)
         add_agent!((6, 8), AgentWeight, model, 54.65)
         add_agent!((10, 7), AgentInteger, model, 5)
 
@@ -405,10 +408,10 @@ using CSV, Arrow
         df = init_agent_dataframe(model, props)
         collect_agent_data!(df, model, props)
         @test size(df) == (4, 7)
-        @test typeof(df.pos) <: Vector{Tuple{Int,Int}}
-        @test typeof(df.weight) <: Vector{Union{Missing,Float64}}
-        @test typeof(df.p) <: Vector{Union{Missing,Int}}
-        @test typeof(df.wpos) <: Vector{Union{Missing,Float64}}
+        @test typeof(df.pos) <: Vector{Tuple{Int, Int}}
+        @test typeof(df.weight) <: Vector{Union{Missing, Float64}}
+        @test typeof(df.p) <: Vector{Union{Missing, Int}}
+        @test typeof(df.wpos) <: Vector{Union{Missing, Float64}}
 
         # Expect something completely unknown to fail
         props = [:UNKNOWN]
@@ -452,7 +455,7 @@ using CSV, Arrow
         @agent struct Agent3Int(GridAgent{2})
             weight::Int
         end
-        model = StandardABM(Union{AgentWeight,Agent3Int}, GridSpace((10, 10)); warn = false, warn_deprecation = false)
+        model = StandardABM(Union{AgentWeight, Agent3Int}, GridSpace((10, 10)); warn = false, warn_deprecation = false)
         add_agent!((6, 8), AgentWeight, model, 54.65)
         add_agent!((10, 7), Agent3Int, model, 5)
         add_agent!((2, 4), AgentWeight, model, 19.81)
@@ -462,7 +465,7 @@ using CSV, Arrow
         df = init_agent_dataframe(model, props)
         collect_agent_data!(df, model, props)
         @test size(df) == (4, 4)
-        @test typeof(df.weight) <: Vector{Union{Float64,Int}}
+        @test typeof(df.weight) <: Vector{Union{Float64, Int}}
 
         # Expect a1.weight <: Float64, a2.weight <: Int64 to fail in aggregate
         props = [(:weight, sum)]
@@ -477,7 +480,7 @@ using CSV, Arrow
         @test df[1, :sum_fweight] ≈ 82.46
 
         # Handle dataframe initialization when one agent type is absent
-        model = StandardABM(Union{AgentWeight,AgentInteger}, GridSpace((10, 10)); warn = false, warn_deprecation = false)
+        model = StandardABM(Union{AgentWeight, AgentInteger}, GridSpace((10, 10)); warn = false, warn_deprecation = false)
         add_agent!((6, 8), AgentWeight, model, 54.65)
 
         # get fieldtype from AgentInteger struct definition when agent is absent
@@ -545,7 +548,7 @@ using CSV, Arrow
         model = StandardABM(
             AgentWeight,
             GridSpace((10, 10));
-            properties=Props(1, false),
+            properties = Props(1, false),
             warn_deprecation = false
         )
         mdata = [:a, :b]
@@ -565,54 +568,65 @@ end
 
     expected_nensembles = nreplicates * (numagents_high - numagents_low + 1)
     function genmodels()
-        basemodels = [AgentsExampleZoo.schelling(; numagents)
-                      for numagents in numagents_low:numagents_high
-                      for _ in 1:nreplicates]
+        basemodels = [
+            AgentsExampleZoo.schelling(; numagents)
+                for numagents in numagents_low:numagents_high
+                for _ in 1:nreplicates
+        ]
         return basemodels
     end
 
-    @testset begin "Serial ensemblerun!"
+    @testset begin
+        "Serial ensemblerun!"
 
         models = genmodels()
         @assert length(models) == expected_nensembles
 
-        adf, mdf, _ = ensemblerun!(models, nsteps;
-                                   parallel = false, adata = [:pos, :mood, :group],
-                                   mdata = [numagents, :min_to_be_happy])
+        adf, mdf, _ = ensemblerun!(
+            models, nsteps;
+            parallel = false, adata = [:pos, :mood, :group],
+            mdata = [numagents, :min_to_be_happy]
+        )
 
         @test length(unique(adf.ensemble)) == expected_nensembles
         @test length(unique(adf.time)) == nsteps + 1
         @test length(unique(mdf.numagents)) == (numagents_high - numagents_low + 1)
     end
 
-    @testset begin "Parallel ensemblerun!"
+    @testset begin
+        "Parallel ensemblerun!"
 
         models = genmodels()
         @assert length(models) == expected_nensembles
 
-        adf, mdf, _ = ensemblerun!(models, nsteps;
-                                   parallel = true,
-                                   adata = [:pos, :mood, :group],
-                                   mdata = [numagents, :min_to_be_happy],
-                                   when = (model, step) -> step % 10 == 0 )
+        adf, mdf, _ = ensemblerun!(
+            models, nsteps;
+            parallel = true,
+            adata = [:pos, :mood, :group],
+            mdata = [numagents, :min_to_be_happy],
+            when = (model, step) -> step % 10 == 0
+        )
 
         @test length(unique(adf.ensemble)) == expected_nensembles
         @test length(unique(adf.time)) == (nsteps / 10) + 1
         @test length(unique(mdf.numagents)) == (numagents_high - numagents_low + 1)
     end
 
-    @testset begin "Parallel ensemblerun! with stopping function"
+    @testset begin
+        "Parallel ensemblerun! with stopping function"
 
         models = genmodels()
         @assert length(models) == expected_nensembles
 
         stopfn(model, step) = all(map(agent -> agent.mood, allagents(model)))
 
-        adf, mdf, _ = ensemblerun!(models, stopfn;
-                                   parallel = true,
-                                   adata = [:pos, :mood, :group],
-                                   mdata = [numagents, :min_to_be_happy],
-                                   when = (model, step) -> step % 10 == 0 )
+        adf, mdf, _ = ensemblerun!(
+            models, stopfn;
+            parallel = true,
+            adata = [:pos, :mood, :group],
+            mdata = [numagents, :min_to_be_happy],
+            when = (model, step) -> step % 10 == 0
+        )
 
         @test length(unique(adf.ensemble)) == expected_nensembles
         @test length(unique(adf.time)) ≤ (nsteps / 10) + 1
@@ -637,8 +651,10 @@ end
 
     function forest_fire(; density = 0.7, griddims = (100, 100))
         space = GridSpace(griddims; periodic = false, metric = :euclidean)
-        forest = StandardABM(Automata, space; model_step! = forest_model_step!,
-                     properties = (trees = zeros(Int, griddims),), warn_deprecation = false)
+        forest = StandardABM(
+            Automata, space; model_step! = forest_model_step!,
+            properties = (trees = zeros(Int, griddims),), warn_deprecation = false
+        )
         for I in CartesianIndices(forest.trees)
             if rand(abmrng(forest)) < density
                 forest.trees[I] = I[1] == 1 ? 2 : 1
@@ -689,7 +705,8 @@ end
             parameters,
             forest_fire;
             n = terminate,
-            mdata)
+            mdata
+        )
         @test unique(mdf.time) == 0:3
     end
 
@@ -732,7 +749,8 @@ end
             forest_fire;
             n = terminate,
             mdata,
-            parallel = true)
+            parallel = true
+        )
         @test unique(mdf.time) == 0:3
     end
 end
@@ -752,8 +770,10 @@ end
 @testset "ensemblerun! and different seeds" begin
     as!(agent, model) = (agent.p = rand(abmrng(model), 1:1000))
     function fake_model(seed)
-        abm = StandardABM(AgentInteger, GridSpace((4, 4)); agent_step! = as!,
-                  rng = MersenneTwister(seed), warn_deprecation = false)
+        abm = StandardABM(
+            AgentInteger, GridSpace((4, 4)); agent_step! = as!,
+            rng = MersenneTwister(seed), warn_deprecation = false
+        )
         fill_space!(abm, _ -> rand(abmrng(abm), 1:1000))
         abm
     end

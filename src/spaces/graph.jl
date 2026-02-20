@@ -58,7 +58,7 @@ function GraphSpace(graph::G) where {G <: AbstractGraph}
 end
 
 function Base.show(io::IO, s::GraphSpace)
-    print(io, "GraphSpace with $(nv(s.graph)) positions and $(ne(s.graph)) edges")
+    return print(io, "GraphSpace with $(nv(s.graph)) positions and $(ne(s.graph)) edges")
 end
 
 """
@@ -102,22 +102,22 @@ ids_in_position(n::Integer, space::GraphSpace) = space.stored_ids[n]
 #######################################################################################
 function nearby_ids(pos::Int, model::ABM{<:GraphSpace}, r = 1; kwargs...)
     np = nearby_positions(pos, model, r; kwargs...)
-    vcat(abmspace(model).stored_ids[pos], abmspace(model).stored_ids[np]...)
+    return vcat(abmspace(model).stored_ids[pos], abmspace(model).stored_ids[np]...)
 end
 
 # This function is here purely because of performance reasons
 function nearby_ids(agent::AbstractAgent, model::ABM{<:GraphSpace}, r = 1; kwargs...)
     all = nearby_ids(agent.pos, model, r; kwargs...)
-    filter!(i -> i ≠ getid(agent), all)
+    return filter!(i -> i ≠ getid(agent), all)
 end
 
 function nearby_positions(
-    position::Int,
-    model::ABM{<:GraphSpace};
-    neighbor_type::Symbol = :default,
-)
+        position::Int,
+        model::ABM{<:GraphSpace};
+        neighbor_type::Symbol = :default,
+    )
     @assert neighbor_type ∈ (:default, :all, :in, :out)
-    if neighbor_type == :default
+    return if neighbor_type == :default
         Graphs.neighbors(abmspace(model).graph, position)
     elseif neighbor_type == :in
         Graphs.inneighbors(abmspace(model).graph, position)
@@ -151,7 +151,7 @@ function Graphs.rem_vertex!(model::ABM{<:GraphSpace}, n::Int)
     n > V && error("Node number exceeds amount of nodes in graph!")
     s = abmspace(model).stored_ids
     s[V], s[n] = s[n], s[V]
-    pop!(s)
+    return pop!(s)
 end
 
 """

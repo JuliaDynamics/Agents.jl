@@ -19,6 +19,7 @@ function step_ahead!(model::StandardABM, agent_step!, model_step!, n, t)
         agents_first && model_step!(model)
         t[] += 1
     end
+    return
 end
 function step_ahead!(model::StandardABM, agent_step!::typeof(dummystep), model_step!, n, t)
     t0 = t[]

@@ -36,7 +36,7 @@ using Agents
 # simulation. The `Particle` type, for the `ContinuousAgent{2,Float64}` space, will have additionally
 # an `id` and `pos` (position) and `vel` (velocity) fields, which are automatically added
 # by the `@agent` macro.
-@agent struct Particle(ContinuousAgent{2,Float64})
+@agent struct Particle(ContinuousAgent{2, Float64})
     r::Float64 # radius
     k::Float64 # repulsion force constant
     mass::Float64
@@ -61,8 +61,8 @@ using CellListMap
 #
 # Additionally, the computation with `CellListMap.jl` requires the definition of a `cutoff`,
 # which will be twice the maximum interacting radii of the particles, and the geometry of the
-# the system, given by the `unitcell` of the periodic box. For non-periodic systems, 
-# use `unitcell = nothing`. 
+# the system, given by the `unitcell` of the periodic box. For non-periodic systems,
+# use `unitcell = nothing`.
 #
 # More complex output data, variable system geometries and other options are supported,
 # according to the [CellListMap](https://m3g.github.io/CellListMap.jl/stable/ParticleSystem/)
@@ -72,44 +72,45 @@ using CellListMap
 # We create the model with a keyword-accepting function as is recommended in Agents.jl.
 # The keywords here control number of particles and sizes.
 function initialize_bouncing(;
-    number_of_particles=10_000,
-    sides=SVector(500.0, 500.0),
-    dt=0.001,
-    max_radius=10.0,
-    parallel=true
-)
+        number_of_particles = 10_000,
+        sides = SVector(500.0, 500.0),
+        dt = 0.001,
+        max_radius = 10.0,
+        parallel = true
+    )
     ## initial random positions
-    positions = [sides .* rand(SVector{2,Float64}) for _ in 1:number_of_particles]
+    positions = [sides .* rand(SVector{2, Float64}) for _ in 1:number_of_particles]
 
     ## We will use CellListMap to compute forces, with similar structure as the positions
     forces = similar(positions)
 
     ## Space and agents
-    space2d = ContinuousSpace(sides; periodic=true)
+    space2d = ContinuousSpace(sides; periodic = true)
 
     ## Initialize CellListMap particle system
     system = ParticleSystem(
-        positions=positions,
-        unitcell=sides,
-        cutoff=2 * max_radius,
-        output=forces,
-        output_name=:forces, # allows the system.forces alias for clarity
-        parallel=parallel,
+        positions = positions,
+        unitcell = sides,
+        cutoff = 2 * max_radius,
+        output = forces,
+        output_name = :forces, # allows the system.forces alias for clarity
+        parallel = parallel,
     )
 
     ## define the model properties
     ## The system field contains the data required for CellListMap.jl
     properties = (
-        dt=dt,
-        number_of_particles=number_of_particles,
-        system=system,
+        dt = dt,
+        number_of_particles = number_of_particles,
+        system = system,
     )
-    model = StandardABM(Particle,
+    model = StandardABM(
+        Particle,
         space2d;
         agent_step!,
         model_step!,
         agents_first = false,
-        properties=properties
+        properties = properties
     )
 
     ## Create active agents
@@ -192,11 +193,11 @@ end
 
 # ## The simulation
 # Finally, the function below runs an example simulation, for 1000 steps.
-function simulate(model=nothing; nsteps=1_000, number_of_particles=10_000)
+function simulate(model = nothing; nsteps = 1_000, number_of_particles = 10_000)
     if isnothing(model)
-        model = initialize_bouncing(number_of_particles=number_of_particles)
+        model = initialize_bouncing(number_of_particles = number_of_particles)
     end
-    Agents.step!(model, nsteps)
+    return Agents.step!(model, nsteps)
 end
 # Which should be quite fast
 model = initialize_bouncing()
@@ -209,15 +210,15 @@ model = initialize_bouncing()
 
 using CairoMakie
 CairoMakie.activate!() # hide
-model = initialize_bouncing(number_of_particles=1000)
+model = initialize_bouncing(number_of_particles = 1000)
 abmvideo(
     "celllistmap.mp4", model;
-    framerate=20, frames=200, dt=5,
-    title="Softly Bouncing Particles with CellListMap.jl",
-    agent_size=p -> p.r,
-    agent_color=p -> p.k,
-    figure=(size=(1280, 720),),
-    title_kwargs=(fontsize=18,),
+    framerate = 20, frames = 200, dt = 5,
+    title = "Softly Bouncing Particles with CellListMap.jl",
+    agent_size = p -> p.r,
+    agent_color = p -> p.k,
+    figure = (size = (1280, 720),),
+    title_kwargs = (fontsize = 18,),
 )
 
 # ```@raw html

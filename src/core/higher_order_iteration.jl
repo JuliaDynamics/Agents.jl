@@ -1,4 +1,3 @@
-
 export iter_agent_groups, map_agent_groups, index_mapped_groups
 
 """
