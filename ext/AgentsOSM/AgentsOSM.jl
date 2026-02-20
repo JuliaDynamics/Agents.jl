@@ -775,7 +775,7 @@ Agents.AgentsIO.to_serializable(t::OpenStreetMapSpace) = SerializableOSMSpace([(
 function Agents.AgentsIO.from_serializable(t::SerializableOSMSpace; kwargs...)
     @assert haskey(kwargs, :map) "Path to OpenStreetMap not provided"
 
-    space = OSM.OpenStreetMapSpace(
+    space = OpenStreetMapSpace(
         get(kwargs, :map, OSM.test_map());   # Should never need default value
     )
     for (k, v) in t.routes
