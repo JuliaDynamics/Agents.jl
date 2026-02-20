@@ -6,7 +6,7 @@ extent = (1.0, 1.0)
 spacing = 0.1
 r = 0.1
 space = ContinuousSpace(extent, spacing)
-@agent struct Agent(ContinuousAgent{2,Float64})
+@agent struct Agent(ContinuousAgent{2, Float64})
 end
 model = StandardABM(Agent, space; rng = StableRNG(42))
 

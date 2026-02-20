@@ -17,8 +17,10 @@ end
 function test_observation_fn(agent_id::Int, model::ReinforcementLearningABM)
 end
 
-function test_reward_fn(env::ReinforcementLearningABM, agent::AbstractAgent, action::Int,
-    initial_model::ReinforcementLearningABM, final_model::ReinforcementLearningABM)
+function test_reward_fn(
+        env::ReinforcementLearningABM, agent::AbstractAgent, action::Int,
+        initial_model::ReinforcementLearningABM, final_model::ReinforcementLearningABM
+    )
 end
 
 function test_terminal_fn(env::ReinforcementLearningABM)
@@ -29,7 +31,7 @@ end
 
 function test_model_init_fn()
     space = GridSpace((5, 5))
-    model = ReinforcementLearningABM(RLTestAgent, space; rng=StableRNG(42))
+    model = ReinforcementLearningABM(RLTestAgent, space; rng = StableRNG(42))
 
     # Add some agents
     for _ in 1:3
@@ -42,15 +44,15 @@ end
 # Create basic RL configuration
 function create_test_rl_config()
     return RLConfig(
-        observation_fn=test_observation_fn,
-        reward_fn=test_reward_fn,
-        terminal_fn=test_terminal_fn,
-        agent_step_fn=test_agent_step_fn,
-        action_spaces=Dict(RLTestAgent => (; vals=1:5)),
-        observation_spaces=Dict(RLTestAgent => (; dim=(3,))),
-        training_agent_types=[RLTestAgent],
-        discount_rates=Dict(RLTestAgent => 0.95),
-        model_init_fn=test_model_init_fn
+        observation_fn = test_observation_fn,
+        reward_fn = test_reward_fn,
+        terminal_fn = test_terminal_fn,
+        agent_step_fn = test_agent_step_fn,
+        action_spaces = Dict(RLTestAgent => (; vals = 1:5)),
+        observation_spaces = Dict(RLTestAgent => (; dim = (3,))),
+        training_agent_types = [RLTestAgent],
+        discount_rates = Dict(RLTestAgent => 0.95),
+        model_init_fn = test_model_init_fn
     )
 end
 
@@ -77,10 +79,12 @@ end
         @test model2.rl_config[] isa RLConfig
 
         # Test with other standard parameters
-        model3 = ReinforcementLearningABM(RLTestAgent, space;
-            scheduler=Schedulers.ByID(),
-            properties=Dict(:test => true),
-            rng=StableRNG(123))
+        model3 = ReinforcementLearningABM(
+            RLTestAgent, space;
+            scheduler = Schedulers.ByID(),
+            properties = Dict(:test => true),
+            rng = StableRNG(123)
+        )
         @test model3.scheduler isa Schedulers.ByID
         @test model3.properties[:test] == true
         @test model3.rng isa StableRNG
@@ -115,7 +119,7 @@ end
     @testset "Property Access" begin
         space = GridSpace((5, 5))
         props = Dict(:custom_prop => 42, :another_prop => "test")
-        model = ReinforcementLearningABM(RLTestAgent, space; properties=props)
+        model = ReinforcementLearningABM(RLTestAgent, space; properties = props)
         config = create_test_rl_config()
         set_rl_config!(model, config)
 
@@ -146,7 +150,7 @@ end
 
     @testset "Agent Management" begin
         space = GridSpace((5, 5))
-        model = ReinforcementLearningABM(RLTestAgent, space; rng=StableRNG(42))
+        model = ReinforcementLearningABM(RLTestAgent, space; rng = StableRNG(42))
         config = create_test_rl_config()
         set_rl_config!(model, config)
 
@@ -166,7 +170,7 @@ end
 
     @testset "Current Training Agent Management" begin
         space = GridSpace((5, 5))
-        model = ReinforcementLearningABM(RLTestAgent, space; rng=StableRNG(42))
+        model = ReinforcementLearningABM(RLTestAgent, space; rng = StableRNG(42))
         config = create_test_rl_config()
         set_rl_config!(model, config)
 
@@ -188,7 +192,7 @@ end
 
     @testset "Model Reset" begin
         space = GridSpace((5, 5))
-        model = ReinforcementLearningABM(RLTestAgent, space; rng=StableRNG(42))
+        model = ReinforcementLearningABM(RLTestAgent, space; rng = StableRNG(42))
         config = create_test_rl_config()
         set_rl_config!(model, config)
 
@@ -231,24 +235,24 @@ end
 
     @testset "Multi-Agent Type Configuration" begin
         space = GridSpace((5, 5))
-        model = ReinforcementLearningABM(Union{RLTestAgent,RLTestAgent2}, space; rng=StableRNG(42))
+        model = ReinforcementLearningABM(Union{RLTestAgent, RLTestAgent2}, space; rng = StableRNG(42))
 
         # Create config for multiple agent types
         config = RLConfig(
-            observation_fn=(agent_id, model) -> Float32[model[agent_id].pos...],
-            reward_fn=(env, agent, action, init, final) -> 1.0f0,
-            terminal_fn=(env) -> false,
-            agent_step_fn=(agent, model, action) -> nothing,
-            action_spaces=Dict(
-                RLTestAgent => (; vals=1:5),
-                RLTestAgent2 => (; vals=1:3)
+            observation_fn = (agent_id, model) -> Float32[model[agent_id].pos...],
+            reward_fn = (env, agent, action, init, final) -> 1.0f0,
+            terminal_fn = (env) -> false,
+            agent_step_fn = (agent, model, action) -> nothing,
+            action_spaces = Dict(
+                RLTestAgent => (; vals = 1:5),
+                RLTestAgent2 => (; vals = 1:3)
             ),
-            observation_spaces=Dict(
-                RLTestAgent => (; dim=(2,)),
-                RLTestAgent2 => (; dim=(2,))
+            observation_spaces = Dict(
+                RLTestAgent => (; dim = (2,)),
+                RLTestAgent2 => (; dim = (2,))
             ),
-            training_agent_types=[RLTestAgent, RLTestAgent2],
-            discount_rates=Dict(
+            training_agent_types = [RLTestAgent, RLTestAgent2],
+            discount_rates = Dict(
                 RLTestAgent => 0.95,
                 RLTestAgent2 => 0.99
             )
@@ -282,9 +286,9 @@ end
 
         # 2. Test with a minimal valid config
         minimal_config = RLConfig(
-            observation_fn=(agent_id, model) -> Float32[1.0, 2.0],
-            reward_fn=(agent, action, prev, curr) -> 1.0f0,
-            training_agent_types=[RLTestAgent]
+            observation_fn = (agent_id, model) -> Float32[1.0, 2.0],
+            reward_fn = (agent, action, prev, curr) -> 1.0f0,
+            training_agent_types = [RLTestAgent]
         )
         set_rl_config!(model, minimal_config)
 
@@ -298,9 +302,9 @@ end
 
         # 3. Test error with an invalid config (empty training agent types)
         invalid_config = RLConfig(
-            observation_fn=(agent_id, model) -> Float32[1.0, 2.0],
-            reward_fn=(agent, action, prev, curr) -> 1.0f0,
-            training_agent_types=[]
+            observation_fn = (agent_id, model) -> Float32[1.0, 2.0],
+            reward_fn = (agent, action, prev, curr) -> 1.0f0,
+            training_agent_types = []
         )
         set_rl_config!(model, invalid_config)
         @test_throws ErrorException Agents.get_current_training_agent_type(model)
@@ -308,7 +312,7 @@ end
 
     @testset "Standard ABM Interface Compatibility" begin
         space = GridSpace((5, 5))
-        model = ReinforcementLearningABM(RLTestAgent, space; rng=StableRNG(42))
+        model = ReinforcementLearningABM(RLTestAgent, space; rng = StableRNG(42))
         config = create_test_rl_config()
         set_rl_config!(model, config)
 
@@ -350,11 +354,13 @@ end
     function wrapper_test_observation_fn(agent_id::Int, model::ReinforcementLearningABM)
         agent = model[agent_id]
         # Return position and wealth as observation
-        return Float32[agent.pos[1], agent.pos[2], agent.wealth/100.0]
+        return Float32[agent.pos[1], agent.pos[2], agent.wealth / 100.0]
     end
 
-    function wrapper_test_reward_fn(env::ReinforcementLearningABM, agent::AbstractAgent, action::Int,
-        initial_model::ReinforcementLearningABM, final_model::ReinforcementLearningABM)
+    function wrapper_test_reward_fn(
+            env::ReinforcementLearningABM, agent::AbstractAgent, action::Int,
+            initial_model::ReinforcementLearningABM, final_model::ReinforcementLearningABM
+        )
         # Reward based on wealth increase
         initial_wealth = initial_model[agent.id].wealth
         final_wealth = agent.wealth
@@ -385,28 +391,28 @@ end
 
     function wrapper_test_model_init_fn()
         space = GridSpace((4, 4))
-        model = ReinforcementLearningABM(WrapperTestAgent, space; rng=StableRNG(123))
+        model = ReinforcementLearningABM(WrapperTestAgent, space; rng = StableRNG(123))
         add_agent!(WrapperTestAgent, model, 10.0, 0)
         return model
     end
 
     function create_wrapper_test_config()
         return RLConfig(
-            observation_fn=wrapper_test_observation_fn,
-            reward_fn=wrapper_test_reward_fn,
-            terminal_fn=wrapper_test_terminal_fn,
-            agent_step_fn=wrapper_test_agent_step_fn,
-            action_spaces=Dict(WrapperTestAgent => (; vals=1:5)),
-            observation_spaces=Dict(WrapperTestAgent => (; dim=(3,))),
-            training_agent_types=[WrapperTestAgent],
-            discount_rates=Dict(WrapperTestAgent => 0.9),
-            model_init_fn=wrapper_test_model_init_fn
+            observation_fn = wrapper_test_observation_fn,
+            reward_fn = wrapper_test_reward_fn,
+            terminal_fn = wrapper_test_terminal_fn,
+            agent_step_fn = wrapper_test_agent_step_fn,
+            action_spaces = Dict(WrapperTestAgent => (; vals = 1:5)),
+            observation_spaces = Dict(WrapperTestAgent => (; dim = (3,))),
+            training_agent_types = [WrapperTestAgent],
+            discount_rates = Dict(WrapperTestAgent => 0.9),
+            model_init_fn = wrapper_test_model_init_fn
         )
     end
 
     @testset "Wrapper Prerequisites" begin
         space = GridSpace((4, 4))
-        model = ReinforcementLearningABM(WrapperTestAgent, space; rng=StableRNG(42))
+        model = ReinforcementLearningABM(WrapperTestAgent, space; rng = StableRNG(42))
         config = create_wrapper_test_config()
         set_rl_config!(model, config)
 
@@ -448,7 +454,7 @@ end
 
     @testset "Model Reset for Training Episodes" begin
         space = GridSpace((4, 4))
-        model = ReinforcementLearningABM(WrapperTestAgent, space; rng=StableRNG(42))
+        model = ReinforcementLearningABM(WrapperTestAgent, space; rng = StableRNG(42))
         config = create_wrapper_test_config()
         set_rl_config!(model, config)
 
@@ -512,7 +518,7 @@ end
 
     @testset "Multi-Step Episode Simulation" begin
         space = GridSpace((4, 4))
-        model = ReinforcementLearningABM(WrapperTestAgent, space; rng=StableRNG(42))
+        model = ReinforcementLearningABM(WrapperTestAgent, space; rng = StableRNG(42))
         config = create_wrapper_test_config()
         set_rl_config!(model, config)
 

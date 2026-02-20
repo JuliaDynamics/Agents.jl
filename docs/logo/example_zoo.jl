@@ -25,19 +25,20 @@ steps_per_frame = [
 ]
 models = Any[nothing for _ in 1:9]
 rules = Any[nothing for _ in 1:9]
-unikwargs = (add_colorbar = false, add_controls = false, adjust_aspect = false,)
+unikwargs = (add_colorbar = false, add_controls = false, adjust_aspect = false)
 
 fig = Figure(resolution = (1200, 1220))
 axs = Axis[]
-for (i, c) in enumerate(CartesianIndices((3,3)))
+for (i, c) in enumerate(CartesianIndices((3, 3)))
     ax = Axis(fig[c.I...]; title = model_names[i])
     hidedecorations!(ax)
     push!(axs, ax)
 end
 
-Label(fig[0, :], "Agents.jl zoo of examples";
+Label(
+    fig[0, :], "Agents.jl zoo of examples";
     tellheight = true, tellwidth = false,
-    valign = :bottom, padding = (0,0,0,0),
+    valign = :bottom, padding = (0, 0, 0, 0),
     font = "TeX Gyre Heros Bold",
     height = 20, fontsize = 30,
 )
@@ -60,13 +61,15 @@ plotkwargs = (;
     heatarray, heatkwargs, unikwargs...,
 )
 
-daisy_obs = abmplot!(axs[1], daisy_model;
-agent_step! = daisy_step!, model_step! = daisyworld_step!,
-plotkwargs..., unikwargs...,)
+daisy_obs = abmplot!(
+    axs[1], daisy_model;
+    agent_step! = daisy_step!, model_step! = daisyworld_step!,
+    plotkwargs..., unikwargs...,
+)
 models[1] = daisy_obs
 
 # Flocking
-@agent struct Bird(ContinuousAgent{2,Float64})
+@agent struct Bird(ContinuousAgent{2, Float64})
     speed::Float64
     cohere_factor::Float64
     separation::Float64
@@ -76,17 +79,17 @@ models[1] = daisy_obs
 end
 
 function flocking_model(;
-    n_birds = 100,
-    speed = 2.0,
-    cohere_factor = 0.4,
-    separation = 4.0,
-    separate_factor = 0.25,
-    match_factor = 0.02,
-    visual_distance = 5.0,
-    extent = (100, 100),
-    seed = 42,
-)
-    space2d = ContinuousSpace(extent; spacing = visual_distance/1.5)
+        n_birds = 100,
+        speed = 2.0,
+        cohere_factor = 0.4,
+        separation = 4.0,
+        separate_factor = 0.25,
+        match_factor = 0.02,
+        visual_distance = 5.0,
+        extent = (100, 100),
+        seed = 42,
+    )
+    space2d = ContinuousSpace(extent; spacing = visual_distance / 1.5)
     rng = Random.MersenneTwister(seed)
 
     model = StandardABM(Bird, space2d; rng, scheduler = Schedulers.Randomly())
@@ -127,18 +130,19 @@ function bird_step!(bird, model)
     match = match ./ N .* bird.match_factor
     bird.vel = (bird.vel .+ cohere .+ separate .+ match) ./ 2
     bird.vel = bird.vel ./ norm(bird.vel)
-    move_agent!(bird, model, bird.speed)
+    return move_agent!(bird, model, bird.speed)
 end
 const bird_polygon = Makie.Polygon(Point2f[(-1, -1), (2, 0), (-1, 1)])
 function bird_marker(b::Bird)
     φ = atan(b.vel[2], b.vel[1]) #+ π/2 + π
-    rotate_polygon(bird_polygon, φ)
+    return rotate_polygon(bird_polygon, φ)
 end
 
 flock_model = flocking_model()
-flock_obs = abmplot!(axs[2], flock_model;
+flock_obs = abmplot!(
+    axs[2], flock_model;
     agent_step! = bird_step!,
-    am = bird_marker,  unikwargs...,
+    am = bird_marker, unikwargs...,
 )
 models[2] = flock_obs
 
@@ -192,7 +196,8 @@ end
 zombie_color(agent) = agent.infected ? :green : :black
 zombie_size(agent) = agent.infected ? 15 : 10
 zombies = initialise_zombies()
-zombies_obs = abmplot!(axs[7], zombies;
+zombies_obs = abmplot!(
+    axs[7], zombies;
     ac = zombie_color, as = zombie_size, unikwargs...,
     scatterkwargs = (strokecolor = :white, strokewidth = 1),
     agent_step! = zombie_step!,
@@ -203,17 +208,17 @@ models[7] = zombies_obs
 # Growing bacteria
 using Agents, LinearAlgebra
 using Random # hide
-@agent struct SimpleCell(ContinuousAgent{2,Float64})
+@agent struct SimpleCell(ContinuousAgent{2, Float64})
     length::Float64
     orientation::Float64
     growthprog::Float64
     growthrate::Float64
 
     ## node positions/forces
-    p1::NTuple{2,Float64}
-    p2::NTuple{2,Float64}
-    f1::NTuple{2,Float64}
-    f2::NTuple{2,Float64}
+    p1::NTuple{2, Float64}
+    p2::NTuple{2, Float64}
+    f1::NTuple{2, Float64}
+    f2::NTuple{2, Float64}
 end
 function SimpleCell(id, pos, l, φ, g, γ)
     a = SimpleCell(id, pos, l, φ, g, γ, (0.0, 0.0), (0.0, 0.0), (0.0, 0.0), (0.0, 0.0))
@@ -224,7 +229,7 @@ end
 function update_nodes!(a::SimpleCell)
     offset = 0.5 * a.length .* unitvector(a.orientation)
     a.p1 = a.pos .+ offset
-    a.p2 = a.pos .- offset
+    return a.p2 = a.pos .- offset
 end
 unitvector(φ) = reverse(sincos(φ))
 cross2D(a, b) = a[1] * b[2] - a[2] * b[1]
@@ -250,10 +255,11 @@ function bacteria_model_step!(model)
     for (a1, a2) in interacting_pairs(model, 2.0, :all)
         interact!(a1, a2, model)
     end
+    return
 end
 function bacterium_step!(agent::SimpleCell, model::ABM)
     fsym, compression, torque = transform_forces(agent)
-    direction =  model.dt * model.mobility .* fsym
+    direction = model.dt * model.mobility .* fsym
     walk!(agent, direction, model)
     agent.length += model.dt * model.mobility .* compression
     agent.orientation += model.dt * model.mobility .* torque
@@ -269,10 +275,10 @@ function interact!(a1::SimpleCell, a2::SimpleCell, model)
     a1.f1 = @. a1.f1 + (n11 + n12)
     a1.f2 = @. a1.f2 + (n21 + n22)
     a2.f1 = @. a2.f1 - (n11 + n21)
-    a2.f2 = @. a2.f2 - (n12 + n22)
+    return a2.f2 = @. a2.f2 - (n12 + n22)
 end
 
-function noderepulsion(p1::NTuple{2,Float64}, p2::NTuple{2,Float64}, model::ABM)
+function noderepulsion(p1::NTuple{2, Float64}, p2::NTuple{2, Float64}, model::ABM)
     delta = p1 .- p2
     distance = norm(delta)
     if distance ≤ 1
@@ -296,7 +302,7 @@ end
 bacteria_model = StandardABM(
     SimpleCell,
     ContinuousSpace((14, 9); spacing = 1.0, periodic = false);
-    properties = Dict(:dt => 0.005, :hardness => 1e2, :mobility => 1.0),
+    properties = Dict(:dt => 0.005, :hardness => 1.0e2, :mobility => 1.0),
     rng = MersenneTwister(1680)
 )
 
@@ -319,11 +325,12 @@ function cassini_oval(agent)
 
     bacteria = R * permutedims([x y])
     coords = [Point2f(x, y) for (x, y) in zip(bacteria[1, :], bacteria[2, :])]
-    scale_polygon(Makie.Polygon(coords), 0.5)
+    return scale_polygon(Makie.Polygon(coords), 0.5)
 end
 bacteria_color(b) = RGBf(b.id * 3.14 % 1, 0.2, 0.2)
 
-bacteria_obs = abmplot!(axs[4], bacteria_model;
+bacteria_obs = abmplot!(
+    axs[4], bacteria_model;
     am = cassini_oval, ac = bacteria_color, unikwargs...,
     agent_step! = bacterium_step!, model_step! = bacteria_model_step!,
 )
@@ -371,7 +378,8 @@ plotkw = (
     preplot! = runners_preplot!,
 )
 
-runners_obs = abmplot!(axs[3], runners_model;
+runners_obs = abmplot!(
+    axs[3], runners_model;
     plotkw..., unikwargs...,
     agent_step! = runner_step!,
 )
@@ -404,6 +412,7 @@ function forest_step!(forest)
         ## Finally, any burning tree is burnt out (2)
         forest.trees[I] = 3
     end
+    return
 end
 forest_model = forest_fire()
 forestkwargs = (
@@ -415,7 +424,8 @@ forestkwargs = (
     ),
 )
 
-forest_obs = abmplot!(axs[5], forest_model;
+forest_obs = abmplot!(
+    axs[5], forest_model;
     forestkwargs..., unikwargs..., model_step! = forest_step!,
 )
 
@@ -457,10 +467,10 @@ mutable struct AntWorldProperties
     pheremone_floor::Int
     pheremone_ceiling::Int
 end
-function initialize_antworld(;number_ants::Int = 125, dimensions::Tuple = (70, 70), diffusion_rate::Int = 50, food_size::Int = 7, random_seed::Int = 2954, nest_size::Int = 5, evaporation_rate::Int = 10, pheremone_amount::Int = 60, spread_pheremone::Bool = false, pheremone_floor::Int = 5, pheremone_ceiling::Int = 100)
+function initialize_antworld(; number_ants::Int = 125, dimensions::Tuple = (70, 70), diffusion_rate::Int = 50, food_size::Int = 7, random_seed::Int = 2954, nest_size::Int = 5, evaporation_rate::Int = 10, pheremone_amount::Int = 60, spread_pheremone::Bool = false, pheremone_floor::Int = 5, pheremone_ceiling::Int = 100)
     rng = Random.Xoshiro(random_seed)
 
-    furthest_distance = sqrt(dimensions[1] ^ 2 + dimensions[2] ^ 2)
+    furthest_distance = sqrt(dimensions[1]^2 + dimensions[2]^2)
 
     x_center = dimensions[1] / 2
     y_center = dimensions[2] / 2
@@ -479,10 +489,10 @@ function initialize_antworld(;number_ants::Int = 125, dimensions::Tuple = (70, 7
 
     for x_val in 1:dimensions[1]
         for y_val in 1:dimensions[2]
-            nest_locations[x_val, y_val] = ((furthest_distance - sqrt((x_val - x_center) ^ 2 + (y_val - y_center) ^ 2)) / furthest_distance) * 100
-            food_1 = (sqrt((x_val - food_center_1[1]) ^ 2 + (y_val - food_center_1[2]) ^ 2)) < food_size
-            food_2 = (sqrt((x_val - food_center_2[1]) ^ 2 + (y_val - food_center_2[2]) ^ 2)) < food_size
-            food_3 = (sqrt((x_val - food_center_3[1]) ^ 2 + (y_val - food_center_3[2]) ^ 2)) < food_size
+            nest_locations[x_val, y_val] = ((furthest_distance - sqrt((x_val - x_center)^2 + (y_val - y_center)^2)) / furthest_distance) * 100
+            food_1 = (sqrt((x_val - food_center_1[1])^2 + (y_val - food_center_1[2])^2)) < food_size
+            food_2 = (sqrt((x_val - food_center_2[1])^2 + (y_val - food_center_2[2])^2)) < food_size
+            food_3 = (sqrt((x_val - food_center_3[1])^2 + (y_val - food_center_3[2])^2)) < food_size
             food_amounts[x_val, y_val] = food_1 || food_2 || food_3 ? rand(rng, [1, 2]) : 0
             if food_1
                 food_source_number[x_val, y_val] = 1
@@ -510,7 +520,7 @@ function initialize_antworld(;number_ants::Int = 125, dimensions::Tuple = (70, 7
         spread_pheremone,
         pheremone_floor,
         pheremone_ceiling
-        )
+    )
 
     model = StandardABM(
         Ant,
@@ -532,37 +542,47 @@ function detect_change_direction(agent::Ant, model_layer::Matrix)
     left_pos = adjacent_dict[mod1(agent.facing_direction - 1, number_directions)]
     right_pos = adjacent_dict[mod1(agent.facing_direction + 1, number_directions)]
 
-    scent_ahead = model_layer[mod1(agent.pos[1] + adjacent_dict[agent.facing_direction][1], x_dimension),
-        mod1(agent.pos[2] + adjacent_dict[agent.facing_direction][2], y_dimension)]
-    scent_left = model_layer[mod1(agent.pos[1] + left_pos[1], x_dimension),
-        mod1(agent.pos[2] + left_pos[2], y_dimension)]
-    scent_right = model_layer[mod1(agent.pos[1] + right_pos[1], x_dimension),
-        mod1(agent.pos[2] + right_pos[2], y_dimension)]
+    scent_ahead = model_layer[
+        mod1(agent.pos[1] + adjacent_dict[agent.facing_direction][1], x_dimension),
+        mod1(agent.pos[2] + adjacent_dict[agent.facing_direction][2], y_dimension),
+    ]
+    scent_left = model_layer[
+        mod1(agent.pos[1] + left_pos[1], x_dimension),
+        mod1(agent.pos[2] + left_pos[2], y_dimension),
+    ]
+    scent_right = model_layer[
+        mod1(agent.pos[1] + right_pos[1], x_dimension),
+        mod1(agent.pos[2] + right_pos[2], y_dimension),
+    ]
 
-    if (scent_right > scent_ahead) || (scent_left > scent_ahead)
+    return if (scent_right > scent_ahead) || (scent_left > scent_ahead)
         if scent_right > scent_left
             agent.facing_direction = mod1(agent.facing_direction + 1, number_directions)
         else
-            agent.facing_direction =  mod1(agent.facing_direction - 1, number_directions)
+            agent.facing_direction = mod1(agent.facing_direction - 1, number_directions)
         end
     end
 end
 function wiggle(agent::Ant, model::AntWorld)
     direction = rand(abmrng(model), [0, rand(abmrng(model), [-1, 1])])
-    agent.facing_direction = mod1(agent.facing_direction + direction, number_directions)
+    return agent.facing_direction = mod1(agent.facing_direction + direction, number_directions)
 end
 function apply_pheremone(agent::Ant, model::AntWorld; pheremone_val::Int = 60, spread_pheremone::Bool = false)
     model.pheremone_trails[agent.pos...] += pheremone_val
-    model.pheremone_trails[agent.pos...]  = model.pheremone_trails[agent.pos...] ≥ model.pheremone_floor ? model.pheremone_trails[agent.pos...] : 0
+    model.pheremone_trails[agent.pos...] = model.pheremone_trails[agent.pos...] ≥ model.pheremone_floor ? model.pheremone_trails[agent.pos...] : 0
 
-    if spread_pheremone
+    return if spread_pheremone
         left_pos = adjacent_dict[mod1(agent.facing_direction - 2, number_directions)]
         right_pos = adjacent_dict[mod1(agent.facing_direction + 2, number_directions)]
 
-        model.pheremone_trails[mod1(agent.pos[1] + left_pos[1], model.x_dimension),
-            mod1(agent.pos[2] + left_pos[2], model.y_dimension)] += (pheremone_val / 2)
-        model.pheremone_trails[mod1(agent.pos[1] + right_pos[1], model.x_dimension),
-            mod1(agent.pos[2] + right_pos[2], model.y_dimension)] += (pheremone_val / 2)
+        model.pheremone_trails[
+            mod1(agent.pos[1] + left_pos[1], model.x_dimension),
+            mod1(agent.pos[2] + left_pos[2], model.y_dimension),
+        ] += (pheremone_val / 2)
+        model.pheremone_trails[
+            mod1(agent.pos[1] + right_pos[1], model.x_dimension),
+            mod1(agent.pos[2] + right_pos[2], model.y_dimension),
+        ] += (pheremone_val / 2)
     end
 end
 function diffuse(model_layer::Matrix, diffusion_rate::Int)
@@ -578,6 +598,7 @@ function diffuse(model_layer::Matrix, diffusion_rate::Int)
             model_layer[x_val, y_val] *= ((100 - diffusion_rate) / 100)
         end
     end
+    return
 end
 turn_around(agent) = agent.facing_direction = mod1(agent.facing_direction + number_directions / 2, number_directions)
 
@@ -605,12 +626,12 @@ function ant_step!(agent::Ant, model::AntWorld)
         end
     end
     wiggle(agent, model)
-    move_agent!(agent, (mod1(agent.pos[1] + adjacent_dict[agent.facing_direction][1], model.x_dimension), mod1(agent.pos[2] + adjacent_dict[agent.facing_direction][2], model.y_dimension)), model)
+    return move_agent!(agent, (mod1(agent.pos[1] + adjacent_dict[agent.facing_direction][1], model.x_dimension), mod1(agent.pos[2] + adjacent_dict[agent.facing_direction][2], model.y_dimension)), model)
 end
 function antworld_step!(model::AntWorld)
     diffuse(model.pheremone_trails, model.diffusion_rate)
     map!((x) -> x ≥ model.pheremone_floor ? x * (100 - model.evaporation_rate) / 100 : 0.0, model.pheremone_trails, model.pheremone_trails)
-    model.tick += 1
+    return model.tick += 1
 end
 
 function antworld_heatmap(model::AntWorld)
@@ -636,11 +657,12 @@ ant_color(ant::Ant) = ant.has_food ? :red : :black
 plotkwargs = (
     ac = ant_color, as = 20, am = '♦',
     heatarray = antworld_heatmap, unikwargs...,
-    heatkwargs = (colormap = Reverse(:viridis), colorrange = (0, 200),)
+    heatkwargs = (colormap = Reverse(:viridis), colorrange = (0, 200)),
 )
-antworld = initialize_antworld(;number_ants = 125, random_seed = 6666, pheremone_amount = 60, evaporation_rate = 5)
+antworld = initialize_antworld(; number_ants = 125, random_seed = 6666, pheremone_amount = 60, evaporation_rate = 5)
 
-antworld_obs = abmplot!(axs[6], antworld;
+antworld_obs = abmplot!(
+    axs[6], antworld;
     plotkwargs..., unikwargs...,
     agent_step! = ant_step!, model_step! = antworld_step!,
 )
@@ -648,10 +670,10 @@ antworld_obs = abmplot!(axs[6], antworld;
 models[6] = antworld_obs
 
 # Fractal growth
-@agent struct FractalParticle(ContinuousAgent{2,Float64})
+@agent struct FractalParticle(ContinuousAgent{2, Float64})
     radius::Float64
     is_stuck::Bool
-    spin_axis::Array{Float64,1}
+    spin_axis::Array{Float64, 1}
 end
 PropFractalParticle(
     radius::Float64,
@@ -661,23 +683,23 @@ PropFractalParticle(
 
 rand_circle(rng) = (θ = rand(rng, 0.0:0.1:359.9); (cos(θ), sin(θ)))
 function particle_radius(min_radius::Float64, max_radius::Float64, rng)
-    min_radius <= max_radius ? rand(rng, min_radius:0.01:max_radius) : min_radius
+    return min_radius <= max_radius ? rand(rng, min_radius:0.01:max_radius) : min_radius
 end
 
 function initialize_fractal(;
-    initial_particles::Int = 100, # initial particles in the model, not including the seed
-    ## size of the space in which particles exist
-    space_extents::NTuple{2,Float64} = (150.0, 150.0),
-    speed = 0.5, # speed of particle movement
-    vibration = 0.55, # amplitude of particle vibration
-    attraction = 0.45, # velocity of particles towards the center
-    spin = 0.55, # tangential velocity with which particles orbit the center
-    ## fraction of particles orbiting clockwise. The rest are anticlockwise
-    clockwise_fraction = 0.0,
-    min_radius = 1.0, # minimum radius of any particle
-    max_radius = 2.0, # maximum radius of any particle
-    seed = 42,
-)
+        initial_particles::Int = 100, # initial particles in the model, not including the seed
+        ## size of the space in which particles exist
+        space_extents::NTuple{2, Float64} = (150.0, 150.0),
+        speed = 0.5, # speed of particle movement
+        vibration = 0.55, # amplitude of particle vibration
+        attraction = 0.45, # velocity of particles towards the center
+        spin = 0.55, # tangential velocity with which particles orbit the center
+        ## fraction of particles orbiting clockwise. The rest are anticlockwise
+        clockwise_fraction = 0.0,
+        min_radius = 1.0, # minimum radius of any particle
+        max_radius = 2.0, # maximum radius of any particle
+        seed = 42,
+    )
     properties = Dict(
         :speed => speed,
         :vibration => vibration,
@@ -722,10 +744,10 @@ function fractal_particle_step!(agent::FractalParticle, model)
     tangent = SVector{2}(cross([radial..., 0.0], agent.spin_axis)[1:2])
     agent.vel =
         (
-            radial .* model.attraction .+ tangent .* model.spin .+
+        radial .* model.attraction .+ tangent .* model.spin .+
             rand_circle(abmrng(model)) .* model.vibration
-        ) ./ (agent.radius^2.0)
-    move_agent!(agent, model, model.speed)
+    ) ./ (agent.radius^2.0)
+    return move_agent!(agent, model, model.speed)
 end
 
 # The `fractal_step!` function serves the sole purpose of spawning additional particles
@@ -738,13 +760,15 @@ function fractal_step!(model)
         add_agent!(pos, FractalParticle, model, prop_particle...)
         model.spawn_count -= 1
     end
+    return
 end
 
 model = initialize_fractal()
 fparticle_color(a::FractalParticle) = a.is_stuck ? :red : :blue
 fparticle_size(a::FractalParticle) = 7.5 * a.radius
 
-fractal_obs = abmplot!(axs[8], model;
+fractal_obs = abmplot!(
+    axs[8], model;
     ac = fparticle_color,
     as = fparticle_size,
     am = '●',
@@ -756,7 +780,7 @@ fractal_obs = abmplot!(axs[8], model;
 models[8] = fractal_obs
 
 # Social distancing
-@agent struct PoorSoul(ContinuousAgent{2,Float64})
+@agent struct PoorSoul(ContinuousAgent{2, Float64})
     mass::Float64
     days_infected::Int  # number of days since is infected
     status::Symbol  # :S, :I or :R
@@ -765,20 +789,20 @@ end
 const steps_per_day = 24
 
 function socialdistancing_init(;
-    infection_period = 30 * steps_per_day,
-    detection_time = 14 * steps_per_day,
-    reinfection_probability = 0.05,
-    isolated = 0.0, # in percentage
-    interaction_radius = 0.012,
-    dt = 1.0,
-    speed = 0.002,
-    death_rate = 0.044, # from website of WHO
-    N = 1000,
-    initial_infected = 5,
-    seed = 42,
-    βmin = 0.4,
-    βmax = 0.8,
-)
+        infection_period = 30 * steps_per_day,
+        detection_time = 14 * steps_per_day,
+        reinfection_probability = 0.05,
+        isolated = 0.0, # in percentage
+        interaction_radius = 0.012,
+        dt = 1.0,
+        speed = 0.002,
+        death_rate = 0.044, # from website of WHO
+        N = 1000,
+        initial_infected = 5,
+        seed = 42,
+        βmin = 0.4,
+        βmax = 0.8,
+    )
 
     properties = (;
         infection_period,
@@ -788,7 +812,7 @@ function socialdistancing_init(;
         interaction_radius,
         dt,
     )
-    space = ContinuousSpace((1,1); spacing = 0.02)
+    space = ContinuousSpace((1, 1); spacing = 0.02)
     model = StandardABM(PoorSoul, space, properties = properties, rng = MersenneTwister(seed))
 
     ## Add initial individuals
@@ -818,17 +842,17 @@ function transmit!(a1, a2, rp)
     if healthy.status == :R
         rand(abmrng(model)) > rp && return
     end
-    healthy.status = :I
+    return healthy.status = :I
 end
 
 function sir_agent_step!(agent, model)
     move_agent!(agent, model, model.dt)
     update!(agent)
-    recover_or_die!(agent, model)
+    return recover_or_die!(agent, model)
 end
 update!(agent) = agent.status == :I && (agent.days_infected += 1)
 function recover_or_die!(agent, model)
-    if agent.days_infected ≥ model.infection_period
+    return if agent.days_infected ≥ model.infection_period
         if rand(abmrng(model)) ≤ model.death_rate
             remove_agent!(agent, model)
         else
@@ -843,15 +867,17 @@ function sir_model_step!(model)
         transmit!(a1, a2, model.reinfection_probability)
         elastic_collision!(a1, a2, :mass)
     end
+    return
 end
 
 sir_model = socialdistancing_init(isolated = 0.8)
 sir_colors(a) = a.status == :S ? "#2b2b33" : a.status == :I ? "#bf2642" : "#338c54"
 
-sir_obs = abmplot!(axs[9], sir_model;
-ac = sir_colors,
-as = 10, unikwargs...,
-agent_step! = sir_agent_step!, model_step! = sir_model_step!,
+sir_obs = abmplot!(
+    axs[9], sir_model;
+    ac = sir_colors,
+    as = 10, unikwargs...,
+    agent_step! = sir_agent_step!, model_step! = sir_model_step!,
 )
 
 models[9] = sir_obs

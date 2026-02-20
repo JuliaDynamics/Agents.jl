@@ -40,9 +40,11 @@ Set `key` of `p` to `val`. For `AbstractDict` this is `p[key] = val`,
 for anything else it is `setproperty`. Changing the values of `NamedTuple`s is impossible.
 """
 set_value!(p::AbstractDict, key, val) = (p[key] = val)
-set_value!(p::NamedTuple, key, val) = error("""
+set_value!(p::NamedTuple, key, val) = error(
+    """
     Immutable struct of type NamedTuple cannot be changed.
-    Please use a mutable container to interactively change the model properties.""")
+    Please use a mutable container to interactively change the model properties."""
+)
 
 set_value!(p, key, val) = setproperty!(p, key, val)
 
@@ -60,22 +62,23 @@ output in `file` (recommended to end in `".mp4"`).
 * `total_time = 10`: Time to record for, in seconds
 * `sleep_time = 1`: Time to call `sleep()` before starting to save.
 """
-function record_interaction(file, figure;
+function record_interaction(
+        file, figure;
         framerate = 30, total_time = 10, sleep_time = 1,
     )
     ispath(dirname(file)) || mkpath(dirname(file))
     sleep(sleep_time)
-    framen = framerate*total_time
+    framen = framerate * total_time
     record(figure, file; framerate) do io
-        for i = 1:framen
-            sleep(1/framerate)
+        for i in 1:framen
+            sleep(1 / framerate)
             recordframe!(io)
         end
     end
     return
 end
 record_interaction(figure::Figure, file; kwargs...) =
-record_interaction(file, figure; kwargs...)
+    record_interaction(file, figure; kwargs...)
 
 
 """
@@ -83,8 +86,8 @@ record_interaction(file, figure; kwargs...)
 Transform `i` to a string that has `i` as a subscript.
 """
 function subscript(i::Int)
-    if i < 0
-        "₋"*subscript(-i)
+    return if i < 0
+        "₋" * subscript(-i)
     elseif i == 1
         "₁"
     elseif i == 2
@@ -115,8 +118,8 @@ end
 Transform `i` to a string that has `i` as a superscript.
 """
 function superscript(i::Int)
-    if i < 0
-        "⁻"*superscript(-i)
+    return if i < 0
+        "⁻" * superscript(-i)
     elseif i == 1
         "¹"
     elseif i == 2
@@ -177,7 +180,7 @@ Base.size(c::CyclicContainer) = size(c.c)
 Base.getindex(c::CyclicContainer, i) = c.c[mod1(i, length(c.c))]
 function Base.getindex(c::CyclicContainer)
     c.n += 1
-    c[c.n]
+    return c[c.n]
 end
 Base.iterate(c::CyclicContainer, i = 1) = iterate(c.c, i)
 
@@ -193,10 +196,12 @@ Agents.translate_polygon(p::Polygon, point) = Polygon(decompose(Point2f, p.exter
 
 function Agents.rotate_polygon(p::Polygon, θ)
     sinφ, cosφ = sincos(θ)
-    Polygon(map(
-        p -> Point2f(cosφ*p[1] - sinφ*p[2], sinφ*p[1] + cosφ*p[2]),
-        decompose(Point2f, p.exterior)
-    ))
+    return Polygon(
+        map(
+            p -> Point2f(cosφ * p[1] - sinφ * p[2], sinφ * p[1] + cosφ * p[2]),
+            decompose(Point2f, p.exterior)
+        )
+    )
 end
 
 Agents.scale_polygon(p::Polygon, s) = Polygon(decompose(Point2f, p.exterior) .* Float32(s))

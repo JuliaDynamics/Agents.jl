@@ -50,20 +50,20 @@ const types = Union{GridAgentOne, GridAgentTwo, GridAgentThree, GridAgentFour, G
 agent_step!(agent::GridAgentOne, model1) = randomwalk!(agent, model1)
 function agent_step!(agent::GridAgentTwo, model1)
     agent.one += rand(abmrng(model1))
-    agent.two = rand(abmrng(model1), Bool)
+    return agent.two = rand(abmrng(model1), Bool)
 end
 function agent_step!(agent::GridAgentThree, model1)
-    if any(a-> a isa GridAgentTwo, nearby_agents(agent, model1))
+    return if any(a -> a isa GridAgentTwo, nearby_agents(agent, model1))
         agent.two = true
         randomwalk!(agent, model1)
     end
 end
 function agent_step!(agent::GridAgentFour, model1)
-    agent.one += sum(a.one for a in nearby_agents(agent, model1))
+    return agent.one += sum(a.one for a in nearby_agents(agent, model1))
 end
 function agent_step!(agent::GridAgentFive, model1)
-    targets = Iterators.filter(a->a.one > 1.0, nearby_agents(agent, model1, 3))
-    if !isempty(targets)
+    targets = Iterators.filter(a -> a.one > 1.0, nearby_agents(agent, model1, 3))
+    return if !isempty(targets)
         farthest = 0.0
         a = first(targets)
         for t in targets
@@ -74,11 +74,11 @@ function agent_step!(agent::GridAgentFive, model1)
     end
 end
 function agent_step!(agent::GridAgentSix, model1)
-    agent.eight += sum(rand(abmrng(model1), (0, 1)) for a in nearby_agents(agent, model1))
+    return agent.eight += sum(rand(abmrng(model1), (0, 1)) for a in nearby_agents(agent, model1))
 end
 
 model1 = StandardABM(
-    Union{GridAgentOne,GridAgentTwo,GridAgentThree,GridAgentFour,GridAgentFive,GridAgentSix},
+    Union{GridAgentOne, GridAgentTwo, GridAgentThree, GridAgentFour, GridAgentFive, GridAgentSix},
     GridSpace((15, 15));
     agent_step!,
     warn = false,
@@ -102,20 +102,20 @@ agent_step!(agent, model2) = agent_step!(agent, model2, variant(agent))
 agent_step!(agent, model2, ::GridAgentOne) = randomwalk!(agent, model2)
 function agent_step!(agent, model2, ::GridAgentTwo)
     agent.one += rand(abmrng(model2))
-    agent.two = rand(abmrng(model2), Bool)
+    return agent.two = rand(abmrng(model2), Bool)
 end
 function agent_step!(agent, model2, ::GridAgentThree)
-    if any(a-> variant(a) isa GridAgentTwo, nearby_agents(agent, model2))
+    return if any(a -> variant(a) isa GridAgentTwo, nearby_agents(agent, model2))
         agent.two = true
         randomwalk!(agent, model2)
     end
 end
 function agent_step!(agent, model2, ::GridAgentFour)
-    agent.one += sum(a.one for a in nearby_agents(agent, model2))
+    return agent.one += sum(a.one for a in nearby_agents(agent, model2))
 end
 function agent_step!(agent, model2, ::GridAgentFive)
-    targets = Iterators.filter(a->a.one > 1.0, nearby_agents(agent, model2, 3))
-    if !isempty(targets)
+    targets = Iterators.filter(a -> a.one > 1.0, nearby_agents(agent, model2, 3))
+    return if !isempty(targets)
         farthest = 0.0
         a = first(targets)
         for t in targets
@@ -126,7 +126,7 @@ function agent_step!(agent, model2, ::GridAgentFive)
     end
 end
 function agent_step!(agent, model2, ::GridAgentSix)
-    agent.eight += sum(rand(abmrng(model2), (0, 1)) for a in nearby_agents(agent, model2))
+    return agent.eight += sum(rand(abmrng(model2), (0, 1)) for a in nearby_agents(agent, model2))
 end
 
 @multiagent GridAgentAll(
@@ -174,5 +174,5 @@ m2 = Base.summarysize(model2)
 
 println("Time to step the model with multiple types: $(t1) s")
 println("Time to step the model with @multiagent: $(t2) s")
-println("Memory occupied by the model with multiple types: $(m1/1000) Kib")
-println("Memory occupied by the model with @multiagent: $(m2/1000) Kib")
+println("Memory occupied by the model with multiple types: $(m1 / 1000) Kib")
+println("Memory occupied by the model with @multiagent: $(m2 / 1000) Kib")

@@ -1,27 +1,27 @@
 export ContinuousSpace, ContinuousAgent
 export nearest_neighbor, elastic_collision!, interacting_pairs
 
-struct ContinuousSpace{D,P,T<:AbstractFloat,F} <: AbstractSpace
-    grid::GridSpace{D,P}
+struct ContinuousSpace{D, P, T <: AbstractFloat, F} <: AbstractSpace
+    grid::GridSpace{D, P}
     update_vel!::F
-    dims::NTuple{D,Int}
+    dims::NTuple{D, Int}
     spacing::T
-    extent::SVector{D,T}
+    extent::SVector{D, T}
 end
-const ContinuousPos{D,T} = Union{SVector{D,T},NTuple{D,T}} where {T<:AbstractFloat}
-Base.eltype(::ContinuousSpace{D,P,T,F}) where {D,P,T,F} = T
+const ContinuousPos{D, T} = Union{SVector{D, T}, NTuple{D, T}} where {T <: AbstractFloat}
+Base.eltype(::ContinuousSpace{D, P, T, F}) where {D, P, T, F} = T
 no_vel_update(a, m) = nothing
 spacesize(space::ContinuousSpace) = space.extent
-function Base.show(io::IO, space::ContinuousSpace{D,P}) where {D,P}
+function Base.show(io::IO, space::ContinuousSpace{D, P}) where {D, P}
     periodic = get_periodic_type(space)
-    s = "$(periodic)continuous space with $(spacesize(space)) extent"*
-    " and spacing=$(space.spacing)"
+    s = "$(periodic)continuous space with $(spacesize(space)) extent" *
+        " and spacing=$(space.spacing)"
     space.update_vel! ≠ no_vel_update && (s *= " with velocity updates")
-    print(io, s)
+    return print(io, s)
 end
-get_periodic_type(space::ContinuousSpace{D,true}) where {D} = "periodic "
-get_periodic_type(space::ContinuousSpace{D,false}) where {D} = ""
-get_periodic_type(space::ContinuousSpace{D,P}) where {D,P} = "mixed-periodicity "
+get_periodic_type(space::ContinuousSpace{D, true}) where {D} = "periodic "
+get_periodic_type(space::ContinuousSpace{D, false}) where {D} = ""
+get_periodic_type(space::ContinuousSpace{D, P}) where {D, P} = "mixed-periodicity "
 
 
 """
@@ -31,11 +31,11 @@ It has the additional fields `pos::SVector{D,T}, vel::SVector{D,T}` where `T`
 can be any `AbstractFloat` type.
 See also [`@agent`](@ref).
 """
-@agent struct ContinuousAgent{D,T}(NoSpaceAgent)
-    pos::SVector{D,T}
-    vel::SVector{D,T}
+@agent struct ContinuousAgent{D, T}(NoSpaceAgent)
+    pos::SVector{D, T}
+    vel::SVector{D, T}
 end
-ContinuousAgent{D}(args...; kwargs...) where D = ContinuousAgent{D,Float64}(args...; kwargs...)
+ContinuousAgent{D}(args...; kwargs...) where {D} = ContinuousAgent{D, Float64}(args...; kwargs...)
 
 """
     ContinuousSpace(extent::NTuple{D, <:Real}; kwargs...)
@@ -89,30 +89,30 @@ can be a possible overestimation, including agent IDs whose distance slightly ex
   If you use `update_vel!`, the agent type must have a field `vel::SVector{D, <:Real}`.
 """
 function ContinuousSpace(
-    extent::Union{SVector{D,X},NTuple{D,X}};
-    spacing = minimum(extent)/20.0,
-    update_vel! = no_vel_update,
-    periodic = true,
-) where {D,X<:Real}
+        extent::Union{SVector{D, X}, NTuple{D, X}};
+        spacing = minimum(extent) / 20.0,
+        update_vel! = no_vel_update,
+        periodic = true,
+    ) where {D, X <: Real}
     if extent ./ spacing != floor.(extent ./ spacing)
         error("All dimensions in `extent` must be completely divisible by `spacing`")
     end
     s = GridSpace(Tuple(floor.(Int, extent ./ spacing)); periodic, metric = :euclidean)
     Z = X <: AbstractFloat ? X : Float64
-    return ContinuousSpace(s, update_vel!, size(s), Z(spacing), SVector{D,Z}(extent))
+    return ContinuousSpace(s, update_vel!, size(s), Z(spacing), SVector{D, Z}(extent))
 end
 
 function random_position(model::ABM{<:ContinuousSpace})
-    map(dim -> rand(abmrng(model)) * dim, spacesize(model))
+    return map(dim -> rand(abmrng(model)) * dim, spacesize(model))
 end
 
 "given position in continuous space, return cell coordinates in grid space."
 pos2cell(a::AbstractAgent, model::ABM) = pos2cell(a.pos, model)
-pos2cell(pos::ContinuousPos, model::ABM) = Tuple(max.(1, ceil.(Int, pos./abmspace(model).spacing)))
+pos2cell(pos::ContinuousPos, model::ABM) = Tuple(max.(1, ceil.(Int, pos ./ abmspace(model).spacing)))
 
 "given position in continuous space, return continuous space coordinates of cell center."
 function cell_center(pos::ContinuousPos, model)
-    abmspace(model).spacing .* (pos2cell(pos, model) .- 0.5)
+    return abmspace(model).spacing .* (pos2cell(pos, model) .- 0.5)
 end
 
 distance_from_cell_center(pos, model::ABM) =
@@ -120,23 +120,26 @@ distance_from_cell_center(pos, model::ABM) =
 
 
 # required for backward compatibility with NTuples in ContinuousSpace
-function add_agent!(A::Type{<:AbstractAgent}, model::ABM{S}, properties::Vararg{Any, N};
-    kwargs...) where {N,S<:ContinuousSpace}
+function add_agent!(
+        A::Type{<:AbstractAgent}, model::ABM{S}, properties::Vararg{Any, N};
+        kwargs...
+    ) where {N, S <: ContinuousSpace}
     T = fieldtype(A, :pos)
-    add_agent!(T(random_position(model)), A, model, properties...; kwargs...)
+    return add_agent!(T(random_position(model)), A, model, properties...; kwargs...)
 end
 
 function add_agent_to_space!(
-    a::AbstractAgent, model::ABM{<:ContinuousSpace}, cell_index = pos2cell(a, model))
+        a::AbstractAgent, model::ABM{<:ContinuousSpace}, cell_index = pos2cell(a, model)
+    )
     push!(abmspace(model).grid.stored_ids[cell_index...], getid(a))
     return a
 end
 
 function remove_agent_from_space!(
-    a::AbstractAgent,
-    model::ABM{<:ContinuousSpace},
-    cell_index = pos2cell(a, model),
-)
+        a::AbstractAgent,
+        model::ABM{<:ContinuousSpace},
+        cell_index = pos2cell(a, model),
+    )
     prev = abmspace(model).grid.stored_ids[cell_index...]
     ai = findfirst(i -> i == getid(a), prev)
     isnothing(ai) && error(lazy"Tried to remove agent with ID $(getid(a)) from the space, but that agent is not on the space")
@@ -164,7 +167,6 @@ function move_agent!(agent::AbstractAgent, pos::ContinuousPos, model::ABM{<:Cont
 end
 
 
-
 """
     move_agent!(agent, model::ABM{<:ContinuousSpace}, dt::Real)
 
@@ -180,13 +182,13 @@ For non-periodic spaces, agents will walk up to, but not reach, the space extent
 For periodic spaces movement properly wraps around the extent.
 """
 function move_agent!(
-    agent::AbstractAgent,
-    model::ABM{<:ContinuousSpace},
-    dt::Real,
-)
+        agent::AbstractAgent,
+        model::ABM{<:ContinuousSpace},
+        dt::Real,
+    )
     abmspace(model).update_vel!(agent, model)
     direction = dt .* agent.vel
-    walk!(agent, direction, model)
+    return walk!(agent, direction, model)
 end
 
 #######################################################################################
@@ -279,6 +281,7 @@ function remove_all_from_space!(model::ABM{<:ContinuousSpace})
     for p in positions(internal_grid)
         empty!(ids_in_position(p, internal_grid))
     end
+    return
 end
 
 #######################################################################################
@@ -292,7 +295,7 @@ Return `nothing` if no agent is within distance `r`.
 """
 function nearest_neighbor(agent::AbstractAgent, model::ABM{<:ContinuousSpace}, r)
     d, j = Inf, 0
-    for id in nearby_ids(agent, model, r; search=:approximate)
+    for id in nearby_ids(agent, model, r; search = :approximate)
         dnew = euclidean_distance(agent.pos, model[id].pos, model)
         if dnew < d
             d, j = dnew, id
@@ -410,15 +413,16 @@ model.
     example for how to do this.
 
 """
-function interacting_pairs(model::ABM{<:ContinuousSpace}, r::Real, method;
+function interacting_pairs(
+        model::ABM{<:ContinuousSpace}, r::Real, method;
         scheduler = abmscheduler(model), nearby_f = nearby_ids_exact, search = :exact
     )
     if nearby_f isa typeof(nearby_ids)
-        @warn "The nearby_f keyword is deprecated, use search = :exact or search = :approximate instead" maxlog=1
+        @warn "The nearby_f keyword is deprecated, use search = :exact or search = :approximate instead" maxlog = 1
         search = :approximate
     end
     @assert method ∈ (:nearest, :all, :types)
-    pairs = Tuple{Int,Int}[]
+    pairs = Tuple{Int, Int}[]
     if method == :nearest
         true_pairs!(pairs, model, r, scheduler)
     elseif method == :all
@@ -430,11 +434,11 @@ function interacting_pairs(model::ABM{<:ContinuousSpace}, r::Real, method;
 end
 
 function all_pairs!(
-    pairs::Vector{Tuple{Int,Int}},
-    model::ABM{<:ContinuousSpace},
-    r::Real,
-    search
-)
+        pairs::Vector{Tuple{Int, Int}},
+        model::ABM{<:ContinuousSpace},
+        r::Real,
+        search
+    )
     for a in allagents(model)
         for nid in nearby_ids(a, model, r; search)
             # Sort the pair to overcome any uniqueness issues
@@ -442,9 +446,10 @@ function all_pairs!(
             new_pair ∉ pairs && push!(pairs, new_pair)
         end
     end
+    return
 end
 
-function true_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM{<:ContinuousSpace}, r::Real, scheduler)
+function true_pairs!(pairs::Vector{Tuple{Int, Int}}, model::ABM{<:ContinuousSpace}, r::Real, scheduler)
     distances = Vector{Float64}(undef, 0)
     for a in (model[id] for id in scheduler(model))
         nn = nearest_neighbor(a, model, r)
@@ -470,7 +475,7 @@ function true_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM{<:ContinuousSpace
     end
     to_remove = Int[]
     # `counter` counts the number of occurencies for each item, it comes from DataStructure.jl
-    for doubles in [k for (k,v) in counter(Iterators.flatten(pairs)) if v>1]
+    for doubles in [k for (k, v) in counter(Iterators.flatten(pairs)) if v > 1]
         # This list is the set of pairs that have two distances in the pair list.
         # The one with the largest distance value must be dropped.
         fidx = findfirst(isequal(doubles), first.(pairs))
@@ -481,19 +486,19 @@ function true_pairs!(pairs::Vector{Tuple{Int,Int}}, model::ABM{<:ContinuousSpace
         else
             # doubles are not from first sorted, there could be more than one.
             idxs = findall(isequal(doubles), last.(pairs))
-            to_keep = findmin(map(i->distances[i], idxs))[2]
+            to_keep = findmin(map(i -> distances[i], idxs))[2]
             deleteat!(idxs, to_keep)
             append!(to_remove, idxs)
         end
     end
-    deleteat!(pairs, unique!(sort!(to_remove)))
+    return deleteat!(pairs, unique!(sort!(to_remove)))
 end
 
 function type_pairs!(
-    pairs::Vector{Tuple{Int,Int}},
-    model::ABM{<:ContinuousSpace},
-    r::Real, scheduler, search,
-)
+        pairs::Vector{Tuple{Int, Int}},
+        model::ABM{<:ContinuousSpace},
+        r::Real, scheduler, search,
+    )
     # We don't know ahead of time what types the scheduler will provide. Get a list.
     available_types = unique(typeof(model[id]) for id in scheduler(model))
     for id in scheduler(model)
@@ -506,11 +511,12 @@ function type_pairs!(
             end
         end
     end
+    return
 end
 
 struct PairIterator{A}
-    pairs::Vector{Tuple{Int,Int}}
-    agents::Dict{Int,A}
+    pairs::Vector{Tuple{Int, Int}}
+    agents::Dict{Int, A}
 end
 
 Base.eltype(::PairIterator{A}) where {A} = Tuple{A, A}
@@ -554,7 +560,7 @@ The dimensionality of `property` and the continuous space do not have to match.
 If `property` has lower dimensionality than the space (e.g. representing some surface
 property in 3D space) then the front dimensions of `pos` will be used to index.
 """
-function get_spatial_index(pos, property::AbstractArray{T,D}, model::ABM) where {T,D}
+function get_spatial_index(pos, property::AbstractArray{T, D}, model::ABM) where {T, D}
     ssize = spacesize(model)
     propertysize = size(property)
     upos = pos[1:D]

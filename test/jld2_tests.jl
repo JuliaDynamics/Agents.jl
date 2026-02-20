@@ -42,9 +42,9 @@
     ) where {D} = @test true
 
     function test_costmetric(
-        metric::Pathfinding.PenaltyMap{D},
-        other::Pathfinding.PenaltyMap{D}
-    ) where {D}
+            metric::Pathfinding.PenaltyMap{D},
+            other::Pathfinding.PenaltyMap{D}
+        ) where {D}
         @test metric.pmap == other.pmap
         test_costmetric(metric.base_metric, other.base_metric)
     end
@@ -94,7 +94,7 @@
         rm("test.jld2")
     end
 
-    @testset "ModelType=$(ModelType)" for ModelType in (StandardABM, )
+    @testset "ModelType=$(ModelType)" for ModelType in (StandardABM,)
         @testset "ContainerType=$(ContainerType)" for ContainerType in (Dict, Vector)
 
             @testset "ContinuousSpace" begin
@@ -152,7 +152,7 @@
         struct ModelData
             i::Int
             f::Float32
-            d::Dict{Int,String}
+            d::Dict{Int, String}
         end
 
         model = StandardABM(
@@ -277,7 +277,7 @@
     end
 
     @testset "Multi-agent" begin
-        model = StandardABM(Union{Agent1,Agent3}, GridSpace((10, 10)); warn = false, warn_deprecation = false)
+        model = StandardABM(Union{Agent1, Agent3}, GridSpace((10, 10)); warn = false, warn_deprecation = false)
         AgentsIO.save_checkpoint("test.jld2", model)
         other = AgentsIO.load_checkpoint("test.jld2"; warn = false, warn_deprecation = false)
 

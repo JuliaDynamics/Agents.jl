@@ -99,4 +99,5 @@ function remove_all_from_model!(model::ABM)
     for a in allagents(model)
         remove_agent_from_container!(a, model)
     end
+    return
 end

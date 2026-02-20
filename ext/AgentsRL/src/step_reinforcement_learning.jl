@@ -1,4 +1,4 @@
-function Agents.CommonSolve.step!(model::ReinforcementLearningABM, n::Union{Real,Function}=1)
+function Agents.CommonSolve.step!(model::ReinforcementLearningABM, n::Union{Real, Function} = 1)
     agent_step! = getfield(model, :agent_step)
     model_step! = getfield(model, :model_step)
     t = getfield(model, :time)
@@ -13,7 +13,7 @@ Default agent stepping function for RL agents. This will use trained policies
 if available, otherwise fall back to random actions.
 """
 function Agents.rl_agent_step!(agent, model)
-    if model isa ReinforcementLearningABM
+    return if model isa ReinforcementLearningABM
         agent_type = typeof(agent)
 
         if haskey(model.trained_policies, agent_type) && !isnothing(model.rl_config[])
@@ -62,4 +62,5 @@ function Agents.step_ahead_rl!(model::ReinforcementLearningABM, agent_step!, mod
         agents_first && model_step!(model)
         t[] += 1
     end
+    return
 end

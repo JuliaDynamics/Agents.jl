@@ -8,7 +8,7 @@ using StableRNGs
     rng = StableRNG(42)
     rng0 = StableRNG(42)
 
-    model = StandardABM(GridAgent{2}, GridSpace((3,3)); rng, warn_deprecation = false)
+    model = StandardABM(GridAgent{2}, GridSpace((3, 3)); rng, warn_deprecation = false)
     agent = add_agent_single!(model)
 
     # Test that model rng pool was used
@@ -19,11 +19,13 @@ end
 @testset "sample!" begin
     rng = StableRNG(50)
     model4 = StandardABM(Agent1, GridSpace((2, 2)); rng = rng, warn_deprecation = false)
-    add_agent!((1,1), Agent1, model4)
-    add_agent!((2,2), Agent1, model4)
+    add_agent!((1, 1), Agent1, model4)
+    add_agent!((2, 2), Agent1, model4)
     sample!(model4, 4)
-    res = Dict{Int64, Agent1}(4 => Agent1(4, (2, 2)), 2 => Agent1(2, (2, 2)),
-                              3 => Agent1(3, (2, 2)), 1 => Agent1(1, (1, 1)))
+    res = Dict{Int64, Agent1}(
+        4 => Agent1(4, (2, 2)), 2 => Agent1(2, (2, 2)),
+        3 => Agent1(3, (2, 2)), 1 => Agent1(1, (1, 1))
+    )
     res_fields = [getfield(res[k], f) for f in fieldnames(Agent1) for k in keys(res)]
     agents_fields = [getfield(a, f) for f in fieldnames(Agent1) for a in allagents(model4)]
     @test allids(model4) == keys(res)
@@ -78,12 +80,12 @@ end
 
 @testset "random agent" begin
     space = GridSpace((10, 10))
-    model = StandardABM(Union{Daisy,Land}, space; warn = false, warn_deprecation = false)
+    model = StandardABM(Union{Daisy, Land}, space; warn = false, warn_deprecation = false)
     fill_space!(Daisy, model, "black")
     add_agent!(Land, model, 999)
 
     a = random_agent(model)
-    @test typeof(a) <: Union{Daisy,Land}
+    @test typeof(a) <: Union{Daisy, Land}
 
     c1(a) = a isa Land
     for alloc in (true, false)

@@ -19,7 +19,7 @@ using Test, Agents, Random
     @test fieldnames(A4) == (:id, :pos, :weight, :z)
     @test fieldtypes(A4) == (Int, NTuple{2, Int}, Float64, Bool)
     @test contains(string(@doc(A4)), "This is a test docstring for agent A4")
-    @test A4(id=1, pos=(1,1), z=true).weight == 3.0
+    @test A4(id = 1, pos = (1, 1), z = true).weight == 3.0
 
     # Also test subtyping
     abstract type AbstractHuman <: AbstractAgent end
@@ -89,7 +89,7 @@ using Test, Agents, Random
     @test_throws ErrorException agent_consts.f2 = 5
     @test_throws ErrorException agent_consts.f4 = false
 
-    abstract type AbstractFoo{D} <: AbstractAgent where D end
+    abstract type AbstractFoo{D} <: AbstractAgent where {D} end
     @agent struct MyFoo{D}(ContinuousAgent{D, Float64}) <: AbstractFoo{D} end
     @test MyFoo{2} <: AbstractFoo{2}
     @test !(MyFoo{2} <: AbstractFoo{3})
@@ -113,7 +113,7 @@ end
     @test_logs (
         :warn,
         "Agent type is not mutable, and most library functions assume that it is.",
-    ) match_mode=:any StandardABM(agent)
+    ) match_mode = :any StandardABM(agent)
     # Warning is suppressed if flag is set
     @test Agents.agenttype(StandardABM(agent; warn = false, warn_deprecation = false)) <: AbstractAgent
     # Cannot use BadAgent since it has no `id` field
@@ -141,17 +141,17 @@ end
     # Shouldn't use DiscreteVelocity in a continuous space context since `vel` has an invalid type
     mutable struct DiscreteVelocity <: AbstractAgent
         id::Int
-        pos::SVector{2,Float64}
-        vel::SVector{2,Int}
+        pos::SVector{2, Float64}
+        vel::SVector{2, Int}
         diameter::Float64
     end
     @test_throws ArgumentError StandardABM(DiscreteVelocity, ContinuousSpace((1, 1)), warn_deprecation = false)
     agent = DiscreteVelocity(1, SVector(1, 1), SVector(2, 3), 2.4)
     @test_throws ArgumentError StandardABM(agent, ContinuousSpace((1, 1)), warn_deprecation = false)
     # Shouldn't use ParametricAgent since it is not a concrete type
-    mutable struct ParametricAgent{T<:Integer} <: AbstractAgent
+    mutable struct ParametricAgent{T <: Integer} <: AbstractAgent
         id::T
-        pos::NTuple{2,T}
+        pos::NTuple{2, T}
         weight::T
         info::String
     end
@@ -165,11 +165,11 @@ end
         models, you can silence this warning.
         If you are using `ContinuousAgent{D}` as agent type in version 6+, update
         to the new two-parameter version `ContinuousAgent{D,Float64}` to obtain
-        the same behavior as previous Agents.jl versions.\n"""
-    ) match_mode=:any StandardABM(ParametricAgent, GridSpace((1, 1)); warn_deprecation = false)
+        the same behavior as previous Agents.jl versions.\n""",
+    ) match_mode = :any StandardABM(ParametricAgent, GridSpace((1, 1)); warn_deprecation = false)
     # Warning is suppressed if flag is set
     @test Agents.agenttype(StandardABM(ParametricAgent, GridSpace((1, 1)); warn = false, warn_deprecation = false)) <:
-          AbstractAgent
+    AbstractAgent
     # ParametricAgent{Int} is the correct way to use such an agent
     @test Agents.agenttype(StandardABM(ParametricAgent{Int}, GridSpace((1, 1)), warn_deprecation = false)) <: AbstractAgent
     #Type inferance using an instance can help users here
@@ -180,7 +180,7 @@ end
         dummy::Bool
     end
 
-    @test Agents.agenttype(StandardABM(Union{NoSpaceAgent,ValidAgent}; warn = false, warn_deprecation = false)) <: AbstractAgent
+    @test Agents.agenttype(StandardABM(Union{NoSpaceAgent, ValidAgent}; warn = false, warn_deprecation = false)) <: AbstractAgent
     @test_logs (
         :warn,
         """
@@ -191,9 +191,9 @@ end
         models, you can silence this warning.
         If you are using `ContinuousAgent{D}` as agent type in version 6+, update
         to the new two-parameter version `ContinuousAgent{D,Float64}` to obtain
-        the same behavior as previous Agents.jl versions.\n"""
-    ) match_mode=:any StandardABM(Union{NoSpaceAgent,ValidAgent}, warn_deprecation = false)
-    @test_throws ArgumentError StandardABM(Union{NoSpaceAgent,BadAgent}; warn = false, warn_deprecation = false)
+        the same behavior as previous Agents.jl versions.\n""",
+    ) match_mode = :any StandardABM(Union{NoSpaceAgent, ValidAgent}, warn_deprecation = false)
+    @test_throws ArgumentError StandardABM(Union{NoSpaceAgent, BadAgent}; warn = false, warn_deprecation = false)
 
     # this should work for backward compatibility but throw warning (#855)
     @test_logs (
@@ -206,10 +206,8 @@ end
         models, you can silence this warning.
         If you are using `ContinuousAgent{D}` as agent type in version 6+, update
         to the new two-parameter version `ContinuousAgent{D,Float64}` to obtain
-        the same behavior as previous Agents.jl versions.\n"""
-    ) match_mode=:any StandardABM(ContinuousAgent{2}, ContinuousSpace((1,1)); warn_deprecation = false)
+        the same behavior as previous Agents.jl versions.\n""",
+    ) match_mode = :any StandardABM(ContinuousAgent{2}, ContinuousSpace((1, 1)); warn_deprecation = false)
     # throws if the old ContinuousAgent{2} form is used with a non-Float64 space
-    @test_throws ArgumentError StandardABM(ContinuousAgent{2}, ContinuousSpace((1f0,1f0)); warn=false, warn_deprecation = false)
+    @test_throws ArgumentError StandardABM(ContinuousAgent{2}, ContinuousSpace((1.0f0, 1.0f0)); warn = false, warn_deprecation = false)
 end
-
-

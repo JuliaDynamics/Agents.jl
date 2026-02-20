@@ -30,7 +30,7 @@ using Random: MersenneTwister                     # reproducibility
 
 # And create an alias to `ContinuousAgent{2,Float64}`,
 # as our agents don't need additional properties.
-const Student = ContinuousAgent{2,Float64}
+const Student = ContinuousAgent{2, Float64}
 
 # ## Rules of the schoolyard
 
@@ -59,7 +59,7 @@ function schoolyard(;
     )
     model = StandardABM(
         Student,
-        ContinuousSpace((100, 100); spacing=spacing, periodic=false);
+        ContinuousSpace((100, 100); spacing = spacing, periodic = false);
         agent_step!,
         properties = Dict(
             :teacher_attractor => teacher_attractor,
@@ -81,7 +81,7 @@ function schoolyard(;
         foe = rand(abmrng(model), filter(s -> s != student, 1:numStudents))
         add_edge!(model.buddies, student, foe, -rand(abmrng(model)))
     end
-    model
+    return model
 end
 
 # Our model contains the `buddies` property, which is our Graphs.jl directed and weighted graph.
@@ -127,7 +127,7 @@ function agent_step!(student, model)
 
     ## Add all forces together to assign the students next position
     new_pos = student.pos .+ noise .+ teacher .+ network_force
-    move_agent!(student, new_pos, model)
+    return move_agent!(student, new_pos, model)
 end
 
 # Applying the rules for movement is relatively simple. For the network specifically,
@@ -153,7 +153,7 @@ const ABMPlot = Agents.get_ABMPlot_type()
 function preplot!(ax::Axis, abmobs)
     obj = CairoMakie.scatter!([50 50]; color = :red) # Show position of teacher
     CairoMakie.hidedecorations!(ax) # hide tick labels etc.
-    CairoMakie.translate!(obj, 0, 0, 5) # be sure that the teacher will be above students
+    return CairoMakie.translate!(obj, 0, 0, 5) # be sure that the teacher will be above students
 end
 
 abmvideo(

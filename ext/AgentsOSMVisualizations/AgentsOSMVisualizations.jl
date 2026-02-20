@@ -6,7 +6,7 @@ using Agents, Makie, OSMMakie
 function Agents.space_axis_limits(model::Agents.ABM{<:OpenStreetMapSpace})
     o = [Inf, Inf]
     e = [-Inf, -Inf]
-    for i ∈ Agents.positions(model)
+    for i in Agents.positions(model)
         x, y = Agents.OSM.lonlat(i, model)
         o[1] = min(x, o[1])
         o[2] = min(y, o[2])
@@ -20,7 +20,8 @@ end
 
 # space plotting
 function Agents.spaceplot!(ax::Axis, space::Agents.OpenStreetMapSpace; kw...)
-    osm_plot = OSMMakie.osmplot!(ax, space.map;
+    osm_plot = OSMMakie.osmplot!(
+        ax, space.map;
         graphplotkwargs = (; arrow_show = false), kw...
     )
     # osm_plot.plots[1].plots[1].plots[1].inspectable[] = false

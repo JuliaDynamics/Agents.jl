@@ -3,10 +3,11 @@ export abmscheduler
 export dummystep
 
 struct StandardABM{
-    S<:SpaceType,
-    A<:AbstractAgent,
-    C<:Union{AbstractDict{Int,A},AbstractVector{A}},
-    T,G,K,F,P,R<:AbstractRNG} <: AgentBasedModel{S}
+        S <: SpaceType,
+        A <: AbstractAgent,
+        C <: Union{AbstractDict{Int, A}, AbstractVector{A}},
+        T, G, K, F, P, R <: AbstractRNG,
+    } <: AgentBasedModel{S}
     agents::C
     agent_step::G
     model_step::K
@@ -22,8 +23,8 @@ end
 
 # Extend mandatory internal API for `AgentBasedModel`
 
-containertype(::StandardABM{S,A,C}) where {S,A,C} = C
-agenttype(::StandardABM{S,A}) where {S,A} = A
+containertype(::StandardABM{S, A, C}) where {S, A, C} = C
+agenttype(::StandardABM{S, A}) where {S, A} = A
 discretimeabm(::StandardABM) = true
 
 """
@@ -131,18 +132,18 @@ end
 ```
 """
 function StandardABM(
-    A::Type,
-    space::S = nothing;
-    agent_step!::G = dummystep,
-    model_step!::K = dummystep,
-    container::Type = Dict,
-    scheduler::F = Schedulers.fastest,
-    properties::P = nothing,
-    rng::R = Random.default_rng(),
-    agents_first::Bool = true,
-    warn = true,
-    warn_deprecation = true
-) where {S<:SpaceType,G,K,F,P,R<:AbstractRNG}
+        A::Type,
+        space::S = nothing;
+        agent_step!::G = dummystep,
+        model_step!::K = dummystep,
+        container::Type = Dict,
+        scheduler::F = Schedulers.fastest,
+        properties::P = nothing,
+        rng::R = Random.default_rng(),
+        agents_first::Bool = true,
+        warn = true,
+        warn_deprecation = true
+    ) where {S <: SpaceType, G, K, F, P, R <: AbstractRNG}
     if warn_deprecation && agent_step! == dummystep && model_step! == dummystep
         @warn """
         From version 6.0 it is necessary to pass at least one of agent_step! or model_step!
@@ -152,13 +153,13 @@ function StandardABM(
         In particular this means it is not needed to pass the stepping functions in step!,
         run!, offline_run!, ensemblerun!, abmplot, abmplot!, abmexploration, abmvideo and
         ABMObservable.
-        """ maxlog=1
+        """ maxlog = 1
     end
     if container == StructVector
         if !(A <: SoAType)
             @warn "The agent type passed to the model constructor is of type $A but a model with a
             StructVector container will have agents of type SoAType{$A}. Pass this to the constructor
-            to remove this warning." maxlog=1
+            to remove this warning." maxlog = 1
         else
             A = A.body.parameters[1]
         end
@@ -169,8 +170,10 @@ function StandardABM(
 
     agents_types = union_types(A)
     T = typeof(agents_types)
-    return StandardABM{S,A,typeof(agents),T,G,K,F,P,R}(agents, agent_step!, model_step!, space, scheduler,
-                                        properties, rng, agents_types, agents_first, Ref(0), Ref(0))
+    return StandardABM{S, A, typeof(agents), T, G, K, F, P, R}(
+        agents, agent_step!, model_step!, space, scheduler,
+        properties, rng, agents_types, agents_first, Ref(0), Ref(0)
+    )
 end
 
 function StandardABM(agent::AbstractAgent, args::Vararg{Any, N}; kwargs...) where {N}
@@ -178,13 +181,14 @@ function StandardABM(agent::AbstractAgent, args::Vararg{Any, N}; kwargs...) wher
 end
 
 function remove_all_from_model!(model::StandardABM)
-    empty!(agent_container(model))
+    return empty!(agent_container(model))
 end
 
 function remove_all_from_space!(model)
     for a in allagents(model)
         remove_agent_from_space!(a, model)
     end
+    return
 end
 
 """
@@ -202,7 +206,7 @@ dummystep(agent, model) = nothing
 #######################################################################################
 # %% Pretty printing
 #######################################################################################
-function Base.show(io::IO, abm::StandardABM{S,A,C}) where {S,A,C}
+function Base.show(io::IO, abm::StandardABM{S, A, C}) where {S, A, C}
     n = isconcretetype(A) ? nameof(A) : string(A)
     if C <: AbstractDict
         typecontainer = "Dict"
@@ -220,7 +224,7 @@ function Base.show(io::IO, abm::StandardABM{S,A,C}) where {S,A,C}
     end
     s *= "\n scheduler: $(schedulername(abmscheduler(abm)))"
     print(io, s)
-    if !(isnothing(abmproperties(abm)))
+    return if !(isnothing(abmproperties(abm)))
         if typeof(abmproperties(abm)) <: Dict
             props = collect(keys(abmproperties(abm)))
         else
@@ -230,5 +234,5 @@ function Base.show(io::IO, abm::StandardABM{S,A,C}) where {S,A,C}
     end
 end
 
-schedulername(x::Union{Function,DataType}) = nameof(x)
+schedulername(x::Union{Function, DataType}) = nameof(x)
 schedulername(x) = Symbol(typeof(x))

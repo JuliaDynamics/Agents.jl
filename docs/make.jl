@@ -17,7 +17,7 @@ pages = [
         "examples/rabbit_fox_hawk.md",
         "examples/event_rock_paper_scissors.md",
         "examples/rl_boltzmann.md",
-        "examples.md"
+        "examples.md",
     ],
     "api.md",
     "Plotting and Interactivity" => "agents_visualizations.md",
@@ -63,11 +63,12 @@ Downloads.download(
 )
 include("build_docs_with_style.jl")
 
-build_docs_with_style(pages, Agents, LightOSM;
+build_docs_with_style(
+    pages, Agents, LightOSM;
     expandfirst = ["index.md"],
     authors = "George Datseris and contributors.",
     warnonly = true,
-    htmlkw = (size_threshold = 20000 * 2^10, ),
+    htmlkw = (size_threshold = 20000 * 2^10,),
 )
 
 println("Finished")

@@ -6,7 +6,7 @@ using GLMakie
 
 # Some nice colors:
 pink_green = Dict(:S => "#2b2b33", :I => "#a533d6", :R => "#338c54")
-pink_green_dark = Dict(:S => "#d068fc", :I =>  "#72cc94", :R => "#f0f0f0")
+pink_green_dark = Dict(:S => "#d068fc", :I => "#72cc94", :R => "#f0f0f0")
 juliadynamics = Dict(
     :S => JULIADYNAMICS_COLORS[3],
     :I => JULIADYNAMICS_COLORS[1],
@@ -29,9 +29,9 @@ Makie.renderstring!(
     font_matrix,
     "Agents.jl",
     font,
-    round(Int, logo_dims[2]/2),
-    round(Int, y/2 + logo_dims[2]/6) ,
-    round(Int, x/2),
+    round(Int, logo_dims[2] / 2),
+    round(Int, y / 2 + logo_dims[2] / 6),
+    round(Int, x / 2),
     halign = :hcenter,
 
 )
@@ -59,11 +59,12 @@ ax_kwargs = (;
 
 # Test:
 sir = sir_logo_initiation(; N = 400, interaction_radius = 0.035)
-fig, ax = abmplot(sir;
+fig, ax = abmplot(
+    sir;
     # agent_step! = sir_agent_step!, model_step! = sir_model_step!,
     enable_inspection = false,
     ac = sir_colors, as = 9, preplot!,
-    figure = (resolution = logo_dims, ), axis = ax_kwargs,
+    figure = (resolution = logo_dims,), axis = ax_kwargs,
 )
 display(fig)
 
@@ -71,7 +72,8 @@ display(fig)
 using CairoMakie
 CairoMakie.activate!()
 sir = sir_logo_initiation(; N = 600, interaction_radius = 0.035)
-abmvideo("agents4_logo.gif", sir, sir_agent_step!, sir_model_step!;
+abmvideo(
+    "agents4_logo.gif", sir, sir_agent_step!, sir_model_step!;
     ac = sir_colors, as = 9, preplot!,
     figure = (resolution = logo_dims, backgroundcolor),
     axis = ax_kwargs, showstep = false,
@@ -82,7 +84,8 @@ abmvideo("agents4_logo.gif", sir, sir_agent_step!, sir_model_step!;
 )
 
 # %% Save final figure for making the icon
-fig, ax = abmplot(sir;
+fig, ax = abmplot(
+    sir;
     enable_inspection = false,
     ac = sir_colors, as = 9, preplot!,
     figure = (resolution = logo_dims, backgroundcolor), axis = ax_kwargs,

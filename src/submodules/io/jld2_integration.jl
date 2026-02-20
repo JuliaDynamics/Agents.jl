@@ -42,7 +42,7 @@ Refer to [`AgentsIO.to_serializable`](@ref) for more info.
 """
 from_serializable(t; kwargs...) = t
 
-struct SerializableABM{S,A<:AbstractAgent,C,P,R<:AbstractRNG}
+struct SerializableABM{S, A <: AbstractAgent, C, P, R <: AbstractRNG}
     agents::Vector{A}
     space::S
     agents_container::C
@@ -51,36 +51,36 @@ struct SerializableABM{S,A<:AbstractAgent,C,P,R<:AbstractRNG}
     maxid::Int64
 end
 
-struct SerializableGridSpace{D,P}
-    dims::NTuple{D,Int}
+struct SerializableGridSpace{D, P}
+    dims::NTuple{D, Int}
     metric::Symbol
 end
-struct SerializableGridSpaceSingle{D,P}
-    dims::NTuple{D,Int}
+struct SerializableGridSpaceSingle{D, P}
+    dims::NTuple{D, Int}
     metric::Symbol
 end
 
-struct SerializableContinuousSpace{D,P,T<:AbstractFloat}
-    grid::SerializableGridSpace{D,P}
-    dims::NTuple{D,Int}
+struct SerializableContinuousSpace{D, P, T <: AbstractFloat}
+    grid::SerializableGridSpace{D, P}
+    dims::NTuple{D, Int}
     spacing::T
-    extent::SVector{D,T}
+    extent::SVector{D, T}
 end
 
 struct SerializableGraphSpace{G}
     graph::G
 end
 
-struct SerializableAStar{D,P,M,T,C}
-    agent_paths::Vector{Tuple{Int,Vector{NTuple{D,T}}}}
-    dims::NTuple{D,T}
+struct SerializableAStar{D, P, M, T, C}
+    agent_paths::Vector{Tuple{Int, Vector{NTuple{D, T}}}}
+    dims::NTuple{D, T}
     neighborhood::Vector{Dims{D}}
     admissibility::Float64
     walkmap::BitArray{D}
     cost_metric::C
 end
 
-JLD2.writeas(::Type{Pathfinding.AStar{D,P,M,T,C}}) where {D,P,M,T,C} = SerializableAStar{D,P,M,T,C}
+JLD2.writeas(::Type{Pathfinding.AStar{D, P, M, T, C}}) where {D, P, M, T, C} = SerializableAStar{D, P, M, T, C}
 
 function to_serializable(t::ABM{S}) where {S}
     sabm = SerializableABM(
@@ -94,28 +94,28 @@ function to_serializable(t::ABM{S}) where {S}
     return sabm
 end
 
-to_serializable(t::GridSpace{D,P}) where {D,P} =
-    SerializableGridSpace{D,P}(spacesize(t), t.metric)
-to_serializable(t::GridSpaceSingle{D,P}) where {D,P} =
-    SerializableGridSpaceSingle{D,P}(spacesize(t), t.metric)
+to_serializable(t::GridSpace{D, P}) where {D, P} =
+    SerializableGridSpace{D, P}(spacesize(t), t.metric)
+to_serializable(t::GridSpaceSingle{D, P}) where {D, P} =
+    SerializableGridSpaceSingle{D, P}(spacesize(t), t.metric)
 
-to_serializable(t::ContinuousSpace{D,P,T}) where {D,P,T} =
-    SerializableContinuousSpace{D,P,T}(to_serializable(t.grid), t.dims, t.spacing, t.extent)
+to_serializable(t::ContinuousSpace{D, P, T}) where {D, P, T} =
+    SerializableContinuousSpace{D, P, T}(to_serializable(t.grid), t.dims, t.spacing, t.extent)
 
 to_serializable(t::GraphSpace{G}) where {G} = SerializableGraphSpace{G}(t.graph)
 
 
-JLD2.wconvert(::Type{SerializableAStar{D,P,M,T,C}}, t::Pathfinding.AStar{D,P,M,T,C}) where {D,P,M,T,C} =
-    SerializableAStar{D,P,M,T,C}(
-        [(k, collect(v)) for (k, v) in t.agent_paths],
-        t.dims,
-        map(Tuple, t.neighborhood),
-        t.admissibility,
-        t.walkmap,
-        t.cost_metric,
-    )
+JLD2.wconvert(::Type{SerializableAStar{D, P, M, T, C}}, t::Pathfinding.AStar{D, P, M, T, C}) where {D, P, M, T, C} =
+    SerializableAStar{D, P, M, T, C}(
+    [(k, collect(v)) for (k, v) in t.agent_paths],
+    t.dims,
+    map(Tuple, t.neighborhood),
+    t.admissibility,
+    t.walkmap,
+    t.cost_metric,
+)
 
-function from_serializable(t::SerializableABM{S,A}; kwargs...) where {S,A}
+function from_serializable(t::SerializableABM{S, A}; kwargs...) where {S, A}
     abm = StandardABM(
         A,
         from_serializable(t.space; kwargs...),
@@ -138,27 +138,27 @@ function type_no_p(::Type{T}) where {T}
     params = T.parameters
     Tn = isempty(params) ? T : T.name.wrapper
     if Tn <: AbstractArray && params[2] === 1
-        return Tn{A, 1} where A
+        return Tn{A, 1} where {A}
     else
         return Tn
     end
 end
 
-function from_serializable(t::SerializableGridSpace{D,P}; kwargs...) where {D,P}
-    s = Array{Vector{Int},D}(undef, t.dims)
+function from_serializable(t::SerializableGridSpace{D, P}; kwargs...) where {D, P}
+    s = Array{Vector{Int}, D}(undef, t.dims)
     for i in eachindex(s)
         s[i] = Int[]
     end
-    return GridSpace{D,P}(s, t.dims, t.metric, Vector(), Vector(), Vector(), Dict())
+    return GridSpace{D, P}(s, t.dims, t.metric, Vector(), Vector(), Vector(), Dict())
 end
-function from_serializable(t::SerializableGridSpaceSingle{D,P}; kwargs...) where {D,P}
+function from_serializable(t::SerializableGridSpaceSingle{D, P}; kwargs...) where {D, P}
     s = zeros(Int, t.dims)
-    return GridSpaceSingle{D,P}(s, t.dims, t.metric, Vector(), Vector(), Vector())
+    return GridSpaceSingle{D, P}(s, t.dims, t.metric, Vector(), Vector(), Vector())
 end
 
-function from_serializable(t::SerializableContinuousSpace{D,P,T}; kwargs...) where {D,P,T}
+function from_serializable(t::SerializableContinuousSpace{D, P, T}; kwargs...) where {D, P, T}
     update_vel! = get(kwargs, :update_vel!, Agents.no_vel_update)
-    ContinuousSpace(
+    return ContinuousSpace(
         from_serializable(t.grid; kwargs...),
         update_vel!,
         t.dims,
@@ -169,17 +169,17 @@ end
 
 from_serializable(t::SerializableGraphSpace; kwargs...) = GraphSpace(t.graph)
 
-JLD2.rconvert(::Type{Pathfinding.AStar{D,P,M,T,C}}, t::SerializableAStar{D,P,M,T,C}) where {D,P,M,T,C} =
-    Pathfinding.AStar{D,P,M,T,C}(
-        Dict{Int,Pathfinding.Path{D,T}}(
-            k => Pathfinding.Path{D,T}(v...) for (k, v) in t.agent_paths
-        ),
-        t.dims,
-        map(CartesianIndex, t.neighborhood),
-        t.admissibility,
-        t.walkmap,
-        t.cost_metric,
-    )
+JLD2.rconvert(::Type{Pathfinding.AStar{D, P, M, T, C}}, t::SerializableAStar{D, P, M, T, C}) where {D, P, M, T, C} =
+    Pathfinding.AStar{D, P, M, T, C}(
+    Dict{Int, Pathfinding.Path{D, T}}(
+        k => Pathfinding.Path{D, T}(v...) for (k, v) in t.agent_paths
+    ),
+    t.dims,
+    map(CartesianIndex, t.neighborhood),
+    t.admissibility,
+    t.walkmap,
+    t.cost_metric,
+)
 
 """
     AgentsIO.save_checkpoint(filename, model::ABM)
@@ -195,7 +195,7 @@ should be considered before using this functionality:
 """
 function save_checkpoint(filename, model::ABM)
     model = to_serializable(model)
-    @save filename model
+    return @save filename model
 end
 
 """

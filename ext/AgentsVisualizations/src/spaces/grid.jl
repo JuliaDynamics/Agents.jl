@@ -8,7 +8,7 @@ end
 function abmheatmap!(ax, abmobs::ABMObservable, space::Agents.AbstractGridSpace, heatobs, heatkwargs)
     hmap = Makie.heatmap!(
         ax, heatobs;
-        colormap=JULIADYNAMICS_CMAP, heatkwargs
+        colormap = JULIADYNAMICS_CMAP, heatkwargs
     )
     return hmap
 end
@@ -22,9 +22,9 @@ function abmplot_heatarray(model::ABM{<:Agents.AbstractGridSpace}, heatarray)
 end
 
 ## Inspection
-function Agents.convert_element_pos(s::S, pos) where {S<:Agents.AbstractGridSpace}
+function Agents.convert_element_pos(s::S, pos) where {S <: Agents.AbstractGridSpace}
     gridpos = pos[1:length(spacesize(s))]
-    Tuple(round.(Int, gridpos)) # using round to handle positions with offset
+    return Tuple(round.(Int, gridpos)) # using round to handle positions with offset
 end
 function Agents.ids_to_inspect(model::ABM{<:GridSpaceSingle}, pos)
     id = id_in_position(pos, model)

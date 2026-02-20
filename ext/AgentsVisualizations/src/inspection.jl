@@ -1,8 +1,10 @@
 # Note: currently this file is not included in the source code.
 
 # 2D space
-function Makie.show_data(inspector::DataInspector,
-        p::ABMP{<:Agents.AbstractSpace}, idx, source::Scatter)
+function Makie.show_data(
+        inspector::DataInspector,
+        p::ABMP{<:Agents.AbstractSpace}, idx, source::Scatter
+    )
     pos = Makie.position_on_plot(source, idx)
     proj_pos = Makie.shift_project(Makie.parent_scene(p), pos)
     Makie.update_tooltip_alignment!(inspector, proj_pos)
@@ -16,8 +18,10 @@ function Makie.show_data(inspector::DataInspector,
 end
 
 # Polygon plots
-function Makie.show_data(inspector::DataInspector,
-        p::ABMP{<:Agents.AbstractSpace}, idx, source::Makie.Mesh)
+function Makie.show_data(
+        inspector::DataInspector,
+        p::ABMP{<:Agents.AbstractSpace}, idx, source::Makie.Mesh
+    )
     # poly plots with multiple elements don't seem to allow inspection per element but only
     # for the whole block of poly elements which is really not what we want
     # using the current mouseposition on the scene when hovering a Mesh (i.e. an agent)
@@ -36,8 +40,10 @@ function Makie.show_data(inspector::DataInspector,
 end
 
 # 3D space
-function Makie.show_data(inspector::DataInspector,
-        p::ABMP{<:Agents.AbstractSpace}, idx, source::MeshScatter)
+function Makie.show_data(
+        inspector::DataInspector,
+        p::ABMP{<:Agents.AbstractSpace}, idx, source::MeshScatter
+    )
     pos = Makie.position_on_plot(source, idx)
     proj_pos = Makie.shift_project(Makie.parent_scene(p), pos)
     Makie.update_tooltip_alignment!(inspector, proj_pos)
@@ -64,17 +70,17 @@ function Agents.agent2string(model::ABM, pos)
     return s
 end
 
-function Agents.agent2string(agent::A) where {A<:AbstractAgent}
+function Agents.agent2string(agent::A) where {A <: AbstractAgent}
     agentstring = "▶ $(nameof(A))\n"
 
     agentstring *= "id: $(getproperty(agent, :id))\n"
 
     if hasproperty(agent, :pos)
         pos = getproperty(agent, :pos)
-        if pos isa Union{NTuple{<:Any, <:AbstractFloat},SVector{<:Any, <:AbstractFloat}}
-            pos = round.(pos, sigdigits=2)
+        if pos isa Union{NTuple{<:Any, <:AbstractFloat}, SVector{<:Any, <:AbstractFloat}}
+            pos = round.(pos, sigdigits = 2)
         elseif pos isa Tuple{<:Int, <:Int, <:AbstractFloat}
-            pos = (pos[1], pos[2], round(pos[3], sigdigits=2))
+            pos = (pos[1], pos[2], round(pos[3], sigdigits = 2))
         end
         agentstring *= "pos: $(pos)\n"
     end
@@ -82,11 +88,11 @@ function Agents.agent2string(agent::A) where {A<:AbstractAgent}
     for field in fieldnames(A)[3:end]
         val = getproperty(agent, field)
         if val isa AbstractFloat
-            val = round(val, sigdigits=2)
+            val = round(val, sigdigits = 2)
         elseif val isa AbstractArray{<:AbstractFloat}
-            val = round.(val, sigdigits=2)
+            val = round.(val, sigdigits = 2)
         elseif val isa NTuple{<:Any, <:AbstractFloat}
-            val = round.(val, sigdigits=2)
+            val = round.(val, sigdigits = 2)
         end
         agentstring *= "$(field): $val\n"
     end
@@ -94,7 +100,7 @@ function Agents.agent2string(agent::A) where {A<:AbstractAgent}
     return agentstring
 end
 
-Agents.convert_element_pos(::S, pos) where {S<:Agents.AbstractSpace} = Tuple(pos)
+Agents.convert_element_pos(::S, pos) where {S <: Agents.AbstractSpace} = Tuple(pos)
 
 Agents.ids_to_inspect(model::ABM, pos) = ids_in_position(pos, model)
 
@@ -104,8 +110,10 @@ Agents.ids_to_inspect(model::ABM, pos) = ids_in_position(pos, model)
 
 # Nothing
 
-function Makie.show_data(inspector::DataInspector,
-        p::ABMP{<:Nothing}, idx, source::Scatter)
+function Makie.show_data(
+        inspector::DataInspector,
+        p::ABMP{<:Nothing}, idx, source::Scatter
+    )
     pos = Makie.position_on_plot(source, idx)
     proj_pos = Makie.shift_project(Makie.parent_scene(p), pos)
     Makie.update_tooltip_alignment!(inspector, proj_pos)

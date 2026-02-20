@@ -1,6 +1,7 @@
 export abmexploration, abmvideo
 
-function Agents.abmexploration(model;
+function Agents.abmexploration(
+        model;
         figure = (size = (1200, 800),),
         axis = NamedTuple(),
         alabels = nothing,
@@ -8,7 +9,8 @@ function Agents.abmexploration(model;
         plotkwargs = NamedTuple(),
         kwargs...
     )
-    fig, ax, abmobs = abmplot(model;
+    fig, ax, abmobs = abmplot(
+        model;
         figure, axis, add_controls = true, kwargs...
     )
 
@@ -23,23 +25,28 @@ end
 
 function init_abm_data_plots!(fig, abmobs, adata, mdata, alabels, mlabels, plotkwargs)
     stepclick, resetclick = abmobs.stepclick, abmobs.resetclick
-    La = isnothing(adata) ? 0 : size(abmobs.adf[])[2]-1
-    Lm = isnothing(mdata) ? 0 : size(abmobs.mdf[])[2]-1
+    La = isnothing(adata) ? 0 : size(abmobs.adf[])[2] - 1
+    Lm = isnothing(mdata) ? 0 : size(abmobs.mdf[])[2] - 1
     La + Lm == 0 && return nothing # failsafe; don't add plots if dataframes are empty
 
-    plotlayout = fig[:, end+1] = GridLayout(tellheight = false)
+    plotlayout = fig[:, end + 1] = GridLayout(tellheight = false)
     axs = []
 
     for i in 1:La # add adata plots
         y_label = dataname(adata[i])
         # string(adata[i][2]) * "_" * string(adata[i][1])
-        points = @lift(Point2f.(apply_offsets($(abmobs.adf).time, $(abmobs.offset_time_adf)),
-                                $(abmobs.adf)[:, y_label]))
+        points = @lift(
+            Point2f.(
+                apply_offsets($(abmobs.adf).time, $(abmobs.offset_time_adf)),
+                $(abmobs.adf)[:, y_label]
+            )
+        )
         ax = plotlayout[i, :] = Axis(fig)
         push!(axs, ax)
         ax.ylabel = isnothing(alabels) ? y_label : alabels[i]
         c = JULIADYNAMICS_COLORS[mod1(i, 3)]
-        scatterlines!(ax, points;
+        scatterlines!(
+            ax, points;
             color = c, strokecolor = c, strokewidth = 0.5,
             label = ax.ylabel, plotkwargs...
         )
@@ -47,25 +54,32 @@ function init_abm_data_plots!(fig, abmobs, adata, mdata, alabels, mlabels, plotk
 
     for i in 1:Lm # add mdata plots
         y_label = string(mdata[i])
-        points = @lift(Point2f.(apply_offsets($(abmobs.mdf).time, $(abmobs.offset_time_mdf)),
-                                $(abmobs.mdf)[:,y_label]))
-        ax = plotlayout[i+La, :] = Axis(fig)
+        points = @lift(
+            Point2f.(
+                apply_offsets($(abmobs.mdf).time, $(abmobs.offset_time_mdf)),
+                $(abmobs.mdf)[:, y_label]
+            )
+        )
+        ax = plotlayout[i + La, :] = Axis(fig)
         push!(axs, ax)
         ax.ylabel = isnothing(mlabels) ? y_label : mlabels[i]
-        c = JULIADYNAMICS_COLORS[mod1(i+La, 3)]
-        scatterlines!(ax, points;
+        c = JULIADYNAMICS_COLORS[mod1(i + La, 3)]
+        scatterlines!(
+            ax, points;
             color = c, strokecolor = c, strokewidth = 0.5,
             label = ax.ylabel, plotkwargs...
         )
     end
 
-    if La+Lm > 1
-        for ax in @view(axs[1:end-1]); hidexdecorations!(ax, grid = false); end
+    if La + Lm > 1
+        for ax in @view(axs[1:(end - 1)])
+            hidexdecorations!(ax, grid = false)
+        end
     end
     axs[end].xlabel = "time"
 
     # Trigger correct, and efficient, linking of x-axis
-    linkxaxes!(axs[end], axs[1:end-1]...)
+    linkxaxes!(axs[end], axs[1:(end - 1)]...)
     on(stepclick) do clicks
         xlims!(axs[1], Makie.xautolimits(axs[1]))
         for ax in axs
@@ -93,21 +107,22 @@ end
 
 ##########################################################################################
 
-function Agents.abmvideo(file, model;
-        spf = nothing, dt = 1, framerate = 30, frames = 300,  title = "", showstep = true,
+function Agents.abmvideo(
+        file, model;
+        spf = nothing, dt = 1, framerate = 30, frames = 300, title = "", showstep = true,
         figure = (size = (600, 600),), axis = NamedTuple(),
         recordkwargs = (compression = 20,), kwargs...
     )
     if !isnothing(spf)
-        @warn "keyword `spf` is deprecated in favor of `dt`." maxlog=1
+        @warn "keyword `spf` is deprecated in favor of `dt`." maxlog = 1
         dt = spf
     end
     # add some title stuff
     abmtime_obs = Observable(abmtime(model))
     if title ≠ "" && showstep
-        t = lift(x -> title*", time = "*string(x), abmtime_obs)
+        t = lift(x -> title * ", time = " * string(x), abmtime_obs)
     elseif showstep
-        t = lift(x -> "time = "*string(x), abmtime_obs)
+        t = lift(x -> "time = " * string(x), abmtime_obs)
     else
         t = title
     end
@@ -117,7 +132,7 @@ function Agents.abmvideo(file, model;
     resize_to_layout!(fig)
 
     record(fig, file; framerate, recordkwargs...) do io
-        for j in 1:frames-1
+        for j in 1:(frames - 1)
             recordframe!(io)
             Agents.step!(abmobs, dt)
             abmtime_obs[] = abmtime(model)

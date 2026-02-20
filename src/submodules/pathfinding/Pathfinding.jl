@@ -21,31 +21,31 @@ examples using path-finding and see the available functions below as well.
 """
 module Pathfinding
 
-using Agents
-using DataStructures
-using LinearAlgebra
+    using Agents
+    using DataStructures
+    using LinearAlgebra
 
-abstract type GridPathfinder{D,P,M} end
+    abstract type GridPathfinder{D, P, M} end
 
-include("metrics.jl")
-include("pathfinding_utils.jl")
-include("astar.jl")
-include("astar_grid.jl")
-include("astar_continuous.jl")
+    include("metrics.jl")
+    include("pathfinding_utils.jl")
+    include("astar.jl")
+    include("astar_grid.jl")
+    include("astar_continuous.jl")
 
-export CostMetric,
-    DirectDistance,
-    MaxDistance,
-    PenaltyMap,
-    AStar,
-    delta_cost,
-    penaltymap,
-    nearby_walkable,
-    random_walkable
+    export CostMetric,
+        DirectDistance,
+        MaxDistance,
+        PenaltyMap,
+        AStar,
+        delta_cost,
+        penaltymap,
+        nearby_walkable,
+        random_walkable
 
-# Deprecations
-@deprecate set_target! plan_route!
-@deprecate set_best_target! plan_best_route!
-@deprecate kill_agent! remove_agent!
+    # Deprecations
+    @deprecate set_target! plan_route!
+    @deprecate set_best_target! plan_best_route!
+    @deprecate kill_agent! remove_agent!
 
 end # module

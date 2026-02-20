@@ -1,5 +1,5 @@
 export ensemblerun!
-Vector_or_Tuple = Union{AbstractArray,Tuple}
+Vector_or_Tuple = Union{AbstractArray, Tuple}
 
 """
     ensemblerun!(models::Vector, n; kwargs...)
@@ -35,11 +35,15 @@ function ensemblerun!(
         kwargs...,
     )
     if parallel
-        return parallel_ensemble(models, n;
-                                 showprogress, kwargs...)
+        return parallel_ensemble(
+            models, n;
+            showprogress, kwargs...
+        )
     else
-        return series_ensemble(models, n;
-                               showprogress, kwargs...)
+        return series_ensemble(
+            models, n;
+            showprogress, kwargs...
+        )
     end
 end
 
@@ -57,11 +61,13 @@ function ensemblerun!(
         kwargs...,
     )
     models = [generator(seed) for seed in seeds]
-    ensemblerun!(models, n; kwargs...)
+    return ensemblerun!(models, n; kwargs...)
 end
 
-function series_ensemble(models, n;
-                         showprogress = false, kwargs...)
+function series_ensemble(
+        models, n;
+        showprogress = false, kwargs...
+    )
 
     @assert models[1] isa ABM
 
@@ -90,8 +96,10 @@ function series_ensemble(models, n;
     return df_agent, df_model, models
 end
 
-function parallel_ensemble(models, n;
-                           showprogress = false, kwargs...)
+function parallel_ensemble(
+        models, n;
+        showprogress = false, kwargs...
+    )
 
     progress = ProgressMeter.Progress(length(models); enabled = showprogress)
     all_data = ProgressMeter.progress_pmap(models; progress) do model
@@ -112,5 +120,5 @@ function parallel_ensemble(models, n;
 end
 
 function add_ensemble_index!(df, m)
-    df[!, :ensemble] = fill(m, size(df, 1))
+    return df[!, :ensemble] = fill(m, size(df, 1))
 end

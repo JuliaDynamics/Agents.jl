@@ -8,9 +8,10 @@ end
 function Agents.abmheatmap!(ax, abmobs::ABMObservable, space::ContinuousSpace, heatobs, heatkwargs)
     nbinx, nbiny = size(heatobs[])
     extx, exty = space.extent
-    coordx = range(0, extx; length=nbinx)
-    coordy = range(0, exty; length=nbiny)
-    hmap = Makie.heatmap!(ax, coordx, coordy, heatobs;
+    coordx = range(0, extx; length = nbinx)
+    coordy = range(0, exty; length = nbiny)
+    hmap = Makie.heatmap!(
+        ax, coordx, coordy, heatobs;
         colormap = JULIADYNAMICS_CMAP, heatkwargs...
     )
     return hmap

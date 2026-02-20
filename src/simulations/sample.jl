@@ -19,11 +19,11 @@ be chosen more than once.
 Example usage in [Wright-Fisher model of evolution](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/wright-fisher/).
 """
 function sample!(
-    model::ABM,
-    n::Int,
-    weight = nothing;
-    replace = true
-)
+        model::ABM,
+        n::Int,
+        weight = nothing;
+        replace = true
+    )
     nagents(model) == 0 && return nothing
     org_ids = collect(allids(model))
     if weight !== nothing
@@ -64,8 +64,10 @@ end
 
 function add_newids_bulk!(model::ABM, new_ids)
     maxid = getfield(model, :maxid)[]
-    new_agents = [copy_agent(model[id], model, maxid+i) for
-                  (i, id) in enumerate(sort!(new_ids))]
+    new_agents = [
+        copy_agent(model[id], model, maxid + i) for
+            (i, id) in enumerate(sort!(new_ids))
+    ]
     remove_all!(model)
     sizehint!(agent_container(model), length(new_ids))
     for agent in new_agents
@@ -103,7 +105,7 @@ function replicate!(agent::AbstractAgent, model; kwargs...)
     return newagent
 end
 
-function copy_agent(agent::A, model, id_new; kwargs...) where {A<:AbstractAgent}
+function copy_agent(agent::A, model, id_new; kwargs...) where {A <: AbstractAgent}
     if is_sumtype(A)
         args = new_args_sum_t(agent, model; kwargs...)
         newagent = A(variantof(agent)(id_new, args...))
@@ -117,7 +119,7 @@ end
 function new_args_t(agent, model; kwargs...)
     # the id is always the first field
     fields_no_id = propertynames(agent)[2:end]
-    if isempty(kwargs)
+    return if isempty(kwargs)
         new_args = (getproperty(agent, x) for x in fields_no_id)
     else
         kwargs_nt = NamedTuple(kwargs)
@@ -127,7 +129,7 @@ end
 function new_args_sum_t(agent, model; kwargs...)
     # the id is always the first field
     fields_no_id = propertynames(agent)[2:end]
-    if isempty(kwargs)
+    return if isempty(kwargs)
         new_args = map(x -> getproperty(agent, x), fields_no_id)
     else
         kwargs_nt = NamedTuple(kwargs)
@@ -143,7 +145,7 @@ end
 # %% sampling functions
 #######################################################################################
 
-function sampling_with_condition_single(iter, condition, model, transform=identity)
+function sampling_with_condition_single(iter, condition, model, transform = identity)
     population = collect(iter)
     n = length(population)
     rng = abmrng(model)
