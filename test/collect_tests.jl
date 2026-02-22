@@ -569,8 +569,10 @@ end
         function schelling(; nagents = 320, griddims = (20, 20), min_to_be_happy = 3)
             space = GridSpaceSingle(griddims, periodic = false)
             properties = Dict(:min_to_be_happy => min_to_be_happy)
-            model = StandardABM(SchellingAgent, space; properties, agent_step! = schelling_agent_step!,
-                                container = Vector, scheduler = Schedulers.Randomly())
+            model = StandardABM(
+                SchellingAgent, space; properties, agent_step! = schelling_agent_step!,
+                container = Vector, scheduler = Schedulers.Randomly()
+            )
             for n in 1:nagents
                 add_agent_single!(SchellingAgent, model, false, n < nagents / 2 ? 1 : 2)
             end

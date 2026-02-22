@@ -276,7 +276,8 @@ agentsplotkwargs = (
 
 # we now put everything together:
 
-fig, ax, abmobs = abmplot(model;
+fig, ax, abmobs = abmplot(
+    model;
     agent_size = city_size, agent_color = city_color, agentsplotkwargs
 )
 fig
