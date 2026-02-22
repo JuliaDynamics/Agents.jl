@@ -345,7 +345,7 @@ using FileIO
 function initialize_runners(map_url; goal = (128, 409), seed = 88)
     heightmap = floor.(Int, convert.(Float64, load(download(map_url))) * 255)
     space = GridSpace(size(heightmap); periodic = false)
-    pathfinder = AStar(space; cost_metric = PenaltyMap(heightmap, MaxDistance{2}()))
+    pathfinder = Pathfinding.AStar(space; cost_metric = PenaltyMap(heightmap, MaxDistance{2}()))
     model = StandardABM(
         Runner,
         space;

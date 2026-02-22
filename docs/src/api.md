@@ -126,15 +126,11 @@ get_direction
 
 ### Movement with paths
 
-For [`OpenStreetMapSpace`](@ref), and [`GridSpace`](@ref)/[`ContinuousSpace`](@ref) using [`Pathfinding`](@ref), a special
-movement method is available.
-
-```@docs
-plan_route!
+For [`OpenStreetMapSpace`](@ref), and [`GridSpace`](@ref)/[`ContinuousSpace`](@ref) using [`Pathfinding`](@ref), it is possible to move along planned routes.
+See the functions `plan_route!
 plan_best_route!
-move_along_route!
-is_stationary
-```
+move_along_route!`  of the respective submodules.
+
 
 ## Removing agents
 
@@ -389,6 +385,15 @@ To use the `parallel=true` option of [`ensemblerun!`](@ref) you need to load `Ag
 Pathfinding
 Pathfinding.AStar
 Pathfinding.penaltymap
+```
+
+### Path-finding planning and moving
+
+```@docs
+Pathfinding.plan_route!
+Pathfinding.plan_best_route!
+Pathfinding.move_along_route!
+Pathfinding.is_stationary
 Pathfinding.nearby_walkable
 Pathfinding.random_walkable
 ```

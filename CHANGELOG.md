@@ -32,6 +32,8 @@ typical usage of Agents.jl:
    - We are currently debating amongst options to counteract this problem, such as porting the LightOSM.jl source code directly into Agents.jl, or forking the project and registering it under a new name, or trying to get ownership of the project.
    - Function `download_osm_network` is no longer re-exported from LightOSM.jl.
    - At least making this current breaking change means that whatever the future solution for `OpenStreetMapSpace` is, it will be non breaking.
+3. The functions `plan_route!, plan_best_route!, move_along_route!` are no longer top-level `Agents` functions. You have to preface the with either `OSM.` or `Pathfinding.` to use them in their respective submodule.
+
 
 # v6.2
 

@@ -105,7 +105,7 @@ For pathfinding in models with [`ContinuousSpace`](@ref).
 
 If the agent does not have a precalculated path or the path is empty, it remains stationary.
 """
-function Agents.move_along_route!(
+function Pathfinding.move_along_route!(
         agent::AbstractAgent,
         model::ABM{<:ContinuousSpace{D}},
         pathfinder::AStar{D},

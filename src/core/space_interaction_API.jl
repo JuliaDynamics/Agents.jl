@@ -22,11 +22,7 @@ export move_agent!,
     nearby_agents,
     random_nearby_id,
     random_nearby_agent,
-    random_nearby_position,
-    plan_route!,
-    plan_best_route!,
-    move_along_route!,
-    is_stationary
+    random_nearby_position
 
 #######################################################################################
 # %% IMPLEMENT
@@ -89,24 +85,6 @@ on the underlying graph of the OSM, providing the intersection nodes nearest to 
 given position.
 """
 nearby_positions(pos, model, r = 1) = notimplemented(model)
-
-#######################################################################################
-# %% OPTIONAL IMPLEMENT
-#######################################################################################
-plan_route!(agent, dest, model_or_pathfinder; kwargs...) =
-    notimplemented(model_or_pathfinder)
-
-plan_best_route!(agent, dests, model_or_pathfinder; kwargs...) =
-    notimplemented(model_or_pathfinder)
-
-move_along_route!(agent, model, args...; kwargs...) = notimplemented(model)
-
-"""
-    is_stationary(agent, model)
-Return `true` if agent has reached the end of its route, or no route
-has been set for it. Used in setups where using [`move_along_route!`](@ref) is valid.
-"""
-is_stationary(agent, model) = notimplemented(model)
 
 #######################################################################################
 # %% Space agnostic removing and moving

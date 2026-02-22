@@ -4,7 +4,7 @@ using Agents.Graphs, Agents.DataFrames
 using StatsBase: mean
 using StableRNGs
 using AgentsExampleZoo
-AStar = Agents.AStar
+AStar = Agents.Pathfinding.AStar
 
 using Distributed
 addprocs(2)
@@ -15,6 +15,7 @@ addprocs(2)
     using StatsBase: mean
     using StableRNGs
     using AgentsExampleZoo
+    AStar = Agents.Pathfinding.AStar
 end
 
 @agent struct Agent0(NoSpaceAgent)
