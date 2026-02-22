@@ -1,5 +1,6 @@
 using Agents, Test, Agents.DataFrames
 using CSV, Arrow
+using Distributed
 
 @testset "DataCollection" begin
     @agent struct AgentWeight(GridAgent{2})
