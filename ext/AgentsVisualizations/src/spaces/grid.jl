@@ -8,7 +8,7 @@ end
 function abmheatmap!(ax, abmobs::ABMObservable, space::Agents.AbstractGridSpace, heatobs, heatkwargs)
     hmap = Makie.heatmap!(
         ax, heatobs;
-        colormap = JULIADYNAMICS_CMAP, heatkwargs
+        colormap = JULIADYNAMICS_CMAP, heatkwargs...
     )
     return hmap
 end

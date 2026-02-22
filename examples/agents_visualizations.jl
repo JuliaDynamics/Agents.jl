@@ -17,7 +17,7 @@
 import Pkg
 Pkg.status(
     ["Agents", "CairoMakie"];
-    mode = PKGMODE_MANIFEST, io = stdout
+    mode = Pkg.PKGMODE_MANIFEST, io = stdout
 )
 
 # ## Static plotting of ABMs
@@ -43,7 +43,7 @@ model
 daisycolor(a) = a.breed
 agent_size = 20
 agent_marker = '✿'
-agentsplotkwargs = (strokewidth = 1.0,) # add stroke around each agent
+agentsplotkwargs = (strokewidth = 1.0, strokecolor = :black)
 fig, ax, abmobs = abmplot(
     model;
     agent_color = daisycolor, agent_size, agent_marker, agentsplotkwargs
@@ -65,7 +65,7 @@ heatkwargs = (colorrange = (-20, 60), colormap = :thermal)
 plotkwargs = (;
     agent_color = daisycolor, agent_size, agent_marker,
     agentsplotkwargs = (strokewidth = 1.0,),
-    heatarray, heatkwargs,
+    heatarray, heatkwargs, colorbar_label = "temperature"
 )
 
 fig, ax, abmobs = abmplot(model; plotkwargs...)
@@ -93,6 +93,8 @@ fig
 
 # One could click the run button and see the model evolve.
 # Furthermore, one can add more sliders that allow changing the model parameters.
+# This is done by providing a dictionary mapping parameter keys to range of values.
+# When such a dictionary is provided, `abmplot` goes into interactive mode by default.
 params = Dict(
     :surface_albedo => 0:0.01:1,
     :solar_change => -0.1:0.01:0.1,
@@ -144,23 +146,6 @@ abmvideo("daisyworld.mp4", model; title = "Daisy World", frames = 150, plotkwarg
 # You could of course also explicitly use `abmplot` in a `record` loop for
 # finer control over additional plot elements.
 
-# ## Agent inspection
-
-# It is possible to inspect agents at a given position by hovering the mouse cursor over
-# the scatter points in the agent plot. Inspection is automatically enabled for interactive
-# applications (i.e. when either agent or model stepping functions are provided). To
-# manually enable this functionality, simply add `enable_inspection = true` as an
-# additional keyword argument to the `abmplot`/`abmplot!` call.
-# A tooltip will appear which by default provides the name of the agent type, its `id`,
-# `pos`, and all other fieldnames together with their current values. This is especially
-# useful for interactive exploration of micro data on the agent level.
-
-# ![RabbitFoxHawk inspection example](https://github.com/JuliaDynamics/JuliaDynamics/tree/master/videos/agents/RabbitFoxHawk_inspection.png)
-
-# The tooltip can be customized by extending `Agents.agent2string`.
-# ```@docs; canonical = false
-# Agents.agent2string
-# ```
 
 # ## Creating custom ABM plots
 # The existing convenience function [`abmexploration`](@ref) will

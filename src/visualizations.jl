@@ -267,6 +267,7 @@ function agentsplot! end
     abmheatmap!(ax, abmobs::ABMObservable, space, heatobs, add_colorbar, heatkwargs)
 
 Plot as a heatmap the provided `heatobs` (an observable matrix created from `heatarray`).
+Return the heatmap (or otherwise) plot object so that a Colorbar can be assigned to it.
 """
 function abmheatmap! end
 
