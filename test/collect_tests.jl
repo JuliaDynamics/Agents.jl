@@ -561,6 +561,9 @@ end
 @testset "Ensemble runs" begin
 
     @everywhere begin
+        @agent struct SchellingAgent(GridAgent{2})
+            const group::Int # The group of the agent
+        end
         nsteps = 100
         nreplicates = 2
         numagents_low = 280
