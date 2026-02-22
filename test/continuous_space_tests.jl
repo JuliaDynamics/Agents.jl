@@ -162,19 +162,19 @@ using LinearAlgebra: norm, dot
         pathfinder = AStar(cspace; walkmap = trues(10, 10))
         model = StandardABM(TupleManualAgent, cspace; properties = (pf = pathfinder,), warn = false, warn_deprecation = false)
         a = add_agent!((0.0, 0.0), model, (0.0, 0.0))
-        @test is_stationary(a, model.pf)
-        plan_route!(a, (4.0, 4.0), model.pf)
-        @test !is_stationary(a, model.pf)
+        @test Pathfinding.is_stationary(a, model.pf)
+        Pathfinding.plan_route!(a, (4.0, 4.0), model.pf)
+        @test !Pathfinding.is_stationary(a, model.pf)
         @test length(model.pf.agent_paths) == 1
-        move_along_route!(a, model, model.pf, 0.35355)
+        Pathfinding.move_along_route!(a, model, model.pf, 0.35355)
         @test all(isapprox.(a.pos, (4.75, 4.75); atol))
         # test waypoint skipping
         move_agent!(a, (0.25, 0.25), model)
-        plan_route!(a, (0.75, 1.25), model.pf)
-        move_along_route!(a, model, model.pf, 0.807106)
+        Pathfinding.plan_route!(a, (0.75, 1.25), model.pf)
+        Pathfinding.move_along_route!(a, model, model.pf, 0.807106)
         @test all(isapprox.(a.pos, (0.75, 0.849999); atol)) || all(isapprox.(a.pos, (0.467156, 0.967156); atol))
         # make sure it doesn't overshoot the end
-        move_along_route!(a, model, model.pf, 20.0)
+        Pathfinding.move_along_route!(a, model, model.pf, 20.0)
         @test all(isapprox.(a.pos, (0.75, 1.25); atol))
     end
     @testset "nearby ids" begin
