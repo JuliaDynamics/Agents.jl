@@ -137,7 +137,7 @@ move_along_route!`  of the respective submodules.
 ```@docs
 remove_agent!
 remove_all!
-sample!
+Agents.sample!
 ```
 
 ## Space utility functions
@@ -165,7 +165,7 @@ random_empty
 add_agent_single!
 move_agent_single!
 swap_agents!
-isempty(::Int, ::ABM)
+isempty(::Int, ::ABM{<:DiscreteSpace})
 ```
 
 ## `GraphSpace` exclusives
@@ -322,7 +322,7 @@ return df_agent, df_model
 
 ```@docs
 Schedulers
-schedule(::ABM)
+Schedulers.schedule(::ABM)
 ```
 
 ### Predefined schedulers
@@ -437,7 +437,6 @@ abmplot!
 abmexploration
 abmvideo
 ABMObservable
-add_interaction!
 translate_polygon
 scale_polygon
 rotate_polygon
