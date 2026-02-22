@@ -204,7 +204,7 @@ function animal_step!(rabbit, model, ::Rabbit)
             variant(x) isa Fox || variant(x) isa Hawk
     ]
     ## If the rabbit sees a predator and isn't already moving somewhere
-    if !isempty(predators) && is_stationary(rabbit, model.landfinder)
+    if !isempty(predators) && Pathfinding.is_stationary(rabbit, model.landfinder)
         ## Try and get an ideal direction away from predators
         direction = (0.0, 0.0, 0.0)
         for predator in predators
@@ -228,7 +228,7 @@ function animal_step!(rabbit, model, ::Rabbit)
             position = rabbit.pos .+ direction .* (model.rabbit_vision / 2.0)
             chosen_position = random_walkable(position, model, model.landfinder, model.rabbit_vision / 2.0)
         end
-        plan_route!(rabbit, chosen_position, model.landfinder)
+        Pathfinding.plan_route!(rabbit, chosen_position, model.landfinder)
     end
 
     ## Reproduce with a random probability, scaling according to the time passed each
@@ -236,8 +236,8 @@ function animal_step!(rabbit, model, ::Rabbit)
     rand(abmrng(model)) <= model.rabbit_repr * model.dt && reproduce!(rabbit, model)
 
     ## If the rabbit isn't already moving somewhere, move to a random spot
-    if is_stationary(rabbit, model.landfinder)
-        plan_route!(
+    if Pathfinding.is_stationary(rabbit, model.landfinder)
+        Pathfinding.plan_route!(
             rabbit,
             random_walkable(rabbit.pos, model, model.landfinder, model.rabbit_vision),
             model.landfinder
@@ -245,7 +245,7 @@ function animal_step!(rabbit, model, ::Rabbit)
     end
 
     ## Move along the route planned above
-    return move_along_route!(rabbit, model, model.landfinder, model.rabbit_speed, model.dt)
+    return Pathfinding.move_along_route!(rabbit, model, model.landfinder, model.rabbit_speed, model.dt)
 end
 
 # Foxes hunt for rabbits, and eat rabbits within a unit radius of its position.
@@ -272,23 +272,23 @@ function animal_step!(fox, model, ::Fox)
     rand(abmrng(model)) <= model.fox_repr * model.dt && reproduce!(fox, model)
 
     ## If the fox isn't already moving somewhere
-    if is_stationary(fox, model.landfinder)
+    if Pathfinding.is_stationary(fox, model.landfinder)
         ## Look for any nearby rabbits
         prey = [x for x in nearby_agents(fox, model, model.fox_vision) if variant(x) isa Rabbit]
         if isempty(prey)
             ## Move anywhere if no rabbits were found
-            plan_route!(
+            Pathfinding.plan_route!(
                 fox,
                 random_walkable(fox.pos, model, model.landfinder, model.fox_vision),
                 model.landfinder,
             )
         else
             ## Move toward a random rabbit
-            plan_route!(fox, rand(abmrng(model), map(x -> x.pos, prey)), model.landfinder)
+            Pathfinding.plan_route!(fox, rand(abmrng(model), map(x -> x.pos, prey)), model.landfinder)
         end
     end
 
-    return move_along_route!(fox, model, model.landfinder, model.fox_speed, model.dt)
+    return Pathfinding.move_along_route!(fox, model, model.landfinder, model.fox_speed, model.dt)
 end
 
 # Hawks function similarly to foxes, except they can also fly. They dive down for prey and
@@ -302,7 +302,7 @@ function animal_step!(hawk, model, ::Hawk)
         remove_agent!(rand(abmrng(model), food), model, model.airfinder)
         hawk.energy += model.Δe_rabbit
         ## Fly back up
-        plan_route!(hawk, hawk.pos .+ (0.0, 0.0, 7.0), model.airfinder)
+        Pathfinding.plan_route!(hawk, hawk.pos .+ (0.0, 0.0, 7.0), model.airfinder)
     end
 
     ## The rest of the stepping function is similar to that of foxes, except hawks use a
@@ -315,20 +315,20 @@ function animal_step!(hawk, model, ::Hawk)
 
     rand(abmrng(model)) <= model.hawk_repr * model.dt && reproduce!(hawk, model)
 
-    if is_stationary(hawk, model.airfinder)
+    if Pathfinding.is_stationary(hawk, model.airfinder)
         prey = [x for x in nearby_agents(hawk, model, model.hawk_vision) if variant(x) isa Rabbit]
         if isempty(prey)
-            plan_route!(
+            Pathfinding.plan_route!(
                 hawk,
                 random_walkable(hawk.pos, model, model.airfinder, model.hawk_vision),
                 model.airfinder,
             )
         else
-            plan_route!(hawk, rand(abmrng(model), map(x -> x.pos, prey)), model.airfinder)
+            Pathfinding.plan_route!(hawk, rand(abmrng(model), map(x -> x.pos, prey)), model.airfinder)
         end
     end
 
-    return move_along_route!(hawk, model, model.airfinder, model.hawk_speed, model.dt)
+    return Pathfinding.move_along_route!(hawk, model, model.airfinder, model.hawk_speed, model.dt)
 end
 
 # This function is called when an animal reproduces. The animal loses half its energy, and

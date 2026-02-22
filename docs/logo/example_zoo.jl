@@ -183,7 +183,7 @@ function initialise_zombies(; seed = 1234)
 end
 function zombie_step!(agent, model)
     distance_left = move_along_route!(agent, model, agent.speed * model.dt)
-    if is_stationary(agent, model) && rand(abmrng(model)) < 0.1
+    if OSM.is_stationary(agent, model) && rand(abmrng(model)) < 0.1
         OSM.plan_random_route!(agent, model; limit = 50)
         move_along_route!(agent, model, distance_left)
     end

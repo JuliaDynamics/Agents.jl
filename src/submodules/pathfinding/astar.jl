@@ -220,7 +220,7 @@ Base.isempty(id::Int, pathfinder::AStar) =
 Return `true` if agent has reached the end of its route, or no route
 has been set for it.
 """
-Pathfinding.is_stationary(
+is_stationary(
     agent::AbstractAgent,
     pathfinder::AStar,
 ) = isempty(Agents.getid(agent), pathfinder)

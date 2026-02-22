@@ -61,7 +61,7 @@ function initialise_zombies(; seed = 1234)
 
     speed = rand(abmrng(model)) * 5.0 + 2.0 # Random speed from 2-7kmph
     zombie = add_agent!(start, model, true, speed)
-    plan_route!(zombie, finish, model)
+    OSM.plan_route!(zombie, finish, model)
     ## This function call creates & adds an agent, see `add_agent!`
     return model
 end
@@ -76,11 +76,11 @@ function zombie_step!(agent, model)
     ## destination early
     distance_left = move_along_route!(agent, model, agent.speed * model.dt)
 
-    if is_stationary(agent, model) && rand(abmrng(model)) < 0.1
+    if OSM.is_stationary(agent, model) && rand(abmrng(model)) < 0.1
         ## When stationary, give the agent a 10% chance of going somewhere else
         OSM.plan_random_route!(agent, model; limit = 50)
         ## Start on new route, moving the remaining distance
-        move_along_route!(agent, model, distance_left)
+        OSM.move_along_route!(agent, model, distance_left)
     end
 
     if agent.infected

@@ -18,7 +18,23 @@ precalculated path using the [`Pathfinding.move_along_route!`](@ref) function.
 Refer to the [Maze Solver](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/maze/),
 [Mountain Runners](https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/runners/)
 and [Rabbit, Fox, Hawk](https://juliadynamics.github.io/Agents.jl/stable/examples/rabbit_fox_hawk/)
-examples using path-finding and see the available functions below as well.
+examples using path-finding.
+
+The submodule exports the following functions:
+
+- [`Pathfinding.CostMetric`](@ref)
+- [`Pathfinding.DirectDistance`](@ref)
+- [`Pathfinding.MaxDistance`](@ref)
+- [`Pathfinding.PenaltyMap`](@ref)
+- [`Pathfinding.AStar`](@ref)
+- [`Pathfinding.delta_cost`](@ref)
+- [`Pathfinding.penaltymap`](@ref)
+- [`Pathfinding.nearby_walkable`](@ref)
+- [`Pathfinding.random_walkable`](@ref)
+- [`Pathfinding.plan_route!`](@ref)
+- [`Pathfinding.plan_best_route!`](@ref)
+- [`Pathfinding.move_along_route!`](@ref)
+
 """
 module Pathfinding
 
