@@ -106,7 +106,7 @@ zombies = initialise_zombies()
 abmvideo(
     "outbreak.mp4", zombies;
     title = "Zombie outbreak", framerate = 15, frames = 200,
-    agentsplotkwargs = (strokewidth = 1, strokecolor = :grey,),
+    agentsplotkwargs = (strokewidth = 1, strokecolor = :grey),
     agent_color = zombie_color, agent_size = zombie_size,
 )
 

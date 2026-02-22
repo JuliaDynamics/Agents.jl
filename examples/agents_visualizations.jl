@@ -65,7 +65,7 @@ heatkwargs = (colorrange = (-20, 60), colormap = :thermal)
 plotkwargs = (;
     agent_color = daisycolor, agent_size, agent_marker,
     agentsplotkwargs = (strokewidth = 1.0,),
-    heatarray, heatkwargs, colorbar_label = "temperature"
+    heatarray, heatkwargs, colorbar_label = "temperature",
 )
 
 fig, ax, abmobs = abmplot(model; plotkwargs...)
