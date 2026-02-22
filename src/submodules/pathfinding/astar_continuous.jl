@@ -62,7 +62,7 @@ function find_continuous_path(
     return cts_path
 end
 
-function Agents.plan_route!(
+function plan_route!(
         agent::AbstractAgent,
         dest::Any,
         pathfinder::AStar{D, P, M, Float64},
@@ -72,7 +72,7 @@ function Agents.plan_route!(
     return pathfinder.agent_paths[Agents.getid(agent)] = path
 end
 
-function Agents.plan_best_route!(
+function plan_best_route!(
         agent::AbstractAgent,
         dests,
         pathfinder::AStar{D, P, M, Float64};

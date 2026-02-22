@@ -16,15 +16,14 @@ The experimental status allows us as developers to make breaking changes, if nee
 This new version also brings some breaking changes that we believe will not affect
 typical usage of Agents.jl:
 
-1. All deprecations regarding Agents.jl have been completely removed. Use version v6.2 if you are not comfortable with this.
-1. All plotting related source code has been completely overhauled.
+1. All deprecations existing in Agents.jl v6 have been removed. Use version v6.2 if you are not comfortable with this.
+2. All plotting related source code has been completely overhauled.
    - Main reason was the difficulty of maintaining the previous version which was relying on advanced Makie.jl features and was also significantly over-engineered.
    - Data inspection is currently unavailable, and we welcome PRs to enable again data inspection in the new plotting code which plots directly on `Axis/Axis3`.
    - All plotting-related deprecations have been removed. Incorrect code will now error.
-   -  The dev-user-facing interface for how to extend plotting for a new space has also been reworked. It is simplified.
-   -  The function `check_space_visualization_API` has been removed.
-   -  Instead, well structured developer docs exist.
-2. The `OpenStreetMapSpace` is now not available immediately after `using Agents`.
+   -  The dev-user-facing interface for how to extend plotting for a new space has also been reworked. It is dramatically simplified.
+   -  The function `check_space_visualization_API` has been removed. Instead, well structured developer docs exist.
+3. The `OpenStreetMapSpace` is now not available immediately after `using Agents`.
    - It is now a package extension. You need to be doing `using LightOSM` to access it.
    - The submodule `OSM` still exists to enable as much backwards compatibility as possible, so `OSM.test_map()` will work as usual after `using LightOSM`.
    - Additionally, now all functionality that is exclusive to OSM is behind the `OSM` module, with the exception of the core types `OpenStreetMapSpace, OpenStreetMapPath, OSMAgent`. Thus you must now do `OSM.is_stationary`, `OSM.plan_route!`, etc. Route-planning shared the same API with A-star pathfinding, but this is no longer possible due to package extensions. So now `Agents.plan_route!` is pathfinding, while `Agents.OSM.plan_route!` is open street map route finding.
@@ -32,7 +31,7 @@ typical usage of Agents.jl:
    - We are currently debating amongst options to counteract this problem, such as porting the LightOSM.jl source code directly into Agents.jl, or forking the project and registering it under a new name, or trying to get ownership of the project.
    - Function `download_osm_network` is no longer re-exported from LightOSM.jl.
    - At least making this current breaking change means that whatever the future solution for `OpenStreetMapSpace` is, it will be non breaking.
-3. The functions `plan_route!, plan_best_route!, move_along_route!` are no longer top-level `Agents` functions. You have to preface the with either `OSM.` or `Pathfinding.` to use them in their respective submodule.
+4. The functions `plan_route!, plan_best_route!, move_along_route!` are no longer top-level `Agents` functions. You have to preface the with either `OSM.` or `Pathfinding.` to use them in their respective submodule. Or do `using Agents.OSM/Agents.Pathfinding` respectively to bring the functions into scope.
 
 
 # v6.2

@@ -560,20 +560,49 @@ end
 
 @testset "Ensemble runs" begin
 
-    nsteps = 100
-    nreplicates = 2
-    numagents_low = 280
-    numagents_high = 300
-    numagents(model) = nagents(model)
+    @everywhere begin
+        nsteps = 100
+        nreplicates = 2
+        numagents_low = 280
+        numagents_high = 300
 
-    expected_nensembles = nreplicates * (numagents_high - numagents_low + 1)
-    function genmodels()
-        basemodels = [
-            AgentsExampleZoo.schelling(; numagents)
-                for numagents in numagents_low:numagents_high
-                for _ in 1:nreplicates
-        ]
-        return basemodels
+        function schelling(; nagents = 320, griddims = (20, 20), min_to_be_happy = 3)
+            space = GridSpaceSingle(griddims, periodic = false)
+            properties = Dict(:min_to_be_happy => min_to_be_happy)
+            model = StandardABM(SchellingAgent, space; properties, agent_step! = schelling_agent_step!,
+                                container = Vector, scheduler = Schedulers.Randomly())
+            for n in 1:nagents
+                add_agent_single!(SchellingAgent, model, false, n < nagents / 2 ? 1 : 2)
+            end
+            return model
+        end
+
+        function schelling_agent_step!(agent, model)
+            agent.mood == true && return # do nothing if already happy
+            count_neighbors_same_group = 0
+            for neighbor in nearby_agents(agent, model)
+                if agent.group == neighbor.group
+                    count_neighbors_same_group += 1
+                end
+            end
+            if count_neighbors_same_group ≥ model.min_to_be_happy
+                agent.mood = true
+            else
+                move_agent_single!(agent, model)
+            end
+        end
+
+        expected_nensembles = nreplicates * (numagents_high - numagents_low + 1)
+        function genmodels()
+            basemodels = [
+                schelling(; nagents)
+                    for nagents in numagents_low:numagents_high
+                    for _ in 1:nreplicates
+            ]
+            return basemodels
+        end
+
+        specialwhen(model, step) = step % 10 == 0
     end
 
     @testset begin
@@ -585,12 +614,12 @@ end
         adf, mdf, _ = ensemblerun!(
             models, nsteps;
             parallel = false, adata = [:pos, :mood, :group],
-            mdata = [numagents, :min_to_be_happy]
+            mdata = [nagents, :min_to_be_happy]
         )
 
         @test length(unique(adf.ensemble)) == expected_nensembles
         @test length(unique(adf.time)) == nsteps + 1
-        @test length(unique(mdf.numagents)) == (numagents_high - numagents_low + 1)
+        @test length(unique(mdf.nagents)) == (numagents_high - numagents_low + 1)
     end
 
     @testset begin
@@ -603,13 +632,13 @@ end
             models, nsteps;
             parallel = true,
             adata = [:pos, :mood, :group],
-            mdata = [numagents, :min_to_be_happy],
-            when = (model, step) -> step % 10 == 0
+            mdata = [nagents, :min_to_be_happy],
+            when = specialwhen
         )
 
         @test length(unique(adf.ensemble)) == expected_nensembles
         @test length(unique(adf.time)) == (nsteps / 10) + 1
-        @test length(unique(mdf.numagents)) == (numagents_high - numagents_low + 1)
+        @test length(unique(mdf.nagents)) == (numagents_high - numagents_low + 1)
     end
 
     @testset begin
@@ -624,13 +653,13 @@ end
             models, stopfn;
             parallel = true,
             adata = [:pos, :mood, :group],
-            mdata = [numagents, :min_to_be_happy],
+            mdata = [nagents, :min_to_be_happy],
             when = (model, step) -> step % 10 == 0
         )
 
         @test length(unique(adf.ensemble)) == expected_nensembles
         @test length(unique(adf.time)) ≤ (nsteps / 10) + 1
-        @test length(unique(mdf.numagents)) == (numagents_high - numagents_low + 1)
+        @test length(unique(mdf.nagents)) == (numagents_high - numagents_low + 1)
     end
 end
 

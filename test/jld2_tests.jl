@@ -191,8 +191,8 @@
         rm("test.jld2")
     end
 
-    @testset "Grid Pathfinder" begin
-        astep!(a, m) = move_along_route!(a, m, m.pathfinder)
+    @testset "Grid Pathfinding" begin
+        astep!(a, m) = Pathfinding.move_along_route!(a, m, m.pathfinder)
         walk = BitArray(fill(true, 10, 10))
         walk[2, 2] = false
         walk[9, 9] = false
@@ -212,7 +212,7 @@
                 rng = MersenneTwister(42)
             )
             add_agent!((1, 1), model)
-            plan_route!(model[1], (10, 10), model.pathfinder)
+            Pathfinding.plan_route!(model[1], (10, 10), model.pathfinder)
             step!(model)
 
             AgentsIO.save_checkpoint("test.jld2", model)
@@ -234,8 +234,8 @@
         rm("test.jld2")
     end
 
-    @testset "Continuous Pathfinder" begin
-        astep!(a, m) = move_along_route!(a, m, m.pathfinder, 0.89, 0.56)
+    @testset "Continuous Pathfinding" begin
+        astep!(a, m) = Pathfinding.move_along_route!(a, m, m.pathfinder, 0.89, 0.56)
         walk = BitArray(fill(true, 10, 10))
         walk[2, 2] = false
         walk[9, 9] = false
@@ -255,7 +255,7 @@
                 rng = MersenneTwister(42), warn_deprecation = false
             )
             add_agent!(SVector(1.3, 1.5), model, SVector(0.0, 0.0), 0.0)
-            plan_route!(model[1], SVector(9.7, 4.8), model.pathfinder)
+            Pathfinding.plan_route!(model[1], SVector(9.7, 4.8), model.pathfinder)
             step!(model)
 
             AgentsIO.save_checkpoint("test.jld2", model)
