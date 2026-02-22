@@ -12,7 +12,7 @@ In this page we list the remaining API functions, which constitute the bulk of A
 
 ```@docs
 AgentBasedModel
-step!(::AgentBasedModel, args...)
+Agents.step!(::AgentBasedModel, args...)
 ```
 
 ## Discrete time ABM
@@ -165,7 +165,6 @@ random_empty
 add_agent_single!
 move_agent_single!
 swap_agents!
-isempty(::Int, ::ABM{<:DiscreteSpace})
 ```
 
 ## `GraphSpace` exclusives
@@ -322,7 +321,7 @@ return df_agent, df_model
 
 ```@docs
 Schedulers
-Schedulers.schedule(::ABM)
+schedule
 ```
 
 ### Predefined schedulers

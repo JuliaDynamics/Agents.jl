@@ -364,10 +364,8 @@ model = initialize_model()
 # The agents are color-coded according to their `type`, to make them easily identifiable in
 # the visualization.
 
-# ```julia
-#
-# using GLMakie # CairoMakie doesn't do 3D plots well
-# ```
+using CairoMakie
+
 animalcolor(animal) = animalcolor(variant(animal))
 animalcolor(a::Rabbit) = :brown
 animalcolor(a::Fox) = :orange

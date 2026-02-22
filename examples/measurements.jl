@@ -144,7 +144,6 @@ function daisyworld(;
     rng = Xoshiro(seed)
     space = GridSpaceSingle(griddims)
     properties = (;
-        # named tuple
         max_age, surface_albedo, solar_luminosity,
         ratio = 0.5, temperature = fill(starting_temperature, griddims),
     )
