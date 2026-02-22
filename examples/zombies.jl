@@ -1,4 +1,4 @@
-# # Zombie Outbreak in a City
+# # [Zombie Outbreak in an Open Street Map City](@id osm_example)
 # ```@raw html
 # <video width="auto" controls autoplay loop>
 # <source src="../outbreak.mp4" type="video/mp4">
@@ -115,3 +115,20 @@ abmvideo(
 # <source src="../outbreak.mp4" type="video/mp4">
 # </video>
 # ```
+
+# ## [Realistic simulation: Ride hailing in Chicago](@id anna_cobb)
+
+# This zombie model is a simple, self-contained example to teach you the basics
+# of using Open Street Map in Agents.jl. From here, the sky is the limit!
+# For example, Anna Cobb et al., simulated the whole of Chicago to study
+# racial imbalances in ride hailing (Uber, Lyft, ...), which resulted in a
+# publication in [PNAS](https://www.pnas.org/doi/10.1073/pnas.2408936121).
+# Here is an example of one of Anna's simulations:
+
+# [Anna Cobb's Chicago simulation](../../anna_cobb_chicago.gif)
+
+# Agents.jl allows doing such simulations with ease! Much easier than
+# alternatives! In the author's own words:
+# > "Using a pre-made model in MATSim nearly killed me.
+# > Using a from-scratch model written in Julia with Agents.jl
+# > led me to greatness.

@@ -43,7 +43,8 @@ Nodes are not necessarily intersections, and there may be multiple nodes on a ro
 two intersections.
 Agents move along the available roads of the map using routing, see below.
 
-An example of using Open Street Map spaces can be found in the [Zombie Outbreak](@ref osm_examle) tutorial.
+An example of using Open Street Map spaces can be found in the
+[Zombie Outbreak](@ref osm_example) tutorial.
 
 ## The `OSMAgent`
 

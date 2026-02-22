@@ -1,3 +1,5 @@
+export abmplot, abmplot!
+
 """
     abmplot(model::ABM; kwargs...) → fig, ax, abmobs
     abmplot!(ax::Axis/Axis3, model::ABM; kwargs...) → abmobs
@@ -116,7 +118,6 @@ function abmplot end
 See `abmplot`.
 """
 function abmplot! end
-export abmplot, abmplot!
 
 """
     ABMObservable(model; adata, mdata, when = true) → abmobs

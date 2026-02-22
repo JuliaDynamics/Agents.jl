@@ -104,7 +104,7 @@
 # ## [Implementation](@id delaunay_model_implementation)
 # Let's now get into the details of the implementation. Let us start by defining our agent type.
 # The cell types are defined using an `@enum`.
-using Agents, StaticArrays
+using Agents
 @enum CellType begin
     Red
     Blue
