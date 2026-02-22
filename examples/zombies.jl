@@ -6,13 +6,15 @@
 # ```
 #
 # This model showcases an ABM running on a map, using [`OpenStreetMapSpace`](@ref).
+# To access this functionality you need to load the `LightOSM` package.
 #
 # ## Constructing the end of days
 using Agents
 using Random
+using LightOSM # required for this functionality
 
 # We'll simulate a zombie outbreak in a city. To do so, we start with an agent which
-# satisfies the OSMSpace conditions of having a `pos`ition of type
+# satisfies the [`OpenStreetMapSpace`](@ref) conditions of having a `pos`ition of type
 # `Tuple{Int,Int,Float64}`. For simplicity though we shall build this with the [`@agent`](@ref)
 # macro.
 
@@ -71,20 +73,20 @@ end
 # for city commuting.
 
 function zombie_step!(agent, model)
-    ## Each agent will progress along their route
-    ## Keep track of distance left to move this step, in case the agent reaches its
-    ## destination early
-    distance_left = move_along_route!(agent, model, agent.speed * model.dt)
+    ## Each agent will progress along their route for a fixed amount of time per step.
+    ## We keep track of distance left to move this step, in case the agent reaches its
+    ## destination early.
+    distance_left = OSM.move_along_route!(agent, model, agent.speed * model.dt)
 
+    ## When stationary, give the agent a 10% chance of going somewhere else
     if OSM.is_stationary(agent, model) && rand(abmrng(model)) < 0.1
-        ## When stationary, give the agent a 10% chance of going somewhere else
         OSM.plan_random_route!(agent, model; limit = 50)
         ## Start on new route, moving the remaining distance
         OSM.move_along_route!(agent, model, distance_left)
     end
 
+    ## Agents will be infected if they get too close (within 10m) to a zombie.
     if agent.infected
-        ## Agents will be infected if they get too close (within 10m) to a zombie.
         map(i -> model[i].infected = true, nearby_ids(agent, model, 0.01))
     end
     return
@@ -92,17 +94,20 @@ end
 
 # ## Visualising the fall of humanity
 
-# Notice that to visualize Open Street Maps, the package OSMMakie.jl must be loaded
-# as well, besides any Makie plotting backend such as CairoMakie.jl.
+# Plotting with Open Street Maps works right out of the box, provided that you have
+# loaded the OSMMakie.jl package (besides any Makie plotting backend such as CairoMakie.jl.).
+# In this case, the underlying open street map is plotted below the agent scatterplot.
+
 using CairoMakie, OSMMakie
 zombie_color(agent) = agent.infected ? :green : :black
-zombie_size(agent) = agent.infected ? 10 : 8
+zombie_size(agent) = agent.infected ? 14 : 10
 zombies = initialise_zombies()
 
 abmvideo(
     "outbreak.mp4", zombies;
     title = "Zombie outbreak", framerate = 15, frames = 200,
-    agent_color = zombie_color, agent_size = zombie_size
+    agentsplotkwargs = (strokewidth = 1, strokecolor = :grey,),
+    agent_color = zombie_color, agent_size = zombie_size,
 )
 
 # ```@raw html
