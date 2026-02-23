@@ -271,7 +271,7 @@ boltzmann_rl_model = initialize_boltzmann_rl_model()
 # Train the Boltzmann agents
 train_model!(
     boltzmann_rl_model;
-    training_steps = 200000,
+    training_steps = 20_000,
     max_steps = 50,
     solver_params = Dict(
         :ΔN => 200,            # Custom batch size for PPO updates
