@@ -165,8 +165,8 @@ using Agents
 # the Chebyshev one, which means that diagonal and orthogonal directions quantify
 # as the same distance away. We also specify that the space should _not_ be periodic.
 
-size = (10, 10)
-space = GridSpaceSingle(size; periodic = false, metric = :chebyshev)
+extent = (10, 10)
+space = GridSpaceSingle(extent; periodic = false, metric = :chebyshev)
 
 # ## Step 2: the `@agent` command
 

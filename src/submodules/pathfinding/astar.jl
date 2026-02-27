@@ -213,18 +213,21 @@ end
 Base.isempty(id::Int, pathfinder::AStar) =
     !haskey(pathfinder.agent_paths, id) || isempty(pathfinder.agent_paths[id])
 
-"""
-    is_stationary(agent, astar::AStar)
 
-Same, but for pathfinding with A*.
 """
-Agents.is_stationary(
+    Pathfinding.is_stationary(agent, pathfinder::AStar)
+
+Return `true` if agent has reached the end of its route, or no route
+has been set for it.
+"""
+is_stationary(
     agent::AbstractAgent,
     pathfinder::AStar,
 ) = isempty(Agents.getid(agent), pathfinder)
 
 """
     Pathfinding.penaltymap(pathfinder)
+
 Return the penalty map of a [`Pathfinding.AStar`](@ref) if the
 [`Pathfinding.PenaltyMap`](@ref) metric is in use, `nothing` otherwise.
 

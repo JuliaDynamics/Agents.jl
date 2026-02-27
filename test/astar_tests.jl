@@ -56,18 +56,18 @@ using Agents.Pathfinding
             pathfinder = AStar(gspace)
             model = StandardABM(Agent3, gspace; properties = (pf = pathfinder,), warn_deprecation = false)
             a = add_agent!((5, 2), model, 654.5)
-            @test is_stationary(a, model.pf)
+            @test Pathfinding.is_stationary(a, model.pf)
 
-            plan_route!(a, (1, 3), model.pf)
-            @test !is_stationary(a, model.pf)
+            Pathfinding.plan_route!(a, (1, 3), model.pf)
+            @test !Pathfinding.is_stationary(a, model.pf)
             @test length(model.pf.agent_paths) == 1
 
-            move_along_route!(a, model, model.pf)
+            Pathfinding.move_along_route!(a, model, model.pf)
             @test a.pos == (1, 3)
 
             delete!(model.pf.agent_paths, 1)
             @test length(model.pf.agent_paths) == 0
-            @test plan_best_route!(a, [(5, 1), (1, 1), (3, 3)], model.pf) == (5, 1)
+            @test Pathfinding.plan_best_route!(a, [(5, 1), (1, 1), (3, 3)], model.pf) == (5, 1)
             @test length(model.pf.agent_paths) == 1
 
             remove_agent!(a, model, model.pf)
@@ -91,8 +91,8 @@ using Agents.Pathfinding
             model = StandardABM(Agent3, sp; properties = (pf = pf,), warn_deprecation = false)
             model.pf.walkmap[3, :] .= 0
             a = add_agent!((1, 3), model, 0.0)
-            @test plan_best_route!(a, [(1, 3), (4, 1)], model.pf) == (1, 3)
-            @test isnothing(plan_best_route!(a, [(5, 3), (4, 1)], model.pf))
+            @test Pathfinding.plan_best_route!(a, [(1, 3), (4, 1)], model.pf) == (1, 3)
+            @test isnothing(Pathfinding.plan_best_route!(a, [(5, 3), (4, 1)], model.pf))
 
             sp = GridSpace((5, 5); periodic = (true, false))
             pf = AStar(sp)
@@ -101,31 +101,31 @@ using Agents.Pathfinding
             model.pf.walkmap[:, 2] .= 0
             a = add_agent!((1, 3), model, 0.0)
             # agent cannot move to (1,1) because y is not periodic
-            @test isnothing(plan_best_route!(a, [(1, 1)], model.pf))
+            @test isnothing(Pathfinding.plan_best_route!(a, [(1, 1)], model.pf))
             # but it can move to (5,3) because x is periodic
             # and (5,3) is only one step away while (2,4) is two steps away
-            @test plan_best_route!(a, [(5, 3), (2, 4)], model.pf) == (5, 3)
+            @test Pathfinding.plan_best_route!(a, [(5, 3), (2, 4)], model.pf) == (5, 3)
         end
 
         @testset "ContinuousSpace" begin
             pathfinder = AStar(cspace; walkmap = trues(10, 10))
             model = StandardABM(Agent6, cspace; properties = (pf = pathfinder,), warn_deprecation = false)
             a = add_agent!(SVector(0.0, 0.0), model, SVector(0.0, 0.0), 0.0)
-            @test is_stationary(a, model.pf)
+            @test Pathfinding.is_stationary(a, model.pf)
 
-            plan_route!(a, SVector(4.0, 4.0), model.pf)
-            @test !is_stationary(a, model.pf)
+            Pathfinding.plan_route!(a, SVector(4.0, 4.0), model.pf)
+            @test !Pathfinding.is_stationary(a, model.pf)
             @test length(model.pf.agent_paths) == 1
-            move_along_route!(a, model, model.pf, 0.35355)
+            Pathfinding.move_along_route!(a, model, model.pf, 0.35355)
             @test all(isapprox.(a.pos, SVector(4.75, 4.75); atol))
 
             # test waypoint skipping
             move_agent!(a, SVector(0.25, 0.25), model)
-            plan_route!(a, SVector(0.75, 1.25), model.pf)
-            move_along_route!(a, model, model.pf, 0.807106)
+            Pathfinding.plan_route!(a, SVector(0.75, 1.25), model.pf)
+            Pathfinding.move_along_route!(a, model, model.pf, 0.807106)
             @test all(isapprox.(a.pos, SVector(0.75, 0.849999); atol)) || all(isapprox.(a.pos, SVector(0.467156, 0.967156); atol))
             # make sure it doesn't overshoot the end
-            move_along_route!(a, model, model.pf, 20.0)
+            Pathfinding.move_along_route!(a, model, model.pf, 20.0)
             @test all(isapprox.(a.pos, SVector(0.75, 1.25); atol))
 
             delete!(model.pf.agent_paths, 1)
@@ -140,16 +140,16 @@ using Agents.Pathfinding
             pathfinder = AStar(pcspace; walkmap = trues(10, 10))
             model = StandardABM(Agent6, pcspace; properties = (pf = pathfinder,), warn_deprecation = false)
             a = add_agent!(SVector(0.0, 0.0), model, SVector(0.0, 0.0), 0.0)
-            @test all(plan_best_route!(a, SVector.([(2.5, 2.5), (4.99, 0.0), (0.0, 4.99)]), model.pf) .≈ (2.5, 2.5))
+            @test all(Pathfinding.plan_best_route!(a, SVector.([(2.5, 2.5), (4.99, 0.0), (0.0, 4.99)]), model.pf) .≈ (2.5, 2.5))
             @test length(model.pf.agent_paths) == 1
-            move_along_route!(a, model, model.pf, 1.0)
+            Pathfinding.move_along_route!(a, model, model.pf, 1.0)
             @test all(isapprox.(a.pos, (0.7071, 0.7071); atol))
 
 
             model.pf.walkmap[:, 3] .= 0
             move_agent!(a, SVector(2.5, 2.5), model)
-            @test all(plan_best_route!(a, SVector.([(3.0, 0.3), (2.5, 2.5)]), model.pf) .≈ (2.5, 2.5))
-            @test isnothing(plan_best_route!(a, SVector.([(3.0, 0.3), (1.0, 0.1)]), model.pf))
+            @test all(Pathfinding.plan_best_route!(a, SVector.([(3.0, 0.3), (2.5, 2.5)]), model.pf) .≈ (2.5, 2.5))
+            @test isnothing(Pathfinding.plan_best_route!(a, SVector.([(3.0, 0.3), (1.0, 0.1)]), model.pf))
 
             remove_agent!(a, model, model.pf)
             @test length(model.pf.agent_paths) == 0
@@ -169,9 +169,9 @@ using Agents.Pathfinding
             model = StandardABM(Agent6, space; properties = (pf = pathfinder,), warn_deprecation = false)
             model.pf.walkmap[5, :] .= 0
             a = add_agent!(SVector(0.0, 0.0), model, SVector(0.0, 0.0), 0.0)
-            @test isnothing(plan_best_route!(a, [SVector(4.0, 0.0)], model.pf))
-            @test plan_best_route!(a, [SVector(1.0, 1.0)], model.pf) == SVector(1.0, 1.0)
-            move_along_route!(a, model, model.pf, 1.0)
+            @test isnothing(Pathfinding.plan_best_route!(a, [SVector(4.0, 0.0)], model.pf))
+            @test Pathfinding.plan_best_route!(a, [SVector(1.0, 1.0)], model.pf) == SVector(1.0, 1.0)
+            Pathfinding.move_along_route!(a, model, model.pf, 1.0)
             @test isapprox(a.pos, SVector(1 / sqrt(2), 1 / sqrt(2)); atol)
         end
     end

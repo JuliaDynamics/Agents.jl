@@ -26,6 +26,7 @@ get_periodic_type(space::ContinuousSpace{D, P}) where {D, P} = "mixed-periodicit
 
 """
     ContinuousAgent{D,T} <: AbstractAgent
+
 The minimal agent struct for usage with `D`-dimensional [`ContinuousSpace`](@ref).
 It has the additional fields `pos::SVector{D,T}, vel::SVector{D,T}` where `T`
 can be any `AbstractFloat` type.
@@ -39,6 +40,7 @@ ContinuousAgent{D}(args...; kwargs...) where {D} = ContinuousAgent{D, Float64}(a
 
 """
     ContinuousSpace(extent::NTuple{D, <:Real}; kwargs...)
+
 Create a `D`-dimensional `ContinuousSpace` in range 0 to (but not including) `extent`.
 Your agent positions (field `pos`) must be of type `SVector{D, <:Real}`,
 and it is strongly recommend that agents also have a field `vel::SVector{D, <:Real}` to use

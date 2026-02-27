@@ -69,44 +69,44 @@ Here are the steps to follow to create a new space:
 
 And that's it! Every function of the main API will now work. In some situations you might want to explicitly extend other functions such as `move_agent!` or `remove_all_from_space!` for performance reasons, but they will work out of the box with a generic implementation.
 
-### Visualization of a custom space
+## Visualization of a custom space
 
 Visualization of a new space type within Agents.jl works in a similar fashion to
 creating a new space type.
 One your space works with the general Agents.jl API, you only need to extend a few functions for it to work automatically with the existing plotting and animation infrastructure.
 
-#### Mandatory methods
+### Mandatory methods
 
 You must extend the following function
 
 ```@docs
-space_axis_limits
+Agents.space_axis_limits
 ```
 
-#### Optional alternative agent plotting
+### Optional alternative agent plotting
 
 If your space does not visualize agents in the default way of one agent = one scattered marker, then you want to extend the function `agentsplot!`.
 For example, `GraphSpace` aggregates multiple agents into a graph plot and is extending `agentsplot!`.
 
 ```@docs
-agentsplot!
+Agents.agentsplot!
 ```
 
-#### Optional pre-plotting
+### Optional pre-plotting
 
 Some spaces, like the `OSMSpace`, need to plot some elements before the agents can be plotted and animated. If that's the case, extend the following:
 
 ```@docs
-spaceplot!
+Agents.spaceplot!
 ```
 
-#### Heatmap handling
+### Heatmap handling
 
 Heatmaps are extracted and plotted automatically, but your space may require some special handling for that. For example `ContinuousSpace` needs to map the finite heatmap matrix over the continuous space.
 If you require such handling, extend:
 
 ```@docs
-abmheatmap!
+Agents.abmheatmap!
 ```
 
 ## Designing a new Pathfinder Cost Metric

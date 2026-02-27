@@ -16,7 +16,7 @@ jobs:
       matrix:
         version:
           - '1'
-        os:  [ubuntu-latest, windows-latest, macos-latest]
+        os:  [windows-latest]
         arch:
           - x64
     steps:

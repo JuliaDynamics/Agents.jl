@@ -1,6 +1,6 @@
 using Test, Agents, Random
 using Agents.Graphs
-using LightOSM
+import LightOSM
 using StableRNGs
 
 @testset "OpenStreetMap space" begin

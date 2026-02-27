@@ -1,3 +1,5 @@
+export abmplot, abmplot!
+
 """
     abmplot(model::ABM; kwargs...) → fig, ax, abmobs
     abmplot!(ax::Axis/Axis3, model::ABM; kwargs...) → abmobs
@@ -116,7 +118,6 @@ function abmplot end
 See `abmplot`.
 """
 function abmplot! end
-export abmplot, abmplot!
 
 """
     ABMObservable(model; adata, mdata, when = true) → abmobs
@@ -267,6 +268,7 @@ function agentsplot! end
     abmheatmap!(ax, abmobs::ABMObservable, space, heatobs, add_colorbar, heatkwargs)
 
 Plot as a heatmap the provided `heatobs` (an observable matrix created from `heatarray`).
+Return the heatmap (or otherwise) plot object so that a Colorbar can be assigned to it.
 """
 function abmheatmap! end
 

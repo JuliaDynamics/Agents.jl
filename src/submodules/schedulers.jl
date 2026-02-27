@@ -34,6 +34,7 @@ Schedulers have many purposes:
 See also [Advanced scheduling](@ref advanced_scheduling) for making more advanced schedulers.
 """
 module Schedulers
+
     using Agents
     using Random: shuffle!, randsubseq, randsubseq!
 
@@ -60,7 +61,7 @@ module Schedulers
 
     """
         Schedulers.fastest
-    
+
     A scheduler that orders all agent IDs in the fastest way possible,
     which is the default order dictated by the agent container.
     """
@@ -68,7 +69,7 @@ module Schedulers
 
     """
         Schedulers.ByID()
-    
+
     A scheduler that orders all agent IDs by their integer value.
     """
     struct ByID
@@ -86,7 +87,7 @@ module Schedulers
 
     """
         Schedulers.Randomly()
-    
+
     A scheduler that randomly orders all agent IDs.
     Different random ordering is used at each different step.
     """
@@ -102,7 +103,7 @@ module Schedulers
 
     """
         Schedulers.Partially(p)
-    
+
     A scheduler that orders only `p` percentage of randomly chosen agent IDs.
     """
     struct Partially{R <: Real}
@@ -120,7 +121,7 @@ module Schedulers
 
     """
         Schedulers.ByProperty(property)
-    
+
     A scheduler that orders agent IDs by their `property`, with agents with greater `property`
     being ordered first. `property` can be a
     `Symbol`, which just dictates which field of the agents to compare, or a function which
@@ -151,17 +152,17 @@ module Schedulers
 
     """
         Schedulers.ByType(shuffle_types::Bool, shuffle_agents::Bool, agent_union)
-    
+
     A scheduler useful only for mixed agent models using `Union` types.
     - Setting `shuffle_types = true` groups by agent type, but randomizes the type order.
-      Otherwise returns agent IDs grouped in order of appearance in the `Union`.
+        Otherwise returns agent IDs grouped in order of appearance in the `Union`.
     - `shuffle_agents = true` randomizes the order of agents within each group, `false` returns
-      the default order of the container (equivalent to [`Schedulers.fastest`](@ref)).
+        the default order of the container (equivalent to [`Schedulers.fastest`](@ref)).
     - `agent_union` is a `Union` of all valid agent types (as passed to [`ABM`](@ref ABM_Implementations))
-    
-    
+
+
         Schedulers.ByType((C, B, A), shuffle_agents::Bool)
-    
+
     A scheduler that orders agent IDs by type in specified order (since
     `Union`s are not order preserving). `shuffle_agents = true` randomizes the order of
     agents within each group.
@@ -210,64 +211,6 @@ module Schedulers
         end
 
         return Iterators.flatten(it for it in sched.ids)
-    end
-
-    # TODO: ByKind scheduler should be removed when deprecation of @multiagent is complete
-
-    """
-        Schedulers.ByKind(agent_kinds; shuffle_kinds = true, shuffle_agents = true)
-    A scheduler useful only for mixed agent models using the [`@multiagent`](@ref) macro.
-    - `agent_kinds` is a `Tuple` of all valid agent kinds e.g. `(:B, :A, :C)`.
-    ## Keyword arguments
-    - `shuffle_kinds = true` groups by agent kind, but randomizes the kind order.
-      Otherwise returns agent IDs grouped in order of appearance in `agent_kinds`.
-    - `shuffle_agents = true` randomizes the order of agents within each group, `false` returns
-      the default order of the container (equivalent to [`Schedulers.fastest`](@ref)).
-    """
-    struct ByKind{K}
-        shuffle_kinds::Bool
-        shuffle_agents::Bool
-        kind_inds::K
-        ids::Vector{Vector{Int}}
-    end
-
-    function ByKind(agent_kinds; shuffle_kinds = true, shuffle_agents = true)
-        return ByKind(
-            shuffle_kinds,
-            shuffle_agents,
-            NamedTuple(t => i for (i, t) in enumerate(agent_kinds)),
-            [Int[] for _ in 1:length(agent_kinds)]
-        )
-    end
-
-    function (sched::ByKind)(model::ABM)
-
-        n_agents = zeros(Int, length(sched.kind_inds))
-        @inbounds for agent in allagents(model)
-            cont_idx = sched.kind_inds[kindof(agent)]
-            n_agents[cont_idx] += 1
-            curr_idx = n_agents[cont_idx]
-            ids_kind = sched.ids[cont_idx]
-            if curr_idx <= length(ids_kind)
-                ids_kind[curr_idx] = Agents.getid(agent)
-            else
-                push!(ids_kind, Agents.getid(agent))
-            end
-        end
-
-        @inbounds for i in 1:length(sched.kind_inds)
-            resize!(sched.ids[i], n_agents[i])
-        end
-
-        sched.shuffle_kinds && shuffle!(abmrng(model), sched.ids)
-
-        @inbounds if sched.shuffle_agents
-            for i in 1:length(sched.ids)
-                shuffle!(abmrng(model), sched.ids[i])
-            end
-        end
-
-        return Iterators.flatten(sched.ids)
     end
 
 end # Schedulers submodule

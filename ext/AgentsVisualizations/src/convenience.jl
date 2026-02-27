@@ -2,7 +2,7 @@ export abmexploration, abmvideo
 
 function Agents.abmexploration(
         model;
-        figure = (size = (1200, 800),),
+        figure = (size = (1600, 800),),
         axis = NamedTuple(),
         alabels = nothing,
         mlabels = nothing,
@@ -19,7 +19,6 @@ function Agents.abmexploration(
     !isnothing(alabels) && @assert length(alabels) == length(adata)
     !isnothing(mlabels) && @assert length(mlabels) == length(mdata)
     init_abm_data_plots!(fig, abmobs, adata, mdata, alabels, mlabels, plotkwargs)
-    display(fig)
     return fig, abmobs
 end
 

@@ -104,7 +104,7 @@
 # ## [Implementation](@id delaunay_model_implementation)
 # Let's now get into the details of the implementation. Let us start by defining our agent type.
 # The cell types are defined using an `@enum`.
-using Agents, StaticArrays
+using Agents
 @enum CellType begin
     Red
     Blue
@@ -523,7 +523,8 @@ mdata = [
     average_cell_area, average_cell_diameter, average_spring_length,
 ]
 agent_df, model_df = run!(model, nsteps; mdata);
-#-
+
+#
 
 using CairoMakie
 time = 0:model.dt:finalT
@@ -536,11 +537,13 @@ lines!(ax, time, model_df[!, :count_total], color = :black, label = "Total", lin
 axislegend(ax, position = :lt)
 ax = Axis(fig[1, 2], xlabel = "Time", ylabel = "Average", width = 600, height = 400)
 lines!(ax, time, model_df[!, :average_cell_area], color = :black, label = "Cell area", linewidth = 3)
-lines!(ax, time, model_df[!, :average_cell_diameter], color = :magenta, label = "Cell diameter", linewidth = 3)
+lines!(ax, time, model_df[!, :average_cell_diameter], color = :violet, label = "Cell diameter", linewidth = 3)
 lines!(ax, time, model_df[!, :average_spring_length], color = :red, label = "Spring length", linewidth = 3)
 axislegend(ax, position = :rb)
 resize_to_layout!(fig)
 fig
+
+# ## Animating Voronoi cells
 
 # Let's now animate the results. To visualise the results we make use of `abmplot`, which requires that we know how to make a marker
 # for each agent. We define a function `voronoi_marker` that returns the vertices of the Voronoi cell

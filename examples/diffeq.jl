@@ -181,9 +181,8 @@ yearly(model, s) = s % 365 == 0
 _, results = run!(model, 20 * 365; mdata = [:stock], when = yearly)
 
 f = Figure(size = (600, 400))
-ax =
-    f[1, 1] = Axis(
-    f,
+ax = Axis(
+    f[1, 1],
     xlabel = "Year",
     ylabel = "Stock",
     title = "Fishery Inventory",
@@ -215,7 +214,7 @@ Random.seed!(6549) #hide
 # Lets therefore modify our system to solve the logistic equation in a continuous context, but
 # discretely monitor and harvest.
 
-import OrdinaryDiffEq
+import OrdinaryDiffEqTsit5
 
 function agent_diffeq_step!(agent, model)
     return agent.yearly_catch = rand(abmrng(model), Poisson(agent.competence))
@@ -223,20 +222,20 @@ end
 
 function model_diffeq_step!(model)
     ## We step 364 days with this call.
-    OrdinaryDiffEq.step!(model.i, 364.0, true)
+    OrdinaryDiffEqTsit5.step!(model.i, 364.0, true)
     ## Only allow fishing if stocks are high enough
     model.i.p[2] =
         model.i.u[1] > model.min_threshold ? sum(a.yearly_catch for a in allagents(model)) :
         0.0
     ## Notify the integrator that conditions may be altered
-    OrdinaryDiffEq.u_modified!(model.i, true)
+    OrdinaryDiffEqTsit5.u_modified!(model.i, true)
     ## Then apply our catch modifier
-    OrdinaryDiffEq.step!(model.i, 1.0, true)
+    OrdinaryDiffEqTsit5.step!(model.i, 1.0, true)
     ## Store yearly stock in the model for plotting
     model.stock = model.i.u[1]
     ## And reset for the next year
     model.i.p[2] = 0.0
-    return OrdinaryDiffEq.u_modified!(model.i, true)
+    return OrdinaryDiffEqTsit5.u_modified!(model.i, true)
 end
 
 function initialise_diffeq(;
@@ -251,8 +250,8 @@ function initialise_diffeq(;
         return ds[1] = s[1] * (1 - (s[1] / max_population)) - h
     end
     prob =
-        OrdinaryDiffEq.ODEProblem(fish_stock!, [stock], (0.0, Inf), [max_population, 0.0])
-    integrator = OrdinaryDiffEq.init(prob, OrdinaryDiffEq.Tsit5(); advance_to_tstop = true)
+        OrdinaryDiffEqTsit5.ODEProblem(fish_stock!, [stock], (0.0, Inf), [max_population, 0.0])
+    integrator = OrdinaryDiffEqTsit5.init(prob, OrdinaryDiffEqTsit5.Tsit5(); advance_to_tstop = true)
 
     model = StandardABM(
         Fisher;
@@ -262,7 +261,7 @@ function initialise_diffeq(;
             :stock => stock,
             :max_population => max_population,
             :min_threshold => min_threshold,
-            :i => integrator, # The OrdinaryDiffEq integrator
+            :i => integrator, # The OrdinaryDiffEqTsit5 integrator
         ),
     )
     for _ in 1:nagents
@@ -277,16 +276,13 @@ nothing #hide
 # We've used the [integrator interface](https://docs.sciml.ai/DiffEqDocs/stable/basics/integrator/)
 # to achieve this.
 #
-# Note that we use [`OrdinaryDiffEq`](https://github.com/SciML/OrdinaryDiffEq.jl) here,
-# which is a component of `DifferentialEquations`.
-# Users may switch this to any subcomponent of the `DifferentialEquations` ecosystem,
-# or use `DifferentialEquations` directly. Since we don't need other components for this
-# example, we'll stick with the subcomponent but speak in general terms since the
-# packages are interchangeable in this context.
+# Note that we use `OrdinaryDiffEqTsit5` here,
+# which is a component of DifferentialEquations.jl
+# Users may switch this to any subcomponent of the DifferentialEquations.jl ecosystem.
 #
 # This implementation uses `import` to explicitly identify which functions are from
-# `DifferentialEquations` and not `Agents`. However, since both `Agents` and
-# `DifferentialEquations` provide a `step!` function, each use must be qualified
+# `OrdinaryDiffEqTsit5` and not `Agents`. However, since both `Agents` and
+# `OrdinaryDiffEqTsit5` provide a `step!` function, each use must be qualified
 # explicitly if one were to choose to bring all of `DifferentialEquations` into scope
 # via the `using` keyword.
 
@@ -295,8 +291,8 @@ modeldeq = initialise_diffeq()
 _, resultsdeq = run!(modeldeq, 20; mdata = [:stock])
 
 f = Figure(size = (600, 400))
-ax = f[1, 1] = Axis(
-    f,
+ax = Axis(
+    f[1, 1];
     xlabel = "Year",
     ylabel = "Stock",
     title = "Fishery Inventory",
@@ -328,9 +324,8 @@ length(modeldeq.i.sol.t)
 # precisely the same manner:
 
 f = Figure(size = (600, 400))
-ax =
-    f[1, 1] = Axis(
-    f,
+ax = Axis(
+    f[1, 1];
     xlabel = "Year",
     ylabel = "Stock",
     title = "Fishery Inventory",
@@ -394,28 +389,28 @@ tspan = (0.0, 20.0 * 365.0)
 const initial_stock = 400.0
 const max_population = 500.0
 
-prob = OrdinaryDiffEq.ODEProblem(fish_stock!, [initial_stock], tspan, [max_population, 0.0])
+prob = OrdinaryDiffEqTsit5.ODEProblem(fish_stock!, [initial_stock], tspan, [max_population, 0.0])
 
 ## Each Dec 31st, we call fish! that adds our catch modifier to the stock, and steps the model
 fish = DiffEqCallbacks.PeriodicCallback(i -> fish!(i, modelcb), 364)
 ## Stocks are replenished again
 reset = DiffEqCallbacks.PeriodicCallback(i -> i.p[2] = 0.0, 365)
 
-sol = OrdinaryDiffEq.solve(
+sol = OrdinaryDiffEqTsit5.solve(
     prob,
-    OrdinaryDiffEq.Tsit5();
-    callback = OrdinaryDiffEq.CallbackSet(fish, reset),
+    OrdinaryDiffEqTsit5.Tsit5();
+    callback = OrdinaryDiffEqTsit5.CallbackSet(fish, reset),
 )
 discrete = vcat(sol(0:365:(365 * 20))[:, :]...)
-f = Figure(size = (600, 400))
-ax = f[1, 1] = Axis(
-    f,
+fig = Figure(size = (600, 400))
+ax = Axis(
+    fig[1, 1];
     xlabel = "Year",
     ylabel = "Stock",
     title = "Fishery Inventory",
 )
 lines!(ax, discrete, linewidth = 2, color = :blue)
-f
+fig
 
 # The results are different here, since the construction of this version and the one
 # above are quite different and cannot be randomly seeded in the same manner.

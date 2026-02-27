@@ -44,6 +44,7 @@ using CairoMakie, Agents
 * Extendable [API](@ref) that provides out of the box thousands of possible agent actions.
 * Support for many types of space: arbitrary graphs, regular grids, continuous space
 * Support for simulations on Open Street Maps including support for utilizing the road's max speed limit, finding nearby agents/roads/destinations and pathfinding.
+  * See this [highlight](@ref anna_cobb) for a simulation of the whole city of Chicago.
 * Modular design allows the creation of entirely new types of space configurations that can be integrated fully with the rest of Agents.jl API with only a few lines of code.
 * Multi-agent support, for interactions between disparate agent species.
 * Support for both discrete time and continuous time (event queue or jump processes) type of simulations.

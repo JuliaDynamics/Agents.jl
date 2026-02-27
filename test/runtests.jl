@@ -4,6 +4,7 @@ using Agents.Graphs, Agents.DataFrames
 using StatsBase: mean
 using StableRNGs
 using AgentsExampleZoo
+AStar = Agents.Pathfinding.AStar
 
 using Distributed
 addprocs(2)
@@ -14,6 +15,7 @@ addprocs(2)
     using StatsBase: mean
     using StableRNGs
     using AgentsExampleZoo
+    AStar = Agents.Pathfinding.AStar
 end
 
 @agent struct Agent0(NoSpaceAgent)
@@ -54,7 +56,7 @@ end
 
 Agent8(id, pos; f1, f2) = Agent8(id, pos, f1, f2)
 
-@agent struct SchellingAgent(GridAgent{2})
+@agent struct SchellingAgent2(GridAgent{2})
     mood::Bool
     group::Int
 end
@@ -73,12 +75,12 @@ function schelling_model(ModelType, SpaceType, ContainerType; numagents = 30, gr
     space = SpaceType(griddims, periodic = false)
     properties = Dict(:min_to_be_happy => min_to_be_happy)
     model = ModelType(
-        SchellingAgent, space, agent_step! = schelling_model_agent_step!,
+        SchellingAgent2, space, agent_step! = schelling_model_agent_step!,
         properties = properties, scheduler = Schedulers.Randomly(),
         container = ContainerType, rng = StableRNG(10)
     )
     for n in 1:numagents
-        add_agent_single!(SchellingAgent, model, false, n < numagents / 2 ? 1 : 2)
+        add_agent_single!(SchellingAgent2, model, false, n < numagents / 2 ? 1 : 2)
     end
     return model
 end
@@ -166,8 +168,8 @@ end
     include("grid_space_tests.jl")
     include("collect_tests.jl")
     include("continuous_space_tests.jl")
-    include("osm_tests.jl")
     include("astar_tests.jl")
+    include("osm_tests.jl")
     include("graph_tests.jl")
     include("csv_tests.jl")
     include("jld2_tests.jl")

@@ -218,7 +218,6 @@ abmvideo(
     agent_size = p -> p.r,
     agent_color = p -> p.k,
     figure = (size = (1280, 720),),
-    title_kwargs = (fontsize = 18,),
 )
 
 # ```@raw html

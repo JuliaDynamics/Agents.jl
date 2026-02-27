@@ -541,7 +541,7 @@
 #     agent_color=agent_color,
 #     agent_marker=agent_marker
 # )
-# display(fig)
+# fig
 # ```
 
 # Run simulation with trained agents

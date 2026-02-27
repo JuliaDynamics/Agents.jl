@@ -75,35 +75,4 @@ include("ambiguities.jl")
 
 include("precompile.jl")
 
-# Update messages:
-using Scratch
-
-function __init__()
-    display_update = true
-    version_number = "6"
-    update_name = "update_v$(version_number)"
-    update_message = """
-    Update message: Agents v$(version_number)
-    
-    This is a new major version of Agents.jl with lots of cool stuff!
-    However, from this version onwards, we will stop posting update messages
-    to the REPL console!
-    
-    If you want to be updated, follow this discourse post:
-    
-    https://discourse.julialang.org/t/agents-jl-v6-releases-announcement-post/111678
-    
-    (and see the CHANGELOG.md file online for a list of changes!)
-    """
-
-    return if display_update
-        # Get scratch space for this package
-        versions_dir = @get_scratch!("versions")
-        if !isfile(joinpath(versions_dir, update_name))
-            printstyled(stdout, "\n" * update_message; color = :light_magenta)
-            touch(joinpath(versions_dir, update_name))
-        end
-    end
-end # _init__ function.
-
 end # module

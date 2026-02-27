@@ -4,7 +4,8 @@ function Agents.abmplot(
         # These keywords are about the `ABM`
         adata = nothing, mdata = nothing, when = true,
         axis = NamedTuple(),
-        add_controls = false,
+        params = Dict(),
+        add_controls = !isempty(params),
         figure = NamedTuple(),
         kwargs...
     )
@@ -16,7 +17,7 @@ function Agents.abmplot(
         either
     end
     ax = axistype(abmobs.model[])(fig[1, 1][1, 1]; axis...)
-    abmplot!(ax, abmobs; add_controls, kwargs...)
+    abmplot!(ax, abmobs; add_controls, params, kwargs...)
     return fig, ax, abmobs
 end
 
@@ -82,7 +83,7 @@ function Agents.abmplot!(
     Agents.spaceplot!(ax, abmspace(modelobs[]); spaceplotkwargs...)
     if !isnothing(heatarray)
         heatobs = @lift(abmplot_heatarray($(modelobs), heatarray))
-        abmheatmap!(ax, abmobs, abmspace(modelobs[]), heatobs, heatkwargs)
+        hmap = abmheatmap!(ax, abmobs, abmspace(modelobs[]), heatobs, heatkwargs)
         add_colorbar && Colorbar(ax.parent[1, 1][1, 2], hmap; width = 20, label = colorbar_label)
         # TODO: Set colorbar to be "glued" to axis
         # Problem with the following code, which comes from the tutorial

@@ -17,7 +17,7 @@
 import Pkg
 Pkg.status(
     ["Agents", "CairoMakie"];
-    mode = PKGMODE_MANIFEST, io = stdout
+    mode = Pkg.PKGMODE_MANIFEST, io = stdout
 )
 
 # ## Static plotting of ABMs
@@ -43,7 +43,7 @@ model
 daisycolor(a) = a.breed
 agent_size = 20
 agent_marker = '✿'
-agentsplotkwargs = (strokewidth = 1.0,) # add stroke around each agent
+agentsplotkwargs = (strokewidth = 1.0, strokecolor = :black)
 fig, ax, abmobs = abmplot(
     model;
     agent_color = daisycolor, agent_size, agent_marker, agentsplotkwargs
@@ -65,7 +65,7 @@ heatkwargs = (colorrange = (-20, 60), colormap = :thermal)
 plotkwargs = (;
     agent_color = daisycolor, agent_size, agent_marker,
     agentsplotkwargs = (strokewidth = 1.0,),
-    heatarray, heatkwargs,
+    heatarray, heatkwargs, colorbar_label = "temperature",
 )
 
 fig, ax, abmobs = abmplot(model; plotkwargs...)
@@ -93,6 +93,8 @@ fig
 
 # One could click the run button and see the model evolve.
 # Furthermore, one can add more sliders that allow changing the model parameters.
+# This is done by providing a dictionary mapping parameter keys to range of values.
+# When such a dictionary is provided, `abmplot` goes into interactive mode by default.
 params = Dict(
     :surface_albedo => 0:0.01:1,
     :solar_change => -0.1:0.01:0.1,
@@ -144,23 +146,6 @@ abmvideo("daisyworld.mp4", model; title = "Daisy World", frames = 150, plotkwarg
 # You could of course also explicitly use `abmplot` in a `record` loop for
 # finer control over additional plot elements.
 
-# ## Agent inspection
-
-# It is possible to inspect agents at a given position by hovering the mouse cursor over
-# the scatter points in the agent plot. Inspection is automatically enabled for interactive
-# applications (i.e. when either agent or model stepping functions are provided). To
-# manually enable this functionality, simply add `enable_inspection = true` as an
-# additional keyword argument to the `abmplot`/`abmplot!` call.
-# A tooltip will appear which by default provides the name of the agent type, its `id`,
-# `pos`, and all other fieldnames together with their current values. This is especially
-# useful for interactive exploration of micro data on the agent level.
-
-# ![RabbitFoxHawk inspection example](https://github.com/JuliaDynamics/JuliaDynamics/tree/master/videos/agents/RabbitFoxHawk_inspection.png)
-
-# The tooltip can be customized by extending `Agents.agent2string`.
-# ```@docs; canonical = false
-# Agents.agent2string
-# ```
 
 # ## Creating custom ABM plots
 # The existing convenience function [`abmexploration`](@ref) will
@@ -247,54 +232,4 @@ end
 for i in 1:100
     step!(abmobs, 1)
 end
-fig
-
-# ## GraphSpace models
-# While the `agent_color, agent_size, agent_marker` keyword arguments generally relate to *agent* colors, markersizes,
-# and markers, they are handled a bit differently in the case of [`GraphSpace models`](https://juliadynamics.github.io/Agents.jl/stable/api/#Agents.GraphSpace).
-# Here, we collect those plot attributes for each node of the underlying graph which can
-# contain multiple agents.
-# If we want to use a function for this, we therefore need to handle an iterator of agents.
-# Keeping this in mind, we can create an [exemplary GraphSpace model](https://juliadynamics.github.io/Agents.jl/stable/examples/sir/)
-# and plot it with [`abmplot`](@ref).
-using Graphs
-using ColorTypes
-sir_model = AgentsExampleZoo.sir()
-city_size(agents_here) = 0.005 * length(agents_here)
-function city_color(agents_here)
-    l_agents_here = length(agents_here)
-    infected = count(a.status == :I for a in agents_here)
-    recovered = count(a.status == :R for a in agents_here)
-    return RGB(infected / l_agents_here, recovered / l_agents_here, 0)
-end
-
-# To further style the edges and nodes of the resulting graph plot, we can leverage
-# the functionality of [GraphMakie.graphplot](https://graph.makie.org/stable/#GraphMakie.graphplot)
-# and pass all the desired keyword arguments to it via a named tuple called
-# `agentsplotkwargs`.
-# When using functions for edge color and width, they should return either one color or
-# a vector with the same length (or twice) as current number of edges in the underlying
-# graph.
-# In the example below, the `edge_color` function colors all edges to a semi-transparent
-# shade of grey and the `edge_width` function makes use of the special ability of
-# `linesegments` to be tapered (i.e. one end is wider than the other).
-using GraphMakie: Shell
-edge_color(model) = fill((:grey, 0.25), ne(abmspace(model).graph))
-function edge_width(model)
-    w = zeros(ne(abmspace(model).graph))
-    for e in edges(abmspace(model).graph)
-        w[e.src] = 0.004 * length(abmspace(model).stored_ids[e.src])
-        w[e.dst] = 0.004 * length(abmspace(model).stored_ids[e.dst])
-    end
-    return w
-end
-agentsplotkwargs = (
-    layout = Shell(), # node positions
-    arrow_show = false, # hide directions of graph edges
-    edge_color = edge_color, # change edge colors and widths with own functions
-    edge_width = edge_width,
-    edge_plottype = :linesegments, # needed for tapered edge widths
-)
-
-fig, ax, abmobs = abmplot(sir_model; agent_size = city_size, agent_color = city_color, agentsplotkwargs)
 fig
