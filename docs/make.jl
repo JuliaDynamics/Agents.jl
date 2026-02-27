@@ -3,7 +3,7 @@ println("Loading packages...")
 using Agents
 using LightOSM
 using CairoMakie
-using Crux # precompile it to avoid doc messages
+import Crux # precompile it to avoid doc messages
 import Literate
 
 pages = [
@@ -47,7 +47,7 @@ indir = joinpath(@__DIR__, "..", "examples")
 outdir = joinpath(@__DIR__, "src", "examples")
 rm(outdir; force = true, recursive = true) # cleans up previous examples
 mkpath(outdir)
-toskip = ()
+toskip = ("rl_wolfsheep.jl",)
 for file in readdir(indir)
     file ∈ toskip && continue
     Literate.markdown(joinpath(indir, file), outdir; credit = false)
@@ -64,6 +64,8 @@ Downloads.download(
 include("build_docs_with_style.jl")
 
 ENV["JULIA_DEBUG"] = "Documenter" # Change this from "Documenter" to "" to disable docs debugging
+
+step! = Agents.step!
 
 build_docs_with_style(
     pages, Agents;
