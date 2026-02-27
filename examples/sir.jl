@@ -239,7 +239,7 @@ model = model_initiation(; params...)
 # And remember, the package `GraphMakie` must be in scope for this plotting to work!
 
 using GraphMakie
-city_size(agents_here) = 0.01 * length(agents_here)
+city_size(agents_here) = 0.1 * length(agents_here)
 function city_color(agents_here)
     l_agents_here = length(agents_here)
     infected = count(a.status == :I for a in agents_here)
