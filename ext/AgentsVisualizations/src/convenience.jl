@@ -19,7 +19,6 @@ function Agents.abmexploration(
     !isnothing(alabels) && @assert length(alabels) == length(adata)
     !isnothing(mlabels) && @assert length(mlabels) == length(mdata)
     init_abm_data_plots!(fig, abmobs, adata, mdata, alabels, mlabels, plotkwargs)
-    display(fig)
     return fig, abmobs
 end
 
