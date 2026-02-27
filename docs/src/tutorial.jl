@@ -283,9 +283,10 @@ Stacktrace:
 #    @ .julia\dev\Agents\docs\src\tutorial.jl:266
 # ```
 
-# This is not a limitation of Agents.jl but a fundamental limitation of the Julia
-# language that very likely will be addressed in the near future.
-# Normally, you would need to restart your Julia session to redefine a custom `struct`.
+# This is not a limitation of Agents.jl but historically a limitation of the Julia
+# language. In older Julia versions, redefining a `struct` required restarting the
+# Julia session. Newer Julia versions (≥ 1.12) improve this behavior, so restarting
+# may no longer be necessary in many development workflows.
 # However, it is simpler to just do a mass rename in the text editor you use to
 # write Julia code (for example, Ctrl+Shift+H in VSCode can do a mass rename).
 # Change the name of the agent type to e.g., the same name ending in 2, 3, ...,

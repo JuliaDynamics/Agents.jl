@@ -116,6 +116,9 @@ end
 function Agents.spaceplot!(ax, p::ABMPlot; spaceplotkwargs...)
 end
 
+# NOTE: `static_preplot!` as a keyword argument in `abmplot` is deprecated.
+# Instead, users should define a custom method for `Agents.static_preplot!(ax, model, p)`.
+
 function Agents.static_preplot!(ax, p::ABMPlot)
 end
 
