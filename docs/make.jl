@@ -63,7 +63,7 @@ Downloads.download(
 )
 include("build_docs_with_style.jl")
 
-ENV["JULIA_DEBUG"] = "" # Change this from "Documenter" to "" to disable docs debugging
+ENV["JULIA_DEBUG"] = "Documenter" # Change this from "Documenter" to "" to disable docs debugging
 
 build_docs_with_style(
     pages, Agents;

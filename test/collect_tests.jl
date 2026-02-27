@@ -562,7 +562,8 @@ end
 @testset "Ensemble runs" begin
 
     @everywhere begin
-        @agent struct SchellingAgent(GridAgent{2})
+        @agent struct SchellingAgent5(GridAgent{2})
+            mood::Bool
             const group::Int # The group of the agent
         end
         nsteps = 100
@@ -574,11 +575,11 @@ end
             space = GridSpaceSingle(griddims, periodic = false)
             properties = Dict(:min_to_be_happy => min_to_be_happy)
             model = StandardABM(
-                SchellingAgent, space; properties, agent_step! = schelling_agent_step!,
+                SchellingAgent5, space; properties, agent_step! = schelling_agent_step!,
                 container = Vector, scheduler = Schedulers.Randomly()
             )
             for n in 1:nagents
-                add_agent_single!(SchellingAgent, model, false, n < nagents / 2 ? 1 : 2)
+                add_agent_single!(SchellingAgent5, model, false, n < nagents / 2 ? 1 : 2)
             end
             return model
         end
