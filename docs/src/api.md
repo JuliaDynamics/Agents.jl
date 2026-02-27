@@ -321,7 +321,7 @@ return df_agent, df_model
 
 ```@docs
 Schedulers
-schedule
+Agents.schedule
 ```
 
 ### Predefined schedulers

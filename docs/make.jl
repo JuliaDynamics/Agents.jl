@@ -1,8 +1,8 @@
 cd(@__DIR__)
 println("Loading packages...")
 using Agents
-using LightOSM
 using CairoMakie
+import LightOSM
 import Crux # precompile it to avoid doc messages
 import Literate
 

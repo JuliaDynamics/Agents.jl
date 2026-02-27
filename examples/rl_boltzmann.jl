@@ -60,7 +60,7 @@
 using Agents, Random, Statistics, Distributions
 
 # while we also need to import the library required for the RL extension
-using Crux
+import Crux
 
 # and define the agent type as usual
 
@@ -269,18 +269,19 @@ end
 boltzmann_rl_model = initialize_boltzmann_rl_model()
 
 # Train the Boltzmann agents
-train_model!(
+@time train_model!(
     boltzmann_rl_model;
-    training_steps = 20_000,
+    training_steps = 25_000,
     max_steps = 50,
     solver_params = Dict(
         :ΔN => 200,            # Custom batch size for PPO updates
-        :log => (period = 1000,) # Log every 1000 steps
+        :log => (period = 5000,) # Log every 1000 steps
     )
 )
 
 # Plot the learning curve to see how agents improved over training
-plot_learning(boltzmann_rl_model.training_history[RLBoltzmannAgent])
+
+Crux.plot_learning(boltzmann_rl_model.training_history[RLBoltzmannAgent])
 
 # ## Running the trained model
 
@@ -295,14 +296,13 @@ copy_trained_policies!(fresh_boltzmann_model, boltzmann_rl_model)
 
 # Let's visualize the initial state and run a simulation to see the trained behavior.
 using CairoMakie
-using CairoMakie.Makie.ColorSchemes
 
 function agent_color(agent) # Custom color function based on wealth
     max_expected_wealth = 10
     clamped_wealth = clamp(agent.wealth, 0, max_expected_wealth)
     normalized_wealth = clamped_wealth / max_expected_wealth
     ## Color scheme: red (poor) to green (rich)
-    return ColorSchemes.RdYlGn_4[normalized_wealth]
+    return CairoMakie.Makie.ColorSchemes.RdYlGn_4[normalized_wealth]
 end
 function agent_size(agent) # Custom size function based on wealth
     max_expected_wealth = 10
@@ -322,18 +322,16 @@ ax.xlabel = "X Position"
 ax.ylabel = "Y Position"
 fig
 
-# Run simulation with trained agents on the fresh model
+# The initial Gini coefficient is
 initial_gini = gini(fresh_boltzmann_model)
-"Initial Gini coefficient: $initial_gini"
 
 # Step the model forward to see the trained behavior
 Agents.step!(fresh_boltzmann_model, 10)
 
 # Check the results after simulation
 final_gini = gini(fresh_boltzmann_model)
-"Final Gini coefficient: $final_gini"
 
-# Plot the final state
+# and indeed the coefficient is reduced. Let's plot the final state
 fig, ax = abmplot(
     fresh_boltzmann_model;
     agent_color = agent_color,
@@ -348,7 +346,6 @@ fig
 # Finally, let's create a video showing the trained agents in action over multiple steps
 # on a bigger scale, and compare visually with a random policy
 
-# Random policy because no policy is specified
 fresh_boltzmann_model = initialize_boltzmann_rl_model(; num_agents = 500, dims = (100, 100))
 plotkwargs = (;
     agent_color = agent_color,
@@ -362,7 +359,7 @@ abmvideo(
     plotkwargs...
 )
 
-# We know copy the trained policies and the agents are...smarter!
+# We now copy the trained policies and the agents are... smarter!
 fresh_boltzmann_model = initialize_boltzmann_rl_model(; num_agents = 500, dims = (100, 100))
 copy_trained_policies!(fresh_boltzmann_model, boltzmann_rl_model)
 abmvideo(
