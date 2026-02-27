@@ -126,7 +126,7 @@ abmvideo(
 # publication in [PNAS](https://www.pnas.org/doi/10.1073/pnas.2408936121).
 # Here is an example of one of Anna's simulations:
 
-# [Anna Cobb's Chicago simulation](../../anna_cobb_chicago.gif)
+# [Anna Cobb's Chicago simulation](../../src/anna_cobb_chicago.gif)
 
 # Agents.jl allows doing such simulations with ease! Much easier than
 # alternatives! In the author's own words:

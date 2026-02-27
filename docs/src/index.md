@@ -18,7 +18,7 @@ using CairoMakie, Agents
 
     There is also a minor breaking change: the internal code for plotting has been
     fully reworked. This does not affect typical users, as all plotting API remains
-    identical, but it does affect users that were extending plotting for custom spaces. As a result of this change, data inspection is currently disabled.
+    identical, but it does affect users that were extending plotting for custom spaces. As a result of this change, hovering data inspection is currently disabled.
 
 
 
