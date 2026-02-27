@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>SIR model for the spread of COVID-19 · Agents.jl</title><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link href="https://fonts.googleapis.com/css?family=Montserrat|Source+Code+Pro&amp;display=swap" rel="stylesheet" type="text/css"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img src="../../assets/logo.png" alt="Agents.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit">Agents.jl</span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Introduction</a></li><li><a class="tocitem" href="../../tutorial/">Tutorial</a></li><li><input class="collapse-toggle" id="menuitem-3" type="checkbox" checked/><label class="tocitem" for="menuitem-3"><span class="docs-label">Examples</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../schelling/">Schelling&#39;s segregation model</a></li><li class="is-active"><a class="tocitem" href>SIR model for the spread of COVID-19</a><ul class="internal"><li><a class="tocitem" href="#SIR-model-1"><span>SIR model</span></a></li><li><a class="tocitem" href="#Model-parameters-1"><span>Model parameters</span></a></li><li><a class="tocitem" href="#Making-the-model-in-Agents.jl-1"><span>Making the model in Agents.jl</span></a></li><li><a class="tocitem" href="#SIR-Stepping-functions-1"><span>SIR Stepping functions</span></a></li><li><a class="tocitem" href="#Example-animation-1"><span>Example animation</span></a></li><li><a class="tocitem" href="#Exponential-growth-1"><span>Exponential growth</span></a></li></ul></li><li><a class="tocitem" href="../flock/">Flocking</a></li><li><a class="tocitem" href="../zombies/">Zombie Outbreak</a></li><li><a class="tocitem" href="../rabbit_fox_hawk/">Rabbit, Fox, Hawk</a></li><li><a class="tocitem" href="../../models/">Predefined Models</a></li><li><a class="tocitem" href="../">More Examples for Agents.jl</a></li></ul></li><li><a class="tocitem" href="../../api/">API</a></li><li><a class="tocitem" href="../../agents_visualizations/">Plotting and Interactivity</a></li><li><input class="collapse-toggle" id="menuitem-6" type="checkbox"/><label class="tocitem" for="menuitem-6"><span class="docs-label">Ecosystem Integration</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../optim/">BlackBoxOptim.jl</a></li><li><a class="tocitem" href="../diffeq/">DifferentialEquations.jl</a></li><li><a class="tocitem" href="../schoolyard/">Graphs.jl</a></li><li><a class="tocitem" href="../measurements/">Measurements.jl</a></li></ul></li><li><a class="tocitem" href="../../performance_tips/">Performance Tips</a></li><li><a class="tocitem" href="../../comparison/">ABM Framework Comparison</a></li><li><a class="tocitem" href="../../devdocs/">Developer Docs</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>SIR model for the spread of COVID-19</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>SIR model for the spread of COVID-19</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/JuliaDynamics/Agents.jl/blob/main/examples/sir.jl" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="SIR-model-for-the-spread-of-COVID-19-1"><a class="docs-heading-anchor" href="#SIR-model-for-the-spread-of-COVID-19-1">SIR model for the spread of COVID-19</a><a class="docs-heading-anchor-permalink" href="#SIR-model-for-the-spread-of-COVID-19-1" title="Permalink"></a></h1><video width="auto" controls autoplay loop>
+<source src="../covid_evolution.mp4" type="video/mp4">
+</video><p>This example illustrates how to use <code>GraphSpace</code> and how to model agents on an graph (network) where the transition probabilities between each node (position) is not constant.</p><h2 id="SIR-model-1"><a class="docs-heading-anchor" href="#SIR-model-1">SIR model</a><a class="docs-heading-anchor-permalink" href="#SIR-model-1" title="Permalink"></a></h2><p>A SIR model tracks the ratio of Susceptible, Infected, and Recovered individuals within a population. Here we add one more category of individuals: those who are infected, but do not know it. Transmission rate for infected and diagnosed individuals is lower than infected and undetected. We also allow a fraction of recovered individuals to catch the disease again, meaning that recovering the disease does not bring full immunity.</p><h2 id="Model-parameters-1"><a class="docs-heading-anchor" href="#Model-parameters-1">Model parameters</a><a class="docs-heading-anchor-permalink" href="#Model-parameters-1" title="Permalink"></a></h2><p>Here are the model parameters, some of which have default values.</p><ul><li><code>Ns</code>: a vector of population sizes per city. The amount of cities is just <code>C=length(Ns)</code>.</li><li><code>β_und</code>: a vector for transmission probabilities β of the infected but undetected per city. Transmission probability is how many susceptible are infected per day by an infected individual. If social distancing is practiced, this number decreases.</li><li><code>β_det</code>: an array for transmission probabilities β of the infected and detected per city. If hospitals are full, this number increases.</li><li><code>infection_period = 30</code>: how many days before a person dies or recovers.</li><li><code>detection_time = 14</code>: how many days before an infected person is detected.</li><li><code>death_rate = 0.02</code>: the probability that the individual will die after the <code>infection_period</code>.</li><li><code>reinfection_probability = 0.05</code>: The probability that a recovered person can get infected again.</li><li><code>migration_rates</code>: A matrix of migration probability per individual per day from one city to another.</li><li><code>Is = [zeros(C-1)..., 1]</code>: An array for initial number of infected but undetected people per city. This starts as only one infected individual in the last city.</li></ul><p>Notice that <code>Ns, β, Is</code> all need to have the same length, as they are numbers for each city. We&#39;ve tried to add values to the infection parameters similar to the ones you would hear on the news about COVID-19.</p><p>The good thing with Agent based models is that you could easily extend the model we implement here to also include age as an additional property of each agent. This makes ABMs flexible and suitable for research of virus spreading.</p><h2 id="Making-the-model-in-Agents.jl-1"><a class="docs-heading-anchor" href="#Making-the-model-in-Agents.jl-1">Making the model in Agents.jl</a><a class="docs-heading-anchor-permalink" href="#Making-the-model-in-Agents.jl-1" title="Permalink"></a></h2><p>We start by defining the <code>PoorSoul</code> agent type and the ABM</p><pre><code class="language-julia">using Agents, Random, DataFrames, Graphs
+using Distributions: Poisson, DiscreteNonParametric
+using DrWatson: @dict
+using CairoMakie
+
+mutable struct PoorSoul &lt;: AbstractAgent
+    id::Int
+    pos::Int
+    days_infected::Int  # number of days since is infected
+    status::Symbol  # 1: S, 2: I, 3:R
+end
+
+function model_initiation(;
+    Ns,
+    migration_rates,
+    β_und,
+    β_det,
+    infection_period = 30,
+    reinfection_probability = 0.05,
+    detection_time = 14,
+    death_rate = 0.02,
+    Is = [zeros(Int, length(Ns) - 1)..., 1],
+    seed = 0,
+)
+
+    rng = MersenneTwister(seed)
+    @assert length(Ns) ==
+    length(Is) ==
+    length(β_und) ==
+    length(β_det) ==
+    size(migration_rates, 1) &quot;length of Ns, Is, and B, and number of rows/columns in migration_rates should be the same &quot;
+    @assert size(migration_rates, 1) == size(migration_rates, 2) &quot;migration_rates rates should be a square matrix&quot;
+
+    C = length(Ns)
+    # normalize migration_rates
+    migration_rates_sum = sum(migration_rates, dims = 2)
+    for c in 1:C
+        migration_rates[c, :] ./= migration_rates_sum[c]
+    end
+
+    properties = @dict(
+        Ns,
+        Is,
+        β_und,
+        β_det,
+        β_det,
+        migration_rates,
+        infection_period,
+        infection_period,
+        reinfection_probability,
+        detection_time,
+        C,
+        death_rate
+    )
+    space = GraphSpace(complete_digraph(C))
+    model = ABM(PoorSoul, space; properties, rng)
+
+    # Add initial individuals
+    for city in 1:C, n in 1:Ns[city]
+        ind = add_agent!(city, model, 0, :S) # Susceptible
+    end
+    # add infected individuals
+    for city in 1:C
+        inds = ids_in_position(city, model)
+        for n in 1:Is[city]
+            agent = model[inds[n]]
+            agent.status = :I # Infected
+            agent.days_infected = 1
+        end
+    end
+    return model
+end</code></pre><p>We will make a function that starts a model with <code>C</code> number of cities, and creates the other parameters automatically by attributing some random values to them. You could directly use the above constructor and specify all <code>Ns, β</code>, etc. for a given set of cities.</p><p>All cities are connected with each other, while it is more probable to travel from a city with small population into a city with large population.</p><pre><code class="language-julia">using LinearAlgebra: diagind
+
+function create_params(;
+    C,
+    max_travel_rate,
+    infection_period = 30,
+    reinfection_probability = 0.05,
+    detection_time = 14,
+    death_rate = 0.02,
+    Is = [zeros(Int, C - 1)..., 1],
+    seed = 19,
+)
+
+    Random.seed!(seed)
+    Ns = rand(50:5000, C)
+    β_und = rand(0.3:0.02:0.6, C)
+    β_det = β_und ./ 10
+
+    Random.seed!(seed)
+    migration_rates = zeros(C, C)
+    for c in 1:C
+        for c2 in 1:C
+            migration_rates[c, c2] = (Ns[c] + Ns[c2]) / Ns[c]
+        end
+    end
+    maxM = maximum(migration_rates)
+    migration_rates = (migration_rates .* max_travel_rate) ./ maxM
+    migration_rates[diagind(migration_rates)] .= 1.0
+
+    params = @dict(
+        Ns,
+        β_und,
+        β_det,
+        migration_rates,
+        infection_period,
+        reinfection_probability,
+        detection_time,
+        death_rate,
+        Is
+    )
+
+    return params
+end
+
+params = create_params(C = 8, max_travel_rate = 0.01)
+model = model_initiation(; params...)</code></pre><pre><code class="language-none">AgentBasedModel with 28540 agents of type PoorSoul
+ space: GraphSpace with 8 positions and 56 edges
+ scheduler: fastest
+ properties: Is, death_rate, infection_period, β_und, Ns, migration_rates, detection_time, reinfection_probability, β_det, C</code></pre><h2 id="SIR-Stepping-functions-1"><a class="docs-heading-anchor" href="#SIR-Stepping-functions-1">SIR Stepping functions</a><a class="docs-heading-anchor-permalink" href="#SIR-Stepping-functions-1" title="Permalink"></a></h2><p>Now we define the functions for modelling the virus spread in time</p><pre><code class="language-julia">function agent_step!(agent, model)
+    migrate!(agent, model)
+    transmit!(agent, model)
+    update!(agent, model)
+    recover_or_die!(agent, model)
+end
+
+function migrate!(agent, model)
+    pid = agent.pos
+    d = DiscreteNonParametric(1:(model.C), model.migration_rates[pid, :])
+    m = rand(model.rng, d)
+    if m ≠ pid
+        move_agent!(agent, m, model)
+    end
+end
+
+function transmit!(agent, model)
+    agent.status == :S &amp;&amp; return
+    rate = if agent.days_infected &lt; model.detection_time
+        model.β_und[agent.pos]
+    else
+        model.β_det[agent.pos]
+    end
+
+    d = Poisson(rate)
+    n = rand(model.rng, d)
+    n == 0 &amp;&amp; return
+
+    for contactID in ids_in_position(agent, model)
+        contact = model[contactID]
+        if contact.status == :S ||
+           (contact.status == :R &amp;&amp; rand(model.rng) ≤ model.reinfection_probability)
+            contact.status = :I
+            n -= 1
+            n == 0 &amp;&amp; return
+        end
+    end
+end
+
+update!(agent, model) = agent.status == :I &amp;&amp; (agent.days_infected += 1)
+
+function recover_or_die!(agent, model)
+    if agent.days_infected ≥ model.infection_period
+        if rand(model.rng) ≤ model.death_rate
+            kill_agent!(agent, model)
+        else
+            agent.status = :R
+            agent.days_infected = 0
+        end
+    end
+end</code></pre><h2 id="Example-animation-1"><a class="docs-heading-anchor" href="#Example-animation-1">Example animation</a><a class="docs-heading-anchor-permalink" href="#Example-animation-1" title="Permalink"></a></h2><p>At the moment <a href="../../agents_visualizations/#InteractiveDynamics.abmplot"><code>abmplot</code></a> does not plot <code>GraphSpace</code>s, but we can still utilize the <a href="../../agents_visualizations/#InteractiveDynamics.ABMObservable"><code>ABMObservable</code></a>. We do not need to collect data here, only the current status of the model will be used in visualization</p><pre><code class="language-julia">using InteractiveDynamics
+using CairoMakie
+abmobs = ABMObservable(model; agent_step!)</code></pre><pre><code class="language-none">ABMObservable with model:
+AgentBasedModel with 28540 agents of type PoorSoul
+ space: GraphSpace with 8 positions and 56 edges
+ scheduler: fastest
+ properties: Is, death_rate, infection_period, β_und, Ns, migration_rates, detection_time, reinfection_probability, β_det, C
+and with data collection:
+ adata: nothing
+ mdata: nothing</code></pre><p>We then initialize elements that are lifted observables from <code>abmobs</code>:</p><pre><code class="language-julia">infected_fraction(m, x) = count(m[id].status == :I for id in x) / length(x)
+infected_fractions(m) = [infected_fraction(m, ids_in_position(p, m)) for p in positions(m)]
+fracs = lift(infected_fractions, abmobs.model)
+color = lift(fs -&gt; [cgrad(:inferno)[f] for f in fs], fracs)
+title = lift(
+    (s, m) -&gt; &quot;step = $(s), infected = $(round(Int, 100infected_fraction(m, allids(m))))%&quot;,
+    abmobs.s, abmobs.model
+)</code></pre><pre><code class="language-none">Observable{String} with 0 listeners. Value:
+&quot;step = 0, infected = 0%&quot;</code></pre><p>And lastly we use them to plot things in a figure</p><pre><code class="language-julia">fig = Figure(resolution = (600, 400))
+ax = Axis(fig[1, 1]; title, xlabel = &quot;City&quot;, ylabel = &quot;Population&quot;)
+barplot!(ax, model.Ns; strokecolor = :black, strokewidth = 1, color)
+fig</code></pre><img src="data:image/png;base64,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aZP6AACoV9b+RpiRkdGnTx8vLy9fX9+IiIiffvpJCPH+++8vWbKkpKTEFhUCAFCPrA1CPz+/y5cvq/9v37792bNnhRBeXl5arVZ9PC8AAI7MBmeNnjt3btSoUSUlJf369Vu1atWJEyeWLl1aXl4eHBxskxIBAKg/1gZhv379li9ffu7cuYKCgmnTprm7u0dFRc2ePXvq1KkhISE2KREAgPpjg8snpk6dOnXqVPX/J0+eTE5Odnd379Gjh/VTBgCgvtnmwby/TM7JqV+/fradJgAA9aeOQZiYmJiSklLzMObdRAAAHFYdg/CLL77YsWNHzcMQhAAAx1fHIFy1atWqVatsWwoAAA3P2rNGAQBo1Kw9Wea7775btGhRtV1fffWVlRMHAKC+WRuErq6u/v7+5j8NBsPp06czMjLUpxUCAODgrA3C/v379+/f37LFZDLNmzcvLS3NyikDANAAbP8boVar/f3vf79t27a7d+/afOIAANhWvZwsk5GRUV5efu3atfqYOAAANmTtodGrV68eO3bMsiU/P//TTz/18vLq0KGDlRMHAKC+WRuER48enTRpkmWLRqMJDQ39/PPPvby8rJw4AAD1zdogHD9+/Pjx421SCgAADc82N902Go0XLly4du2am5tbp06dWrdubZPJAgBQ32wQhAcPHnz99dcvXbpkbhkxYsSKFSsCAgKsnzgAAPXK2rNGL126FBsbGxIS8ve//z07O/v69euffvrp4cOHx44da5P6AACoV9buEe7YsSMgIGD//v1ubm5qy29/+9uQkJCnn346MzMzODjY6goBAKhH1u4R5ubmRkZGmlNQ9Zvf/EYIkZOTY+XEAQCob9YGYUxMzPHjx3Nzcy0bDxw40KJFi4iICCsnDgBAfbP20OigQYOee+65qKiomTNndu7cuays7B//+MfixYvnz59/5swZdZiQkJCQkBCrSwUAwPasDcKtW7euXr1aCDFjxgzL9rffftv8//feey8+Pt7KGQEAUB+sDcIXX3xx4MCBNQ/j6+tr5VwAAKgn1gahp6enp6enEEJRlMzMTHd39+bNm9dmRKPReO7cuRs3boSFhXXu3Fmr/Y9fK1NTU69cuRIZGRkYGFhlxLp1AQBQLRs8fSI1NTUuLs7Dw6NVq1Z+fn5BQUEffvhhRUVFDaNcu3atV69ekZGRL730Urdu3aKioszPLywrKxs2bFj79u1jY2ODgoLmz59vHqtuXQAA1MDaIMzLy9Pr9adOnVqwYME333yzffv2uLi4+Ph4y98I7/faa6/l5eWlpKTcu3fv/PnzOTk55huWJiQkJCUlHTt2rLi4eM2aNR988MHu3but6QIAoAbWBuGmTZvKy8uTk5NnzZr11FNPjRgxYvHixatXr/7444+Li4urHaWkpOTAgQO/+93v2rVrJ4SIiIiYP3/+kSNHcnNzjUbjunXrpkyZEhUVpdVqJ0yYEB0dvWbNGiFE3boAAKiZtUF44cKF/v37+/n5WTbGxsaaTCbLu49aKigomDRpkl6vN7eokVlZWXn9+vXMzEzLLr1erz7vsG5dAADUzNqTZVq1anXo0CGTyWR5tsv58+eFEKGhodWOEhgYuGLFCvOfN2/eXLJkSf/+/QMDA9X0sjzVJSgoKDc3t7KyMisrqw5dTk6/LGBOTk52drZlJQaDwc3NreafM2tBsW50WzKZlJoXR1EcqFpFEZbVVvybucVkMtmjrgeqqKioclaXJaPR2JDFPIxSWVlZw5uhsrLSod66RqPR6i3RgTjSdiYURamyoWm12qa0tquokke1YW0QDh8+PCEhYfz48e+++26HDh1KSkoOHz48c+bMQYMGtWzZ8qGjb9my5Y033nB3d9+wYYMQIi8vTwhh+URfLy8vRVHu3btXty7LJ2Bs3bp16dKllnN/7LHHIiIirLwVnEN9/FVWVtS8OOXl5Q1WzEMpismy2pKSEoPBoNFozC0Gg8EedT1Qbm6ui4vLg3oLCwsd53uGoih5eXk1vBny8vIcqtrCwsKmdFNGRXGg73Dl5eWW67agoECj0TjUR4FtGQwG9VqG2rM2CDt16rRx48bp06dv2rRJq9WqX+EHDRqkBlsNUlNTX3311RMnTsyYMSM+Pl6tu0WLFkKIwsJC82D5+fkajcbX17duXZZznD59+vTp0y1b1Mv8rbwzuE5nm2c62oSLi0vNi+Pq6tpgxTyUVqu1rNZgMBQXF1t+d3nUd3N9CwoKqmEF+vr6Wqa4fWk0Wn9//xreDHfu3NFobHDSuE2oW2tTukf/o+6R1CtXV1fLdevu7q7Var29ve1YUr2qw+eGDT7ER4wYMWTIkBMnTly9etXT07NTp07du3eveZTTp08PHDgwKirqwoUL4eHh5vagoCAhhHqoU5WVlRUQEODs7Fy3LuuXDgDQtNX9a8uVK1fGjRvXrVs3vV6/bdu2mJiYiRMnjh49+qEpaDKZRo0apdfrv/76a8sUFEK0adMmPDw8MTHR3JKYmBgdHV3nLgAAalbHPcLs7OzevXtXVFT06dMnLS3t5Zdfzs3NnT17dm3GPXLkSEpKyvPPP//pp59ato8dO9bd3X3y5Ml//OMfY2Nj+/btu3bt2qNHj6oJp9Fo6tAFAEDN6hiEa9asKSsrO336dMeOHSsrK1944YWFCxfWMggvXrwohPjoo4+qtD/77LPu7u5z5sxJS0sbMGCATqfTarXLli2LiYlRB6hbFwAANajjodFLly5FR0d37NhRCOHk5PTKK69kZGQUFRXVZtzJkycr1VF/6tNqtStWrLh3715ycnJ+fv60adN+qbVOXQAA1KCOe4QGg8HynEz1RtuVlZW2KUoIb2/vyMhIG3YBAFAtBzrHFwCAhkcQAgCkVvfrCHfs2GE+OqoeFG3btq3lBcXqDV8AAHBkdQzC55577kG3EgUAoBGpYxCOHTt27Nixti0FAICGx2+EAACpEYQAAKkRhAAAqRGEAACpEYQAAKk50ENlAQAN78yZM5aPsLcvLy+vPn36NPBMCUIAkNrMmTN//PFHJyf7P8ncZDIGBASkpqY28HwJQgCQmtFoLC4uEaLU3oUIIRQ/P7+Gnyu/EQIApEYQAgCkRhACAKRGEAIApEYQAgCkRhACAKRGEAIApEYQAgCkRhACAKRGEAIApEYQAgCkRhACAKRGEAIApEYQAgCkRhACAKRGEAIApEYQAgCkRhACAKRGEAIApEYQAgCkRhACAKTmZO8CAODhUlJS7F3CL/z8/Pz8/OxdBWyGIATg6MrKyh5//HFPTy97FyKEEOXlZe+88058fLy9C4HNEIQAGgGdTldUZLB3FSqTvQuAjfEbIQBAagQhAEBqBCEAQGoEIQBAagQhAEBqBCEAQGoEIQBAagQhAEBqBCEAQGoEIQBAagQhAEBqBCEAQGoEIQBAagQhAEBqBCEAQGoEIQBAagQhAEBqBCEAQGoEIQBAagQhAEBqBCEAQGoEIQBAagQhAEBqBCEAQGoEIQBAagQhAEBqBCEAQGoEIQBAagQhAEBqBCEAQGoEIQBAagQhAEBqBCEAQGoEIQBAagQhAEBqBCEAQGoEIQBAagQhAEBqBCEAQGoEIQBAagQhAEBqBCEAQGoEIQBAagQhAEBqBCEAQGoEIQBAagQhAEBqBCEAQGoEIQBAagQhAEBqBCEAQGoEIQBAagQhAEBqBCEAQGoEIQBAagQhAEBqBCEAQGoEIQBAagQhAEBqTSoIU1NTv/nmm9u3b9u7EABAo9FEgrCsrGzYsGHt27ePjY0NCgqaP3++vSsCADQOTSQIExISkow2OyEAAAtMSURBVJKSjh07VlxcvGbNmg8++GD37t32LgoA0Ag0hSA0Go3r1q2bMmVKVFSUVqudMGFCdHT0mjVr7F0XAKARaApBeP369czMTL1eb27R6/XHjh2zY0kAgMaiKQRhVlaWECIwMNDcEhQUlJubW1lZab+iAACNg5O9C7CBvLw8IYSXl5e5xcvLS1GUe/fuBQQEmBvj4+MTEhIsRxwwYEBkZGR6ero1c9fptEKYrJmCbdW8OCaTyXGq1el0ltWWlJQYDIaSkhJzS35+vhCKEEZ7VFeV0Shu3Ljh4uLyoAFycnIKCwsasqQaFBTkZ2VlNW/e/EEDZGVlFRTkN2RJNSgsLMjJyanhrVteXm40OsTbQJWfn1/zhqbT6RzkfSuEMJlMltUWFBRotVpPT88qQzVwVQ+i1Wqt/EzOz8/38fF5pFE0iqJYM0tHkJyc3Ldv31OnTkVGRqotK1eunDZtWllZmbOzcw0jxsfHm/+F3RkMhuLiYsvvLnB8N2/eDAkJ0WqbwrElSeTl5Wm1Wm9vb3sXUl/q8MHeFN6+QUFB4t8HSFVZWVkBAQE1pyAAAKJpBGGbNm3Cw8MTExPNLYmJidHR0XYsCQDQWDSFINRoNJMnT165cuWRI0cqKytXr1599OjRadOm2bsuAEAj0BROlhFCzJkzJy0tbcCAATqdTqvVLlu2LCYmxt5FAQAagaawRyiE0Gq1K1asuHfvXnJycn5+PruDAIBaaiJ7hCpvb2/ziaMAANRGE9kjBACgbghCAIDUCEIAgNQIQgCA1AhCAIDUmtRZo48qLS0tLS2Ne406iIqKioqKCg8PD3sXgkdQUFDg5eWl0WjsXQhqq7S0VKPRuLq62ruQ+vL999+HhYU90ihS7xF27979UdcX6k9+fv61a9fsXQUezblz53jeWeOSmZl5+/Zte1dRj8LCwrp37/5IozSFp0+gadi5c+dnn322c+dOexeCR+Dv73/x4kV/f397F4Lamjt3rqen59y5c+1diAOReo8QAACCEAAgNYIQACA1ghAAIDUdFw/AQWg0moCAgC5duti7EDyafv36OTs727sKPILHHnusbdu29q7CgXDWKABAahwaBQBIjSAEAEiNIAQASI0gBABITeqbbsMujEbjuXPnbty4ERYW1rlzZ622mm9j5eXld+/etWzx8PDw9vZuqBrxi0d9LVJTU69cuRIZGRkYGFj/1aEa979kqubNm1e51zYb2r8oQAO6evVqZGSkEMLX11cI0bt372vXrt0/2NatW6u8UV999dUGLxaK8iivRWlp6fPPPy+EcHNzE0LMmzevgUuF6uDBg9V+2u/cubPKkGxoKvYI0aBee+21vLy8lJSUdu3aXbhw4dlnnx0/fvzhw4erDJaSktK6detPPvnE3NKmTZuGrRT/UvvXIiEhISkp6dixY3369Fm/fv2rr77as2fPYcOGNVSl+Jfu3bvv3bvXsuXAgQNbt26NioqqMiQbmorrCNFwSkpKPD09ly5dOm3aNLVl3bp1EyZMyMnJadGiheWQv/3tb7Ozs6tszLCLWr4WRqOxdevWY8eO/fOf/6y2DBw40MfHZ/fu3fVfI2qSnZ39q1/9au3atU899VSVLjY0FXuEaDgFBQWTJk3S6/XmluLiYiHE/Q+0u3LlSu/evb/99tvLly8/9thjMTEx7u7uDVor/q2Wr8X169czMzMtX1y9Xr9kyZIGrBTVmzp1amxs7P0pKNjQzOx9bBbyunHjRocOHfr3739/V1BQkIeHh4+PT0REhLOzc7t27c6fP9/wFUKp9Wtx9OhRIcSpU6fMLatWrdJoNBUVFQ1YLKpKSkry9va+c+dOtb1saCoun4B9bNmypXfv3pWVlRs2bKjSVVpa6uvrO3HixNzc3PPnz1+6dMlkMr366qt2qVNytX8t8vLyhBBeXl7mFi8vL0VR7t2713Dl4j8pivLmm2/OmTMnICDg/l42tF/YO4khnZSUlAEDBri6uv7P//xPYWFhbUZZsWKFEOLu3bv1XRse6kGvxYkTJ8R/7hGuWLFCo9GUl5c3bIH4xYEDB1xcXLKzs2s5vLQbGnuEaFCnT5/u0aOHm5vbhQsXFi5c6OnpWZuxwsPDhRA5OTn1XB0e7kGvRVBQkBAiKyvL3JKVlRUQEMCDKezok08+GTZsmL+/fy2Hl3ZDIwjRcEwm06hRo/R6/ddff61uctVKTEwMDg4+efKkueWnn35yc3N77LHHGqRM/KL2r0WbNm3Cw8MTExMtx42Ojm6gQnGfO3fu7N27d+zYsQ8agA3tF/beJYVEDh06JIR44403Vv8ng8GgKMrKlSvj4uJKS0tLS0tDQ0N//etfHzp0qKCgYPfu3c2bN3/77bftXb6Man4tzC+Z+ueCBQuaNWt2+PDhiooK9UyZ7777zn61y279+vUajSY3N7dKOxva/QhCNJyVK1dW+20sMzNTURT1V3r1V8NTp05FRESovVqtdtasWeZPWzSwGl4Ly5dMURSj0ThlyhStVuvs7Ozq6vrJJ5/Yr2ooo0eP7tq16/3tbGj344J6OCiTyZSSklJYWNipU6dmzZrZuxypPdJrUVBQkJqa+sQTT1S5rSUcExua4M4yAADJcbIMAEBqBCEAQGoEIQBAagQhAEBqBCEAQGoEIQBAagQhAEBqBCEAQGoEIdBEHD58eOLEid26dQsNDdXr9bt27VLbjUbjrl27Tp06Zd/yAIdFEAJNwdKlS2NiYq5fvz5+/Pg333zT2dk5NjZ2wYIFQoiSkpLY2NglS5aoQ3788cdqOwAVt1gDGr2TJ0/26tXrvffei4+PNze+/vrry5cvT0lJCQ0N3bJlS7t27aKiooQQ48aNKyoqMu8vAmCPEGj0EhISOnTo8Pvf/96yce7cuR4eHvv27XNycnJ1dfXx8RFC7Nu37+rVq+np6evWrUtKSvrqq68sR9mxY8cPP/zQoKUDDoAgBBo3k8l04MCB8ePHa7X/sTkHBwcXFBRMnz5dCDF79uwDBw4IIZKSktLT0zMyMrZt2/bzzz+PHDmyqKhIHf7GjRsvvvhiRkZGwy8CYF8EIdC43bhxo7y8vF27drUZeOHChQMHDuzbt+9XX301evToyspK807hpk2b/Pz8nnnmmfosFnBEBCHQuOXm5gohfH19H3VEf3//QYMGbdu2Tf1z48aNo0ePdnFxsXF9gMMjCIHGLTw8XAiRlpZ2f9fZs2drvmoiLi7u66+/NhgM586dO3fu3EsvvVRPRQKOjCAEGrfmzZsHBgYePnz4/q6nn3560aJFNYwbGxtbXl6+f//+DRs2dOzYsXfv3vVWJuC4CEKg0Zs1a9bWrVtPnz5t2bh///7MzMzBgwfXMKKfn59er//iiy82b9788ssv13OZgIMiCIFGb+bMmREREQMHDvzb3/6WlpaWnZ29devWCRMm9OzZc+zYsVUG1ul0GRkZ2dnZ6jXEo0aN2r59+61bt8aNG2eP2gH7IwiBRs/d3T05OXn48OEzZswIDw9v2bLl6NGj+/Xrt2vXLicnpyoDx8bG/vzzzy1btszPzxdCDB8+XKfTDRw4sHXr1vaoHbA/7iwDNB0VFRX//Oc/S0pKOnTo4O/v/6DBysrKDAZD8+bNhRB5eXnBwcErV67kTBlIq+q3RQCNl7Ozc2Rk5EMHc3V1dXV1Vf+/atUqZ2fnF154oZ5LAxwXQQhIKi0tbfDgwVevXl22bFmzZs3sXQ5gNxwaBSRVXFy8Zs2azp07Dxo0SKPR2LscwG4IQgCA1DhrFAAgNYIQACA1ghAAIDWCEAAgNYIQACA1ghAAIDWCEAAgNYIQACA1ghAAIDWCEAAgNYIQACA1ghAAIDWCEAAgtf8P/xil18+WTuUAAAAASUVORK5CYII=" /><p>Now we can even make an animation of it</p><pre><code class="language-julia">record(fig, &quot;covid_evolution.mp4&quot;; framerate = 5) do io
+    for j in 1:30
+        recordframe!(io)
+        Agents.step!(abmobs, 1)
+    end
+    recordframe!(io)
+end</code></pre><video width="auto" controls autoplay loop>
+<source src="../covid_evolution.mp4" type="video/mp4">
+</video><p>One can really see &quot;explosive growth&quot; in this animation. Things look quite calm for a while and then suddenly supermarkets have no toilet paper anymore!</p><h2 id="Exponential-growth-1"><a class="docs-heading-anchor" href="#Exponential-growth-1">Exponential growth</a><a class="docs-heading-anchor-permalink" href="#Exponential-growth-1" title="Permalink"></a></h2><p>We now run the model and collect data. We define two useful functions for data collection:</p><pre><code class="language-julia">infected(x) = count(i == :I for i in x)
+recovered(x) = count(i == :R for i in x)</code></pre><p>and then collect data</p><pre><code class="language-julia">model = model_initiation(; params...)
+
+to_collect = [(:status, f) for f in (infected, recovered, length)]
+data, _ = run!(model, agent_step!, 100; adata = to_collect)
+data[1:10, :]</code></pre><div class="data-frame"><p>10 rows × 4 columns</p><table class="data-frame"><thead><tr><th></th><th>step</th><th>infected_status</th><th>recovered_status</th><th>length_status</th></tr><tr><th></th><th title="Int64">Int64</th><th title="Int64">Int64</th><th title="Int64">Int64</th><th title="Int64">Int64</th></tr></thead><tbody><tr><th>1</th><td>0</td><td>1</td><td>0</td><td>28540</td></tr><tr><th>2</th><td>1</td><td>2</td><td>0</td><td>28540</td></tr><tr><th>3</th><td>2</td><td>3</td><td>0</td><td>28540</td></tr><tr><th>4</th><td>3</td><td>5</td><td>0</td><td>28540</td></tr><tr><th>5</th><td>4</td><td>8</td><td>0</td><td>28540</td></tr><tr><th>6</th><td>5</td><td>16</td><td>0</td><td>28540</td></tr><tr><th>7</th><td>6</td><td>28</td><td>0</td><td>28540</td></tr><tr><th>8</th><td>7</td><td>43</td><td>0</td><td>28540</td></tr><tr><th>9</th><td>8</td><td>74</td><td>0</td><td>28540</td></tr><tr><th>10</th><td>9</td><td>117</td><td>0</td><td>28540</td></tr></tbody></table></div><p>We now plot how quantities evolved in time to show the exponential growth of the virus</p><pre><code class="language-">N = sum(model.Ns) # Total initial population
+x = data.step
+fig = Figure(resolution = (600, 400))
+ax = fig[1, 1] = Axis(fig, xlabel = &quot;steps&quot;, ylabel = &quot;log10(count)&quot;)
+li = lines!(ax, x, log10.(data[:, aggname(:status, infected)]), color = :blue)
+lr = lines!(ax, x, log10.(data[:, aggname(:status, recovered)]), color = :red)
+dead = log10.(N .- data[:, aggname(:status, length)])
+ld = lines!(ax, x, dead, color = :green)
+fig[1, 2] = Legend(fig, [li, lr, ld], [&quot;infected&quot;, &quot;recovered&quot;, &quot;dead&quot;], textsize = 12)
+fig</code></pre><p>The exponential growth is clearly visible since the logarithm of the number of infected increases linearly, until everyone is infected.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../schelling/">« Schelling&#39;s segregation model</a><a class="docs-footer-nextpage" href="../flock/">Flocking »</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Wednesday 6 July 2022 20:52">Wednesday 6 July 2022</span>. Using Julia version 1.7.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
