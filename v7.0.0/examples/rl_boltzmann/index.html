@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Boltzmann Wealth Model with Reinforcement Learning · Agents.jl</title><meta name="title" content="Boltzmann Wealth Model with Reinforcement Learning · Agents.jl"/><meta property="og:title" content="Boltzmann Wealth Model with Reinforcement Learning · Agents.jl"/><meta property="twitter:title" content="Boltzmann Wealth Model with Reinforcement Learning · Agents.jl"/><meta name="description" content="Documentation for Agents.jl."/><meta property="og:description" content="Documentation for Agents.jl."/><meta property="twitter:description" content="Documentation for Agents.jl."/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script><link href="https://fonts.googleapis.com/css?family=Montserrat|Source+Code+Pro&amp;display=swap" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img src="../../assets/logo.png" alt="Agents.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../../">Agents.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Introduction</a></li><li><a class="tocitem" href="../../tutorial/">Tutorial</a></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../sir/">SIR model for the spread of COVID-19</a></li><li><a class="tocitem" href="../flock/">Flocking model</a></li><li><a class="tocitem" href="../zombies/">Zombie Outbreak in an Open Street Map City</a></li><li><a class="tocitem" href="../predator_prey/">Predator-prey dynamics</a></li><li><a class="tocitem" href="../rabbit_fox_hawk/">3D Mixed-Agent Ecosystem with Pathfinding</a></li><li><a class="tocitem" href="../event_rock_paper_scissors/">Spatial rock-paper-scissors (event based)</a></li><li class="is-active"><a class="tocitem" href>Boltzmann Wealth Model with Reinforcement Learning</a><ul class="internal"><li><a class="tocitem" href="#Model-specification"><span>Model specification</span></a></li><li><a class="tocitem" href="#Loading-packages-and-defining-the-agent-type"><span>Loading packages and defining the agent type</span></a></li><li><a class="tocitem" href="#Utility-functions"><span>Utility functions</span></a></li><li><a class="tocitem" href="#Agent-stepping-function"><span>Agent stepping function</span></a></li><li><a class="tocitem" href="#RL-specific-functions"><span>RL-specific functions</span></a></li><li><a class="tocitem" href="#Model-initialization"><span>Model initialization</span></a></li><li><a class="tocitem" href="#Training-the-RL-agents"><span>Training the RL agents</span></a></li><li><a class="tocitem" href="#Running-the-trained-model"><span>Running the trained model</span></a></li><li><a class="tocitem" href="#Key-takeaways"><span>Key takeaways</span></a></li></ul></li><li><a class="tocitem" href="../">More Examples for Agents.jl</a></li></ul></li><li><a class="tocitem" href="../../api/">API</a></li><li><a class="tocitem" href="../agents_visualizations/">Plotting and Interactivity</a></li><li><span class="tocitem">Ecosystem Integration</span><ul><li><a class="tocitem" href="../optim/">BlackBoxOptim.jl</a></li><li><a class="tocitem" href="../diffeq/">DifferentialEquations.jl</a></li><li><a class="tocitem" href="../schoolyard/">Graphs.jl</a></li><li><a class="tocitem" href="../celllistmap/">CellListMap.jl</a></li><li><a class="tocitem" href="../delaunay/">DelaunayTriangulation.jl</a></li><li><a class="tocitem" href="../measurements/">Uncertanty Propagation</a></li></ul></li><li><a class="tocitem" href="../../performance_tips/">Performance Tips</a></li><li><a class="tocitem" href="../../comparison/">ABM Framework Comparison</a></li><li><a class="tocitem" href="../../devdocs/">Developer Docs</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>Boltzmann Wealth Model with Reinforcement Learning</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Boltzmann Wealth Model with Reinforcement Learning</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/JuliaDynamics/Agents.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/JuliaDynamics/Agents.jl/blob/main/examples/rl_boltzmann.jl" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="rltutorial"><a class="docs-heading-anchor" href="#rltutorial">Boltzmann Wealth Model with Reinforcement Learning</a><a id="rltutorial-1"></a><a class="docs-heading-anchor-permalink" href="#rltutorial" title="Permalink"></a></h1><video width="auto" controls autoplay loop>
+<source src="../rn_boltzmann.mp4" type="video/mp4">
+</video><video width="auto" controls autoplay loop>
+<source src="../rl_boltzmann.mp4" type="video/mp4">
+</video><p>This is a tutorial for the <a href="../../api/#Agents.ReinforcementLearningABM"><code>ReinforcementLearningABM</code></a> model which combines reinforcement learning with agent based modelling. The example demonstrates how to integrate reinforcement learning with agent based modelling using the Boltzmann wealth distribution model. In this model, agents move around a grid and exchange wealth when they encounter other agents, but their movement decisions are learned through reinforcement learning rather than being random.</p><p>The model showcases how RL agents can learn to optimize their behavior to achieve specific goals - in this case, reducing wealth inequality as measured by the Gini coefficient.</p><div class="admonition is-info" id="Crux-needed!-7b4b9146e9f6bcd4"><header class="admonition-header">`Crux` needed!<a class="admonition-anchor" href="#Crux-needed!-7b4b9146e9f6bcd4" title="Permalink"></a></header><div class="admonition-body"><p>This functionality is formally a package extension. To access it you need to be <code>using Crux</code>.</p></div></div><div class="admonition is-info" id="Reinforcement-Learning-fundamentals-assummed-726e897c13eb0211"><header class="admonition-header">Reinforcement Learning fundamentals assummed<a class="admonition-anchor" href="#Reinforcement-Learning-fundamentals-assummed-726e897c13eb0211" title="Permalink"></a></header><div class="admonition-body"><p>The discussion in this tutorial assumes you are familiar with the fundamentals of reinforcement learning. If not, you can start your journey from the <a href="https://en.wikipedia.org/wiki/Reinforcement_learning">Wikipedia page</a>.</p></div></div><h2 id="Model-specification"><a class="docs-heading-anchor" href="#Model-specification">Model specification</a><a id="Model-specification-1"></a><a class="docs-heading-anchor-permalink" href="#Model-specification" title="Permalink"></a></h2><p>The Boltzmann wealth model is a classic example in econophysics where agents represent economic actors who exchange wealth. The traditional model uses random movement, but here we replace that with learned behavior using reinforcement learning.</p><p><strong>Rules:</strong></p><ul><li>Agents move on a 2D periodic grid</li><li>When agents occupy the same position, they may exchange wealth</li><li>Wealth flows from richer to poorer agents</li><li>Agent movement is learned through RL to minimize wealth inequality</li></ul><p><strong>RL Integration:</strong></p><ul><li><strong>Actions</strong>: Stay, move North, South, East, or West (5 discrete actions)</li><li><strong>Observations</strong>: Local neighborhood information and agent&#39;s relative wealth</li><li><strong>Reward</strong>: Reduction in Gini coefficient (wealth inequality measure)</li><li><strong>Goal</strong>: Learn movement patterns that promote wealth redistribution</li></ul><h2 id="Loading-packages-and-defining-the-agent-type"><a class="docs-heading-anchor" href="#Loading-packages-and-defining-the-agent-type">Loading packages and defining the agent type</a><a id="Loading-packages-and-defining-the-agent-type-1"></a><a class="docs-heading-anchor-permalink" href="#Loading-packages-and-defining-the-agent-type" title="Permalink"></a></h2><p>This part is the same as with the normal usage of Agents.jl</p><pre><code class="language-julia hljs">using Agents, Random, Statistics, Distributions</code></pre><p>while we also need to import the library required for the RL extension</p><pre><code class="language-julia hljs">import Crux</code></pre><p>and define the agent type as usual</p><pre><code class="language-julia hljs">@agent struct RLBoltzmannAgent(GridAgent{2})
+    wealth::Int
+end</code></pre><h2 id="Utility-functions"><a class="docs-heading-anchor" href="#Utility-functions">Utility functions</a><a id="Utility-functions-1"></a><a class="docs-heading-anchor-permalink" href="#Utility-functions" title="Permalink"></a></h2><p>First, we define the Gini coefficient calculation, which measures wealth inequality. A Gini coefficient of 0 represents perfect equality, while 1 represents maximum inequality.</p><pre><code class="language-julia hljs">function gini(model::ABM)
+    wealths = [a.wealth for a in allagents(model)]
+    n, sum_wi = length(wealths), sum(wealths)
+    (n &lt;= 1 || sum_wi == 0.0) &amp;&amp; return 0.0
+    num = sum((2i - n - 1) * w for (i, w) in enumerate(sort!(wealths)))
+    den = n * sum_wi
+    return num / den
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">gini (generic function with 1 method)</code></pre><h2 id="Agent-stepping-function"><a class="docs-heading-anchor" href="#Agent-stepping-function">Agent stepping function</a><a id="Agent-stepping-function-1"></a><a class="docs-heading-anchor-permalink" href="#Agent-stepping-function" title="Permalink"></a></h2><p>The agent stepping function defines how agents behave in response to RL actions. Unlike traditional ABM where this might contain random movement, here the movement is determined by the RL policy based on the chosen action.</p><p>This function augments the standard Agents.jl <code>agent_step!</code> signature by including an additional third argument <code>action::Int</code> that represents the action chosen by the RL policy. This action is optimized during training by the RL framework. The correspondence between integers and &quot;actual agent actions&quot; is decided by the user.</p><pre><code class="language-julia hljs">function boltzmann_rl_step!(agent::RLBoltzmannAgent, model, action::Int)
+    # Action definitions: 1=stay, 2=north, 3=south, 4=east, 5=west
+    dirs = ((0, 0), (0, 1), (0, -1), (1, 0), (-1, 0))
+    walk!(agent, dirs[action], model; ifempty = false)
+
+    # Wealth exchange mechanism
+    other = random_agent_in_position(agent.pos, model, a -&gt; a.id != agent.id)
+    return if !isnothing(other)
+        # Transfer wealth from richer to poorer agent
+        if other.wealth &gt; agent.wealth &amp;&amp; other.wealth &gt; 0
+            agent.wealth += 1
+            other.wealth -= 1
+        end
+    end
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">boltzmann_rl_step! (generic function with 1 method)</code></pre><h2 id="RL-specific-functions"><a class="docs-heading-anchor" href="#RL-specific-functions">RL-specific functions</a><a id="RL-specific-functions-1"></a><a class="docs-heading-anchor-permalink" href="#RL-specific-functions" title="Permalink"></a></h2><p>The following functions define how the RL environment interacts with the ABM:</p><ul><li><strong>Observation function</strong>: Extracts relevant state information for the RL agent</li><li><strong>Reward function</strong>: Defines what behavior we want to encourage</li><li><strong>Terminal function</strong>: Determines when an episode ends</li></ul><h3 id="Observation-function"><a class="docs-heading-anchor" href="#Observation-function">Observation function</a><a id="Observation-function-1"></a><a class="docs-heading-anchor-permalink" href="#Observation-function" title="Permalink"></a></h3><p>The observation function is a key component of reinforcement learning. In our scenario, it focuses on the local neighborhood of the agent and the wealth distribution in this neighborhood (as well as the agent&#39;s own wealth). Note that the observation function must return the observed quantities as a <code>Vector{Float32}</code>.</p><pre><code class="language-julia hljs">function global_to_local(neighbor_pos, center_pos, radius, grid_dims) # helper function
+    function transform_dim(neighbor_coord, center_coord, dim_size)
+        local_center = radius + 1
+        delta = neighbor_coord - center_coord
+        delta &gt; radius &amp;&amp; return local_center + (delta - dim_size)
+        delta &lt; -radius &amp;&amp; return local_center + (delta + dim_size)
+        return local_center + delta
+    end
+    return ntuple(i -&gt; transform_dim(neighbor_pos[i], center_pos[i], grid_dims[i]), length(grid_dims))
+end
+
+function boltzmann_get_observation(agent, model::ABM)
+    width, height = spacesize(model)
+    observation_radius = model.observation_radius
+
+    grid_size = 2 * observation_radius + 1
+    # 2 channels: occupancy and relative wealth
+    neighborhood_grid = zeros(Float32, grid_size, grid_size, 2)
+
+    for pos in nearby_positions(agent.pos, model, observation_radius)
+        k = 0
+        for neighbor in agents_in_position(pos, model)
+            lpos = global_to_local(pos, agent.pos, observation_radius, spacesize(model))
+            neighbor.id == agent.id &amp;&amp; continue
+            neighborhood_grid[lpos..., 1] = 1.0
+            wealth_diff = Float32(neighbor.wealth - agent.wealth)
+            wealth_sum = Float32(neighbor.wealth + agent.wealth)
+            if wealth_sum &gt; 0
+                k += 1
+                neighborhood_grid[lpos..., 2] = wealth_diff / wealth_sum
+            end
+            k != 0 &amp;&amp; (neighborhood_grid[lpos..., 2] /= k)
+        end
+    end
+
+    total_wealth = sum(a.wealth for a in allagents(model))
+    normalized_wealth = total_wealth &gt; 0 ? Float32(agent.wealth / total_wealth) : 0.0f0
+    normalized_pos_x = Float32(agent.pos[1] / width)
+    normalized_pos_y = Float32(agent.pos[2] / height)
+
+    return vcat(
+        normalized_wealth,
+        normalized_pos_x,
+        normalized_pos_y,
+        vec(neighborhood_grid)
+    )
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">boltzmann_get_observation (generic function with 1 method)</code></pre><h3 id="Reward-function"><a class="docs-heading-anchor" href="#Reward-function">Reward function</a><a id="Reward-function-1"></a><a class="docs-heading-anchor-permalink" href="#Reward-function" title="Permalink"></a></h3><p>The reward function is also a key component of reinforcement learning. Here, the reward function encourages agents to reduce wealth inequality by rewarding decreases in the Gini coefficient. This creates an incentive for agents to learn movement patterns that promote wealth redistribution. As the Gini coefficient is only dependent on the global model state, all agents have the same reward, and hence the reward function does not actually utilize the input agent.</p><pre><code class="language-julia hljs">function boltzmann_calculate_reward(agent, action, previous_model, current_model)
+
+    initial_gini = gini(previous_model)
+    final_gini = gini(current_model)
+
+    # Reward decrease in Gini coefficient
+    reward = (initial_gini - final_gini) * 100
+    reward &gt; 0 &amp;&amp; (reward = reward / (abmtime(current_model) + 1))
+    # Small penalty for neutral actions
+    reward &lt;= 0.0 &amp;&amp; (reward = -0.1f0)
+
+    return reward
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">boltzmann_calculate_reward (generic function with 1 method)</code></pre><h3 id="Terminal-condition"><a class="docs-heading-anchor" href="#Terminal-condition">Terminal condition</a><a id="Terminal-condition-1"></a><a class="docs-heading-anchor-permalink" href="#Terminal-condition" title="Permalink"></a></h3><p>Define when an RL episode should end. Here, episodes terminate when wealth inequality (Gini coefficient) drops below a threshold, indicating success.</p><pre><code class="language-julia hljs">boltzmann_is_terminal_rl(env) = gini(env) &lt; 0.1</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">boltzmann_is_terminal_rl (generic function with 1 method)</code></pre><h2 id="Model-initialization"><a class="docs-heading-anchor" href="#Model-initialization">Model initialization</a><a id="Model-initialization-1"></a><a class="docs-heading-anchor-permalink" href="#Model-initialization" title="Permalink"></a></h2><p>The following functions handle model creation and RL configuration setup. We first create a separate function the generates a <a href="../../api/#Agents.ReinforcementLearningABM"><code>ReinforcementLearningABM</code></a> without an RL configuration. This function will be further used during training to generate new models while updating the overall model policies.</p><pre><code class="language-julia hljs">function create_fresh_boltzmann_model(num_agents, dims, initial_wealth, observation_radius, seed = rand(Int))
+    rng = MersenneTwister(seed)
+    space = GridSpace(dims; periodic = true)
+
+    properties = Dict{Symbol, Any}(:observation_radius =&gt; observation_radius)
+
+    model = ReinforcementLearningABM(
+        RLBoltzmannAgent, space;
+        agent_step = boltzmann_rl_step!,
+        properties = properties, rng = rng, scheduler = Schedulers.Randomly()
+    )
+
+    # Add agents with random initial wealth
+    for _ in 1:num_agents
+        add_agent_single!(RLBoltzmannAgent, model, rand(rng, 1:initial_wealth))
+    end
+
+    return model
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">create_fresh_boltzmann_model (generic function with 2 methods)</code></pre><p>We then use this function to create another keyword-based function, which initializes an RL model with the RL training functions we have created so far:</p><pre><code class="language-julia hljs">function initialize_boltzmann_rl_model(; num_agents = 10, dims = (10, 10), initial_wealth = 10, observation_radius = 4)
+    # Create the main model using the initialization function
+    model = create_fresh_boltzmann_model(num_agents, dims, initial_wealth, observation_radius)
+
+    # `RLConfig` specifies the learning environment parameters
+    rl_config = RLConfig(;
+        model_init_fn = () -&gt; create_fresh_boltzmann_model(num_agents, dims, initial_wealth, observation_radius),
+        observation_fn = boltzmann_get_observation,
+        reward_fn = boltzmann_calculate_reward,
+        terminal_fn = boltzmann_is_terminal_rl,
+        agent_step_fn = boltzmann_rl_step!,
+        action_spaces = Dict(
+            RLBoltzmannAgent =&gt; Crux.DiscreteSpace(5)  ## 5 possible actions
+        ),
+        observation_spaces = Dict(
+            # Observation space: (2*radius+1)² grid cells * 2 channels + 3 agent features
+            RLBoltzmannAgent =&gt; Crux.ContinuousSpace((((2 * observation_radius + 1)^2 * 2) + 3,), Float32)
+        ),
+        training_agent_types = [RLBoltzmannAgent]
+    )
+
+    # Set the RL configuration to the model
+    set_rl_config!(model, rl_config)
+
+    return model
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">initialize_boltzmann_rl_model (generic function with 1 method)</code></pre><h2 id="Training-the-RL-agents"><a class="docs-heading-anchor" href="#Training-the-RL-agents">Training the RL agents</a><a id="Training-the-RL-agents-1"></a><a class="docs-heading-anchor-permalink" href="#Training-the-RL-agents" title="Permalink"></a></h2><p>Now we create and train our model. The agents will learn through trial and error which movement patterns best achieve the goal of reducing wealth inequality.</p><p>Create and train the Boltzmann RL model</p><pre><code class="language-julia hljs">boltzmann_rl_model = initialize_boltzmann_rl_model()</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ReinforcementLearningABM{GridSpace{2, true}, Main.RLBoltzmannAgent, Dict{Int64, Main.RLBoltzmannAgent}, Tuple{DataType}, typeof(dummystep), typeof(dummystep), Agents.Schedulers.Randomly, Dict{Symbol, Any}, Random.MersenneTwister}(Dict{Int64, Main.RLBoltzmannAgent}(5 =&gt; Main.RLBoltzmannAgent(5, (8, 6), 10), 4 =&gt; Main.RLBoltzmannAgent(4, (4, 3), 10), 6 =&gt; Main.RLBoltzmannAgent(6, (5, 1), 4), 7 =&gt; Main.RLBoltzmannAgent(7, (7, 8), 1), 2 =&gt; Main.RLBoltzmannAgent(2, (6, 2), 6), 10 =&gt; Main.RLBoltzmannAgent(10, (8, 3), 10), 9 =&gt; Main.RLBoltzmannAgent(9, (3, 1), 6), 8 =&gt; Main.RLBoltzmannAgent(8, (9, 7), 7), 3 =&gt; Main.RLBoltzmannAgent(3, (10, 5), 7), 1 =&gt; Main.RLBoltzmannAgent(1, (7, 10), 8)…), Agents.dummystep, Agents.dummystep, GridSpace with size (10, 10), metric=chebyshev, periodic=true, Agents.Schedulers.Randomly(Int64[]), Dict{Symbol, Any}(:observation_radius =&gt; 4), Random.MersenneTwister(-309953280522471625, (0, 1254, 0, 0, 0, 20)), (Main.RLBoltzmannAgent,), true, Base.RefValue{Int64}(10), Base.RefValue{Int64}(0), Base.RefValue{Any}(RLConfig(Main.var&quot;#11#12&quot;{Int64, Tuple{Int64, Int64}, Int64, Int64}(10, (10, 10), 10, 4), Main.boltzmann_get_observation, Main.boltzmann_calculate_reward, Main.boltzmann_is_terminal_rl, Main.boltzmann_rl_step!, Dict{Type, Any}(Main.RLBoltzmannAgent =&gt; Crux.DiscreteSpace
+  N: Int64 5
+  vals: Array{Int64}((5,)) [1, 2, 3, 4, 5]
+), Dict{Type, Any}(Main.RLBoltzmannAgent =&gt; Crux.ContinuousSpace{Tuple{Int64}}
+  dims: Tuple{Int64}
+  type: primitive type Float32 &lt;: AbstractFloat
+  μ: Float32 0.0f0
+  σ: Float32 1.0f0
+), Type[Main.RLBoltzmannAgent], Dict{Type, Float64}(), Dict{Type, Any}())), Dict{Type, Any}(), Dict{Type, Any}(Main.RLBoltzmannAgent =&gt; nothing), Base.RefValue{Bool}(false), Base.RefValue{Any}(nothing), Base.RefValue{Int64}(1))</code></pre><p>Train the Boltzmann agents</p><pre><code class="language-julia hljs">@time train_model!(
+    boltzmann_rl_model;
+    training_steps = 25_000,
+    max_steps = 50,
+    solver_params = Dict(
+        :ΔN =&gt; 200,            # Custom batch size for PPO updates
+        :log =&gt; (period = 5000,) # Log every 1000 steps
+    )
+)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ReinforcementLearningABM{GridSpace{2, true}, Main.RLBoltzmannAgent, Dict{Int64, Main.RLBoltzmannAgent}, Tuple{DataType}, typeof(dummystep), typeof(dummystep), Agents.Schedulers.Randomly, Dict{Symbol, Any}, Random.MersenneTwister}(Dict{Int64, Main.RLBoltzmannAgent}(5 =&gt; Main.RLBoltzmannAgent(5, (6, 1), 6), 4 =&gt; Main.RLBoltzmannAgent(4, (1, 6), 4), 6 =&gt; Main.RLBoltzmannAgent(6, (9, 6), 8), 7 =&gt; Main.RLBoltzmannAgent(7, (1, 1), 10), 2 =&gt; Main.RLBoltzmannAgent(2, (1, 4), 3), 10 =&gt; Main.RLBoltzmannAgent(10, (6, 6), 2), 9 =&gt; Main.RLBoltzmannAgent(9, (7, 4), 4), 8 =&gt; Main.RLBoltzmannAgent(8, (2, 10), 4), 3 =&gt; Main.RLBoltzmannAgent(3, (2, 8), 5), 1 =&gt; Main.RLBoltzmannAgent(1, (10, 8), 9)…), Agents.dummystep, Agents.dummystep, GridSpace with size (10, 10), metric=chebyshev, periodic=true, Agents.Schedulers.Randomly(Int64[]), Dict{Symbol, Any}(:observation_radius =&gt; 4), Random.MersenneTwister(-309953280522471625, (0, 12534, 11532, 490, 10278, 640)), (Main.RLBoltzmannAgent,), true, Base.RefValue{Int64}(10), Base.RefValue{Int64}(0), Base.RefValue{Any}(RLConfig(Main.var&quot;#11#12&quot;{Int64, Tuple{Int64, Int64}, Int64, Int64}(10, (10, 10), 10, 4), Main.boltzmann_get_observation, Main.boltzmann_calculate_reward, Main.boltzmann_is_terminal_rl, Main.boltzmann_rl_step!, Dict{Type, Any}(Main.RLBoltzmannAgent =&gt; Crux.DiscreteSpace
+  N: Int64 5
+  vals: Array{Int64}((5,)) [1, 2, 3, 4, 5]
+), Dict{Type, Any}(Main.RLBoltzmannAgent =&gt; Crux.ContinuousSpace{Tuple{Int64}}
+  dims: Tuple{Int64}
+  type: primitive type Float32 &lt;: AbstractFloat
+  μ: Float32 0.0f0
+  σ: Float32 1.0f0
+), Type[Main.RLBoltzmannAgent], Dict{Type, Float64}(), Dict{Type, Any}())), Dict{Type, Any}(Main.RLBoltzmannAgent =&gt; Crux.ActorCritic{Crux.DiscreteNetwork, Crux.ContinuousNetwork}(Crux.DiscreteNetwork(Chain(Dense(165 =&gt; 64, relu), Dense(64 =&gt; 64, relu), Dense(64 =&gt; 5)), [1, 2, 3, 4, 5], Crux.var&quot;#157#158&quot;(), false, Flux.cpu), Crux.ContinuousNetwork(Chain(Dense(165 =&gt; 64, relu), Dense(64 =&gt; 64, relu), Dense(64 =&gt; 1)), 1, Flux.cpu))), Dict{Type, Any}(Main.RLBoltzmannAgent =&gt; Crux.OnPolicySolver
+  agent: Crux.PolicyParams{Crux.ActorCritic{Crux.DiscreteNetwork, Crux.ContinuousNetwork}, Crux.DiscreteSpace}
+  S: Crux.ContinuousSpace{Tuple{Int64}}
+  N: Int64 25000
+  ΔN: Int64 200
+  max_steps: Int64 50
+  log: Crux.LoggerParams
+  i: Int64 25000
+  param_optimizers: Dict{Any, Crux.TrainingParams}
+  a_opt: Crux.TrainingParams
+  c_opt: Crux.TrainingParams
+  𝒫: @NamedTuple{ϵ::Float32, λp::Float32, λe::Float32}
+  interaction_storage: Nothing nothing
+  post_sample_callback: record_avgr (function of type Crux.var&quot;#record_avgr#687&quot;{Crux.var&quot;#record_avgr#681#688&quot;})
+  post_batch_callback: #695 (function of type Crux.var&quot;#695#696&quot;{Crux.var&quot;#697#698&quot;})
+  λ_gae: Float32 0.95f0
+  required_columns: Array{Symbol}((3,))
+  Vc: Nothing nothing
+  cost_opt: Nothing nothing
+), Base.RefValue{Bool}(false), Base.RefValue{Any}(Main.RLBoltzmannAgent), Base.RefValue{Int64}(1))</code></pre><p>Plot the learning curve to see how agents improved over training</p><pre><code class="language-julia hljs">Crux.plot_learning(boltzmann_rl_model.training_history[RLBoltzmannAgent])</code></pre><img src="4fe4b4ad.svg" alt="Example block output"/><h2 id="Running-the-trained-model"><a class="docs-heading-anchor" href="#Running-the-trained-model">Running the trained model</a><a id="Running-the-trained-model-1"></a><a class="docs-heading-anchor-permalink" href="#Running-the-trained-model" title="Permalink"></a></h2><p>After training, we create a fresh model instance and apply the learned policies to see how well the agents perform.</p><p>First, create a fresh model instance for simulation with the same parameters</p><pre><code class="language-julia hljs">fresh_boltzmann_model = initialize_boltzmann_rl_model()</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ReinforcementLearningABM{GridSpace{2, true}, Main.RLBoltzmannAgent, Dict{Int64, Main.RLBoltzmannAgent}, Tuple{DataType}, typeof(dummystep), typeof(dummystep), Agents.Schedulers.Randomly, Dict{Symbol, Any}, Random.MersenneTwister}(Dict{Int64, Main.RLBoltzmannAgent}(5 =&gt; Main.RLBoltzmannAgent(5, (10, 10), 5), 4 =&gt; Main.RLBoltzmannAgent(4, (8, 8), 10), 6 =&gt; Main.RLBoltzmannAgent(6, (6, 6), 9), 7 =&gt; Main.RLBoltzmannAgent(7, (10, 5), 9), 2 =&gt; Main.RLBoltzmannAgent(2, (6, 9), 2), 10 =&gt; Main.RLBoltzmannAgent(10, (2, 2), 5), 9 =&gt; Main.RLBoltzmannAgent(9, (7, 4), 6), 8 =&gt; Main.RLBoltzmannAgent(8, (5, 4), 2), 3 =&gt; Main.RLBoltzmannAgent(3, (4, 10), 4), 1 =&gt; Main.RLBoltzmannAgent(1, (6, 1), 8)…), Agents.dummystep, Agents.dummystep, GridSpace with size (10, 10), metric=chebyshev, periodic=true, Agents.Schedulers.Randomly(Int64[]), Dict{Symbol, Any}(:observation_radius =&gt; 4), Random.MersenneTwister(-4450065503867595350, (0, 1254, 0, 0, 0, 21)), (Main.RLBoltzmannAgent,), true, Base.RefValue{Int64}(10), Base.RefValue{Int64}(0), Base.RefValue{Any}(RLConfig(Main.var&quot;#11#12&quot;{Int64, Tuple{Int64, Int64}, Int64, Int64}(10, (10, 10), 10, 4), Main.boltzmann_get_observation, Main.boltzmann_calculate_reward, Main.boltzmann_is_terminal_rl, Main.boltzmann_rl_step!, Dict{Type, Any}(Main.RLBoltzmannAgent =&gt; Crux.DiscreteSpace
+  N: Int64 5
+  vals: Array{Int64}((5,)) [1, 2, 3, 4, 5]
+), Dict{Type, Any}(Main.RLBoltzmannAgent =&gt; Crux.ContinuousSpace{Tuple{Int64}}
+  dims: Tuple{Int64}
+  type: primitive type Float32 &lt;: AbstractFloat
+  μ: Float32 0.0f0
+  σ: Float32 1.0f0
+), Type[Main.RLBoltzmannAgent], Dict{Type, Float64}(), Dict{Type, Any}())), Dict{Type, Any}(), Dict{Type, Any}(Main.RLBoltzmannAgent =&gt; nothing), Base.RefValue{Bool}(false), Base.RefValue{Any}(nothing), Base.RefValue{Int64}(1))</code></pre><p>And copy the trained policies to the fresh model</p><pre><code class="language-julia hljs">copy_trained_policies!(fresh_boltzmann_model, boltzmann_rl_model)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ReinforcementLearningABM{GridSpace{2, true}, Main.RLBoltzmannAgent, Dict{Int64, Main.RLBoltzmannAgent}, Tuple{DataType}, typeof(dummystep), typeof(dummystep), Agents.Schedulers.Randomly, Dict{Symbol, Any}, Random.MersenneTwister}(Dict{Int64, Main.RLBoltzmannAgent}(5 =&gt; Main.RLBoltzmannAgent(5, (10, 10), 5), 4 =&gt; Main.RLBoltzmannAgent(4, (8, 8), 10), 6 =&gt; Main.RLBoltzmannAgent(6, (6, 6), 9), 7 =&gt; Main.RLBoltzmannAgent(7, (10, 5), 9), 2 =&gt; Main.RLBoltzmannAgent(2, (6, 9), 2), 10 =&gt; Main.RLBoltzmannAgent(10, (2, 2), 5), 9 =&gt; Main.RLBoltzmannAgent(9, (7, 4), 6), 8 =&gt; Main.RLBoltzmannAgent(8, (5, 4), 2), 3 =&gt; Main.RLBoltzmannAgent(3, (4, 10), 4), 1 =&gt; Main.RLBoltzmannAgent(1, (6, 1), 8)…), Agents.dummystep, Agents.dummystep, GridSpace with size (10, 10), metric=chebyshev, periodic=true, Agents.Schedulers.Randomly(Int64[]), Dict{Symbol, Any}(:observation_radius =&gt; 4), Random.MersenneTwister(-4450065503867595350, (0, 1254, 0, 0, 0, 21)), (Main.RLBoltzmannAgent,), true, Base.RefValue{Int64}(10), Base.RefValue{Int64}(0), Base.RefValue{Any}(RLConfig(Main.var&quot;#11#12&quot;{Int64, Tuple{Int64, Int64}, Int64, Int64}(10, (10, 10), 10, 4), Main.boltzmann_get_observation, Main.boltzmann_calculate_reward, Main.boltzmann_is_terminal_rl, Main.boltzmann_rl_step!, Dict{Type, Any}(Main.RLBoltzmannAgent =&gt; Crux.DiscreteSpace
+  N: Int64 5
+  vals: Array{Int64}((5,)) [1, 2, 3, 4, 5]
+), Dict{Type, Any}(Main.RLBoltzmannAgent =&gt; Crux.ContinuousSpace{Tuple{Int64}}
+  dims: Tuple{Int64}
+  type: primitive type Float32 &lt;: AbstractFloat
+  μ: Float32 0.0f0
+  σ: Float32 1.0f0
+), Type[Main.RLBoltzmannAgent], Dict{Type, Float64}(), Dict{Type, Any}())), Dict{Type, Any}(Main.RLBoltzmannAgent =&gt; Crux.ActorCritic{Crux.DiscreteNetwork, Crux.ContinuousNetwork}(Crux.DiscreteNetwork(Chain(Dense(165 =&gt; 64, relu), Dense(64 =&gt; 64, relu), Dense(64 =&gt; 5)), [1, 2, 3, 4, 5], Crux.var&quot;#157#158&quot;(), false, Flux.cpu), Crux.ContinuousNetwork(Chain(Dense(165 =&gt; 64, relu), Dense(64 =&gt; 64, relu), Dense(64 =&gt; 1)), 1, Flux.cpu))), Dict{Type, Any}(Main.RLBoltzmannAgent =&gt; nothing), Base.RefValue{Bool}(false), Base.RefValue{Any}(nothing), Base.RefValue{Int64}(1))</code></pre><p>Let&#39;s visualize the initial state and run a simulation to see the trained behavior.</p><pre><code class="language-julia hljs">using CairoMakie
+
+function agent_color(agent) # Custom color function based on wealth
+    max_expected_wealth = 10
+    clamped_wealth = clamp(agent.wealth, 0, max_expected_wealth)
+    normalized_wealth = clamped_wealth / max_expected_wealth
+    # Color scheme: red (poor) to green (rich)
+    return CairoMakie.Makie.ColorSchemes.RdYlGn_4[normalized_wealth]
+end
+function agent_size(agent) # Custom size function based on wealth
+    max_expected_wealth = 10
+    clamped_wealth = clamp(agent.wealth, 0, max_expected_wealth)
+    size_factor = clamped_wealth / max_expected_wealth
+    return 10 + size_factor * 15
+end
+
+fig, ax = abmplot(
+    fresh_boltzmann_model;
+    agent_color = agent_color,
+    agent_size = agent_size,
+    agent_marker = :circle
+)
+ax.title = &quot;Boltzmann Wealth Distribution (Initial State)&quot;
+ax.xlabel = &quot;X Position&quot;
+ax.ylabel = &quot;Y Position&quot;
+fig</code></pre><img src="1f0c44d4.png" alt="Example block output"/><p>The initial Gini coefficient is</p><pre><code class="language-julia hljs">initial_gini = gini(fresh_boltzmann_model)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">0.26</code></pre><p>Step the model forward to see the trained behavior</p><pre><code class="language-julia hljs">Agents.step!(fresh_boltzmann_model, 10)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ReinforcementLearningABM{GridSpace{2, true}, Main.RLBoltzmannAgent, Dict{Int64, Main.RLBoltzmannAgent}, Tuple{DataType}, typeof(dummystep), typeof(dummystep), Agents.Schedulers.Randomly, Dict{Symbol, Any}, Random.MersenneTwister}(Dict{Int64, Main.RLBoltzmannAgent}(5 =&gt; Main.RLBoltzmannAgent(5, (7, 2), 5), 4 =&gt; Main.RLBoltzmannAgent(4, (5, 9), 10), 6 =&gt; Main.RLBoltzmannAgent(6, (2, 3), 9), 7 =&gt; Main.RLBoltzmannAgent(7, (7, 7), 9), 2 =&gt; Main.RLBoltzmannAgent(2, (5, 2), 3), 10 =&gt; Main.RLBoltzmannAgent(10, (7, 2), 5), 9 =&gt; Main.RLBoltzmannAgent(9, (5, 2), 3), 8 =&gt; Main.RLBoltzmannAgent(8, (5, 2), 4), 3 =&gt; Main.RLBoltzmannAgent(3, (9, 7), 4), 1 =&gt; Main.RLBoltzmannAgent(1, (3, 1), 8)…), Agents.dummystep, Agents.dummystep, GridSpace with size (10, 10), metric=chebyshev, periodic=true, Agents.Schedulers.Randomly([2, 4, 3, 9, 7, 8, 1, 10, 6, 5]), Dict{Symbol, Any}(:observation_radius =&gt; 4), Random.MersenneTwister(-4450065503867595350, (0, 2256, 1254, 143, 0, 21)), (Main.RLBoltzmannAgent,), true, Base.RefValue{Int64}(10), Base.RefValue{Int64}(10), Base.RefValue{Any}(RLConfig(Main.var&quot;#11#12&quot;{Int64, Tuple{Int64, Int64}, Int64, Int64}(10, (10, 10), 10, 4), Main.boltzmann_get_observation, Main.boltzmann_calculate_reward, Main.boltzmann_is_terminal_rl, Main.boltzmann_rl_step!, Dict{Type, Any}(Main.RLBoltzmannAgent =&gt; Crux.DiscreteSpace
+  N: Int64 5
+  vals: Array{Int64}((5,)) [1, 2, 3, 4, 5]
+), Dict{Type, Any}(Main.RLBoltzmannAgent =&gt; Crux.ContinuousSpace{Tuple{Int64}}
+  dims: Tuple{Int64}
+  type: primitive type Float32 &lt;: AbstractFloat
+  μ: Float32 0.0f0
+  σ: Float32 1.0f0
+), Type[Main.RLBoltzmannAgent], Dict{Type, Float64}(), Dict{Type, Any}())), Dict{Type, Any}(Main.RLBoltzmannAgent =&gt; Crux.ActorCritic{Crux.DiscreteNetwork, Crux.ContinuousNetwork}(Crux.DiscreteNetwork(Chain(Dense(165 =&gt; 64, relu), Dense(64 =&gt; 64, relu), Dense(64 =&gt; 5)), [1, 2, 3, 4, 5], Crux.var&quot;#157#158&quot;(), false, Flux.cpu), Crux.ContinuousNetwork(Chain(Dense(165 =&gt; 64, relu), Dense(64 =&gt; 64, relu), Dense(64 =&gt; 1)), 1, Flux.cpu))), Dict{Type, Any}(Main.RLBoltzmannAgent =&gt; nothing), Base.RefValue{Bool}(false), Base.RefValue{Any}(nothing), Base.RefValue{Int64}(1))</code></pre><p>Check the results after simulation</p><pre><code class="language-julia hljs">final_gini = gini(fresh_boltzmann_model)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">0.23666666666666666</code></pre><p>and indeed the coefficient is reduced. Let&#39;s plot the final state</p><pre><code class="language-julia hljs">fig, ax = abmplot(
+    fresh_boltzmann_model;
+    agent_color = agent_color,
+    agent_size = agent_size,
+    agent_marker = :circle
+)
+ax.title = &quot;Boltzmann Wealth Distribution (After 10 RL Steps)&quot;
+ax.xlabel = &quot;X Position&quot;
+ax.ylabel = &quot;Y Position&quot;
+fig</code></pre><img src="788aae8b.png" alt="Example block output"/><p>Finally, let&#39;s create a video showing the trained agents in action over multiple steps on a bigger scale, and compare visually with a random policy</p><pre><code class="language-julia hljs">fresh_boltzmann_model = initialize_boltzmann_rl_model(; num_agents = 500, dims = (100, 100))
+plotkwargs = (;
+    agent_color = agent_color,
+    agent_size = agent_size,
+    agent_marker = :circle,
+)
+abmvideo(
+    &quot;rn_boltzmann.mp4&quot;, fresh_boltzmann_model; frames = 100,
+    framerate = 20,
+    title = &quot;Boltzmann Wealth Model with Random Agents&quot;,
+    plotkwargs...
+)</code></pre><p>We now copy the trained policies and the agents are... smarter!</p><pre><code class="language-julia hljs">fresh_boltzmann_model = initialize_boltzmann_rl_model(; num_agents = 500, dims = (100, 100))
+copy_trained_policies!(fresh_boltzmann_model, boltzmann_rl_model)
+abmvideo(
+    &quot;rl_boltzmann.mp4&quot;, fresh_boltzmann_model; frames = 100,
+    framerate = 20,
+    title = &quot;Boltzmann Wealth Model with RL Agents&quot;,
+    plotkwargs...
+)</code></pre><h2 id="Key-takeaways"><a class="docs-heading-anchor" href="#Key-takeaways">Key takeaways</a><a id="Key-takeaways-1"></a><a class="docs-heading-anchor-permalink" href="#Key-takeaways" title="Permalink"></a></h2><p>This example demonstrated several important concepts:</p><ol><li><p><strong>RL-ABM Integration</strong>: How to integrate reinforcement learning with agent-based modeling using the [<code>ReinforcementLearningABM</code>] type.</p></li><li><p><strong>Custom Reward Design</strong>: The reward function encourages behavior that reduces wealth inequality, showing how RL can optimize for specific outcomes.</p></li><li><p><strong>Observation Engineering</strong>: Agents observe their local neighborhood, providing them with relevant information for decision-making.</p></li><li><p><strong>Policy Transfer</strong>: Trained policies can be copied to fresh model instances, enabling evaluation and deployment of learned behaviors.</p></li></ol></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../event_rock_paper_scissors/">« Spatial rock-paper-scissors (event based)</a><a class="docs-footer-nextpage" href="../">More Examples for Agents.jl »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Friday 27 February 2026 20:29">Friday 27 February 2026</span>. Using Julia version 1.12.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
