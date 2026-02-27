@@ -8,7 +8,7 @@
 [![Package Downloads](https://img.shields.io/badge/dynamic/json?url=http%3A%2F%2Fjuliapkgstats.com%2Fapi%2Fv1%2Ftotal_downloads%2FAgents&query=total_requests&label=Downloads)](http://juliapkgstats.com/pkg/Agents)
 
 **Agents.jl** is a pure [Julia](https://julialang.org/) general-purpose framework for **agent-based modeling (ABM)**: a computational simulation methodology where autonomous agents react to their environment (including other agents) given a predefined set of rules.
-Some major highlights of Agents.jl that set it apart other similar frameworks are:
+Some major highlights of Agents.jl that set it apart from other similar frameworks are:
 
 1. It is simple: has a very short learning curve and requires writing minimal code
 2. Has an extensive interface of thousands of out-of-the box possible agent actions
