@@ -149,9 +149,8 @@ model = schoolyard()
 using CairoMakie
 CairoMakie.activate!() # hide
 
-const ABMPlot = Agents.get_ABMPlot_type()
 function preplot!(ax::Axis, abmobs)
-    obj = CairoMakie.scatter!([50 50]; color = :red) # Show position of teacher
+    obj = CairoMakie.scatter!([50, 50]; color = :red) # Show position of teacher
     CairoMakie.hidedecorations!(ax) # hide tick labels etc.
     return CairoMakie.translate!(obj, 0, 0, 5) # be sure that the teacher will be above students
 end
