@@ -181,9 +181,8 @@ yearly(model, s) = s % 365 == 0
 _, results = run!(model, 20 * 365; mdata = [:stock], when = yearly)
 
 f = Figure(size = (600, 400))
-ax =
-    f[1, 1] = Axis(
-    f,
+ax = Axis(
+    f[1, 1],
     xlabel = "Year",
     ylabel = "Stock",
     title = "Fishery Inventory",
@@ -292,8 +291,8 @@ modeldeq = initialise_diffeq()
 _, resultsdeq = run!(modeldeq, 20; mdata = [:stock])
 
 f = Figure(size = (600, 400))
-ax = f[1, 1] = Axis(
-    f,
+ax = Axis(
+    f[1, 1];
     xlabel = "Year",
     ylabel = "Stock",
     title = "Fishery Inventory",
@@ -325,9 +324,8 @@ length(modeldeq.i.sol.t)
 # precisely the same manner:
 
 f = Figure(size = (600, 400))
-ax =
-    f[1, 1] = Axis(
-    f,
+ax = Axis(
+    f[1, 1];
     xlabel = "Year",
     ylabel = "Stock",
     title = "Fishery Inventory",
@@ -405,7 +403,8 @@ sol = OrdinaryDiffEqTsit5.solve(
 )
 discrete = vcat(sol(0:365:(365 * 20))[:, :]...)
 fig = Figure(size = (600, 400))
-ax = Axis(fig[1, 1];
+ax = Axis(
+    fig[1, 1];
     xlabel = "Year",
     ylabel = "Stock",
     title = "Fishery Inventory",

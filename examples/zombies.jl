@@ -98,7 +98,8 @@ end
 # loaded the OSMMakie.jl package (besides any Makie plotting backend such as CairoMakie.jl.).
 # In this case, the underlying open street map is plotted below the agent scatterplot.
 
-using CairoMakie, OSMMakie
+using CairoMakie
+import OSMMakie
 zombie_color(agent) = agent.infected ? :green : :black
 zombie_size(agent) = agent.infected ? 14 : 10
 zombies = initialise_zombies()
