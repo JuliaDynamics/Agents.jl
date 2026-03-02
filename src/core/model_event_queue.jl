@@ -25,20 +25,21 @@ An event instance that can be given to [`EventQueueABM`](@ref).
 Notice that when using the [`add_event!`](@ref) function, `propensity, timing` are ignored
 if `event_idx` and `t` are given.
 """
-Base.@kwdef struct AgentEvent{F<:Function, P, A<:Type, T<:Function}
+Base.@kwdef struct AgentEvent{F <: Function, P, A <: Type, T <: Function}
     action!::F = dummystep
     propensity::P = 1.0
     types::A = AbstractAgent
     timing::T = exp_propensity
 end
 
-exp_propensity(agent, model, propensity) = randexp(abmrng(model))/propensity
+exp_propensity(agent, model, propensity) = randexp(abmrng(model)) / propensity
 
 struct EventQueueABM{
-    S<:SpaceType,
-    A<:AbstractAgent,
-    C<:Union{AbstractDict{Int,A},AbstractVector{A}},
-    P,E,R<:AbstractRNG,TF,ET,PT,FPT,Q} <: AgentBasedModel{S}
+        S <: SpaceType,
+        A <: AbstractAgent,
+        C <: Union{AbstractDict{Int, A}, AbstractVector{A}},
+        P, E, R <: AbstractRNG, TF, ET, PT, FPT, Q,
+    } <: AgentBasedModel{S}
     # core ABM stuff
     agents::C
     space::S
@@ -152,12 +153,12 @@ function EventQueueABM(
         warn = true,
         autogenerate_on_add = true,
         autogenerate_after_action = true,
-    ) where {S<:SpaceType,P,R<:AbstractRNG}
+    ) where {S <: SpaceType, P, R <: AbstractRNG}
     if container == StructVector
         if !(A <: SoAType)
             @warn "The agent type passed to the model constructor is of type $A but a model with a 
             StructVector container will have agents of type SoAType{$A}. Pass this to the constructor to 
-            remove this warning." maxlog=1
+            remove this warning." maxlog = 1
         else
             A = A.body.parameters[1]
         end
@@ -167,15 +168,15 @@ function EventQueueABM(
 
     # the queue stores pairs of (agent ID, event index) mapping them to their trigger time
     queue = BinaryHeap(
-                Base.By(last, DataStructures.FasterForward()), 
-                Pair{Tuple{Int, Int}, Float64}[]
-            )
+        Base.By(last, DataStructures.FasterForward()),
+        Pair{Tuple{Int, Int}, Float64}[]
+    )
 
     agent_types = is_sumtype(A) ? values(allvariants(A)) : union_types(A)
 
-    if is_sumtype(A) 
-        type_func = LightSumTypes.variant_idx 
-    else 
+    if is_sumtype(A)
+        type_func = LightSumTypes.variant_idx
+    else
         type_to_idx = Dict(t => i for (i, t) in enumerate(agent_types))
         type_func = (agent) -> type_to_idx[typeof(agent)]
     end
@@ -183,8 +184,10 @@ function EventQueueABM(
     # precompute a vector mapping the agent type index to a
     # vectors of indices, each vector corresponding
     # to all valid events that can apply to a given agent type
-    idx_events_each_type = [[i for (i, e) in enumerate(events) if t <: e.types] 
-                            for t in agent_types]
+    idx_events_each_type = [
+        [i for (i, e) in enumerate(events) if t <: e.types]
+            for t in agent_types
+    ]
     # initialize vectors for the propensities (they are updated in-place later)
     propensities_each_type = [zeros(length(e)) for e in idx_events_each_type]
 
@@ -209,11 +212,13 @@ function EventQueueABM(
     # because we use the index of `type_to_idx` to access them.
 
     # construct the type
-    E,TF,ET,PT,FPT,Q = typeof.((
-        events, type_func, idx_events_each_type, propensities_each_type,
-        idx_func_propensities_each_type, queue
-    ))
-    return EventQueueABM{S,A,typeof(agents),P,E,R,TF,ET,PT,FPT,Q}(
+    E, TF, ET, PT, FPT, Q = typeof.(
+        (
+            events, type_func, idx_events_each_type, propensities_each_type,
+            idx_func_propensities_each_type, queue,
+        )
+    )
+    return EventQueueABM{S, A, typeof(agents), P, E, R, TF, ET, PT, FPT, Q}(
 
         agents, space, properties, rng, Ref(0), Ref(0.0),
 
@@ -255,12 +260,12 @@ function add_event!(agent, model) # TODO: Study type stability of this function
     # Then, select an event based on propensities
     # The time to the event is generated from the selected event
     prop_idx = sample_propensity(abmrng(model), propensities_type)
-    event_idx = events_type[prop_idx] 
+    event_idx = events_type[prop_idx]
     selected_event = events[event_idx]
     selected_prop = propensities_type[prop_idx]
     t = selected_event.timing(agent, model, selected_prop)
     # we then propagate to the direct function
-    add_event!(agent, event_idx, t, model)
+    return add_event!(agent, event_idx, t, model)
 end
 
 function add_event!(agent::AbstractAgent, event_idx, t::Real, model::EventQueueABM)
@@ -308,7 +313,7 @@ All models are initialized at time 0.
 """
 abmtime(model::EventQueueABM) = getfield(model, :time)[]
 
-containertype(::EventQueueABM{S,A,C}) where {S,A,C} = C
-agenttype(::EventQueueABM{S,A}) where {S,A} = A
+containertype(::EventQueueABM{S, A, C}) where {S, A, C} = C
+agenttype(::EventQueueABM{S, A}) where {S, A} = A
 
 discretimeabm(::EventQueueABM) = false

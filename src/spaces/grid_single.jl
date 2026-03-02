@@ -8,13 +8,13 @@
 export GridSpaceSingle, id_in_position
 
 # type P stands for Periodic and is a boolean
-struct GridSpaceSingle{D,P} <: AbstractGridSpace{D,P}
-    stored_ids::Array{Int,D}
-    extent::NTuple{D,Int}
+struct GridSpaceSingle{D, P} <: AbstractGridSpace{D, P}
+    stored_ids::Array{Int, D}
+    extent::NTuple{D, Int}
     metric::Symbol
-    offsets_at_radius::Vector{Vector{NTuple{D,Int}}}
-    offsets_within_radius::Vector{Vector{NTuple{D,Int}}}
-    offsets_within_radius_no_0::Vector{Vector{NTuple{D,Int}}}
+    offsets_at_radius::Vector{Vector{NTuple{D, Int}}}
+    offsets_within_radius::Vector{Vector{NTuple{D, Int}}}
+    offsets_within_radius_no_0::Vector{Vector{NTuple{D, Int}}}
 end
 spacesize(space::GridSpaceSingle) = space.extent
 
@@ -30,15 +30,17 @@ with non-zero IDs, either positive or negative. This is not checked internally.
 
 All arguments and keywords behave exactly as in [`GridSpace`](@ref).
 """
-function GridSpaceSingle(d::NTuple{D,Int};
-        periodic::Union{Bool,NTuple{D,Bool}} = true,
+function GridSpaceSingle(
+        d::NTuple{D, Int};
+        periodic::Union{Bool, NTuple{D, Bool}} = true,
         metric = :chebyshev
     ) where {D}
     s = zeros(Int, d)
-    return GridSpaceSingle{D,periodic}(s, d, metric,
-        Vector{Vector{NTuple{D,Int}}}(),
-        Vector{Vector{NTuple{D,Int}}}(),
-        Vector{Vector{NTuple{D,Int}}}(),
+    return GridSpaceSingle{D, periodic}(
+        s, d, metric,
+        Vector{Vector{NTuple{D, Int}}}(),
+        Vector{Vector{NTuple{D, Int}}}(),
+        Vector{Vector{NTuple{D, Int}}}(),
     )
 end
 # Implementation of space API
@@ -58,10 +60,10 @@ end
 # move_agent! does not need be implemented.
 # The generic version at core/space_interaction_API.jl covers it.
 # `random_empty` comes from spaces/discrete.jl as long as we extend:
-Base.isempty(pos::GridPos{D}, model::ABM{<:GridSpaceSingle{D}}) where D = abmspace(model).stored_ids[pos...] == 0
+Base.isempty(pos::GridPos{D}, model::ABM{<:GridSpaceSingle{D}}) where {D} = abmspace(model).stored_ids[pos...] == 0
 # And we also need to extend the iterator of empty positions
 function empty_positions(model::ABM{<:GridSpaceSingle})
-    Iterators.filter(i -> abmspace(model).stored_ids[i...] == 0, positions(model))
+    return Iterators.filter(i -> abmspace(model).stored_ids[i...] == 0, positions(model))
 end
 
 """
@@ -87,7 +89,8 @@ end
 # the duplication is necessary because `nearby_ids(pos, ...)` should in principle
 # contain the id at the given `pos` as well.
 
-function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:GridSpaceSingle{D,true}}, r = 1,
+function nearby_ids(
+        pos::NTuple{D, Int}, model::ABM{<:GridSpaceSingle{D, true}}, r = 1,
         get_offset_indices = offsets_within_radius # internal, see last function
     ) where {D}
     nindices = get_offset_indices(model, r)
@@ -100,7 +103,8 @@ function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:GridSpaceSingle{D,true}}, 
     return ids_iterator
 end
 
-function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:GridSpaceSingle{D,false}}, r = 1,
+function nearby_ids(
+        pos::NTuple{D, Int}, model::ABM{<:GridSpaceSingle{D, false}}, r = 1,
         get_offset_indices = offsets_within_radius # internal, see last function
     ) where {D}
     nindices = get_offset_indices(model, r)
@@ -113,7 +117,7 @@ function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:GridSpaceSingle{D,false}},
     return ids_iterator
 end
 
-struct PeriodicNearbyIDS{D,Q,I}
+struct PeriodicNearbyIDS{D, Q, I}
     pos::GridPos{D}
     len::Int
     nindices::Vector{Q}
@@ -121,7 +125,7 @@ struct PeriodicNearbyIDS{D,Q,I}
     space_size::NTuple{D, Int}
     do_bounds::Bool
 end
-@inline function Base.iterate(iter::PeriodicNearbyIDS, state=1)
+@inline function Base.iterate(iter::PeriodicNearbyIDS, state = 1)
     while state <= iter.len
         @inbounds offset = iter.nindices[state]
         pos = iter.pos .+ offset
@@ -137,7 +141,7 @@ end
 Base.IteratorSize(::Type{<:PeriodicNearbyIDS}) = Base.SizeUnknown()
 Base.eltype(::PeriodicNearbyIDS) = Int
 
-struct NonPeriodicNearbyIDS{D,Q,I}
+struct NonPeriodicNearbyIDS{D, Q, I}
     pos::GridPos{D}
     len::Int
     nindices::Vector{Q}
@@ -145,7 +149,7 @@ struct NonPeriodicNearbyIDS{D,Q,I}
     space_size::NTuple{D, Int}
     do_bounds::Bool
 end
-@inline function Base.iterate(iter::NonPeriodicNearbyIDS, state=1)
+@inline function Base.iterate(iter::NonPeriodicNearbyIDS, state = 1)
     while state <= iter.len
         @inbounds offset = iter.nindices[state]
         pos = iter.pos .+ offset
@@ -163,24 +167,27 @@ Base.IteratorSize(::Type{<:NonPeriodicNearbyIDS}) = Base.SizeUnknown()
 Base.eltype(::NonPeriodicNearbyIDS) = Int
 
 # TODO: create custom iterator also for this case
-function nearby_ids(pos::NTuple{D, Int}, model::ABM{<:GridSpaceSingle{D,P}}, r = 1,
+function nearby_ids(
+        pos::NTuple{D, Int}, model::ABM{<:GridSpaceSingle{D, P}}, r = 1,
         get_offset_indices = offsets_within_radius # internal, see last function
-    ) where {D,P}
+    ) where {D, P}
     nindices = get_offset_indices(model, r)
     stored_ids = abmspace(model).stored_ids
     space_size = size(stored_ids)
     position_iterator = (pos .+ β for β in nindices)
     # check if we are far from the wall to skip bounds checks
     if all(i -> r < pos[i] <= space_size[i] - r, 1:D)
-        ids_iterator = (stored_ids[p...] for p in position_iterator
-                        if stored_ids[p...] != 0)
+        ids_iterator = (
+            stored_ids[p...] for p in position_iterator
+                if stored_ids[p...] != 0
+        )
     else
         ids_iterator = (
             checkbounds(Bool, stored_ids, p...) ?
-            stored_ids[p...] : stored_ids[mod1.(p, space_size)...]
-            for p in position_iterator
-            if stored_ids[mod1.(p, space_size)...] != 0 &&
-            all(P[i] || checkbounds(Bool, axes(stored_ids, i), p[i]) for i in 1:D)
+                stored_ids[p...] : stored_ids[mod1.(p, space_size)...]
+                for p in position_iterator
+                if stored_ids[mod1.(p, space_size)...] != 0 &&
+                all(P[i] || checkbounds(Bool, axes(stored_ids, i), p[i]) for i in 1:D)
         )
     end
     return ids_iterator
@@ -192,7 +199,8 @@ end
 # Here we implement a new version for neighborhoods, similar to abusive_unremovable.jl.
 # The extension uses the function `offsets_within_radius_no_0` from spaces/grid_general.jl
 function nearby_ids(
-    a::AbstractAgent, model::ABM{<:GridSpaceSingle}, r = 1)
+        a::AbstractAgent, model::ABM{<:GridSpaceSingle}, r = 1
+    )
     return nearby_ids(a.pos, model, r, offsets_within_radius_no_0)
 end
 
@@ -200,4 +208,5 @@ function remove_all_from_space!(model::ABM{<:GridSpaceSingle})
     for p in positions(model)
         abmspace(model).stored_ids[p...] = 0
     end
+    return
 end

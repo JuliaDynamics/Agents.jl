@@ -15,9 +15,9 @@ to vector of indices within each radius.
 
 `D` is the dimension and `P` is whether the space is periodic (boolean).
 """
-abstract type AbstractGridSpace{D,P} <: DiscreteSpace end
+abstract type AbstractGridSpace{D, P} <: DiscreteSpace end
 
-const GridPos{D} = NTuple{D,Int}
+const GridPos{D} = NTuple{D, Int}
 
 """
     GridAgent{D} <: AbstractAgent
@@ -35,50 +35,54 @@ end
 
 npositions(space::AbstractGridSpace) = length(space.stored_ids)
 
-# ALright, so here is the design for basic nearby_stuff looping. 
+# ALright, so here is the design for basic nearby_stuff looping.
 # We initialize a vector of tuples of indices within radius `r` from origin position.
 # We store this vector. When we have to loop over nearby_stuff, we call this vector
 # and add it to the given position. That is what the concrete implementations of
-# nearby_stuff do in the concrete spaces files. 
-# !! Important !! Notice that all implementation of different position metrics 
-# should start by calling `calculate_hyperrectangle` since the calculated hyperrectagle 
+# nearby_stuff do in the concrete spaces files.
+# !! Important !! Notice that all implementation of different position metrics
+# should start by calling `calculate_hyperrectangle` since the calculated hyperrectagle
 # respects the periodicity of the space.
 
-function calculate_hyperrectangle(space::AbstractGridSpace{D,true}, r) where {D}
+function calculate_hyperrectangle(space::AbstractGridSpace{D, true}, r) where {D}
     space_size = spacesize(space)
     if r < minimum(space_size) ÷ 2
         hyperrect = Iterators.product((-r:r for _ in 1:D)...)
     else
         odd_s, half_s = space_size .% 2, space_size .÷ 2
         r_dims = min.(r, half_s)
-        from_to = (-rm:rm-(rm == hs && os == 0)
-                   for (rm, hs, os) in zip(r_dims, half_s, odd_s))
+        from_to = (
+            -rm:(rm - (rm == hs && os == 0))
+                for (rm, hs, os) in zip(r_dims, half_s, odd_s)
+        )
         hyperrect = Iterators.product(from_to...)
     end
     return hyperrect
 end
-function calculate_hyperrectangle(space::AbstractGridSpace{D,false}, r) where {D}
+function calculate_hyperrectangle(space::AbstractGridSpace{D, false}, r) where {D}
     space_size = spacesize(space)
     if r < minimum(space_size)
-        hyperrect = Iterators.product((-r:r for _ in 1:D)...) 
+        hyperrect = Iterators.product((-r:r for _ in 1:D)...)
     else
         r_dims = min.(r, space_size)
         hyperrect = Iterators.product((-rm:rm for rm in r_dims)...)
     end
     return hyperrect
 end
-function calculate_hyperrectangle(space::AbstractGridSpace{D,P}, r) where {D,P}
+function calculate_hyperrectangle(space::AbstractGridSpace{D, P}, r) where {D, P}
     space_size = spacesize(space)
     r_notover = [p_d ? r < s_d ÷ 2 : r < s_d for (p_d, s_d) in zip(P, space_size)]
     if all(r_notover)
-        hyperrect = Iterators.product((-r:r for _ in 1:D)...) 
+        hyperrect = Iterators.product((-r:r for _ in 1:D)...)
     else
         odd_s, half_s = space_size .% 2, space_size .÷ 2
         r_dims_P = min.(r, half_s)
         r_dims_notP = min.(r, space_size)
-        from_to = (P[i] ? 
-                    (-r_dims_P[i]:r_dims_P[i]-(r_dims_P[i] == half_s[i] && odd_s[i] == 0)) : 
-                    (-r_dims_notP[i]:r_dims_notP[i]) for i in 1:D)
+        from_to = (
+            P[i] ?
+                (-r_dims_P[i]:(r_dims_P[i] - (r_dims_P[i] == half_s[i] && odd_s[i] == 0))) :
+                (-r_dims_notP[i]:r_dims_notP[i]) for i in 1:D
+        )
         hyperrect = Iterators.product(from_to...)
     end
     return hyperrect
@@ -134,11 +138,11 @@ end
 function calculate_offsets(space::AbstractGridSpace{D}, r::Int) where {D}
     hyperrect = calculate_hyperrectangle(space, r)
     if space.metric == :euclidean
-        βs = [β for β ∈ hyperrect if sum(β.^2) ≤ r^2]
+        βs = [β for β in hyperrect if sum(β .^ 2) ≤ r^2]
     elseif space.metric == :manhattan
-        βs = [β for β ∈ hyperrect if sum(abs.(β)) ≤ r]
+        βs = [β for β in hyperrect if sum(abs.(β)) ≤ r]
     elseif space.metric == :chebyshev
-        βs = vec([β for β ∈ hyperrect])
+        βs = vec([β for β in hyperrect])
     else
         error("Unknown metric type")
     end
@@ -148,13 +152,13 @@ end
 
 function resize_offsets!(offsets, i)
     incr = i - length(offsets)
-    if incr > 0
+    return if incr > 0
         resize!(offsets, i)
     end
 end
 
 function random_position(model::ABM{<:AbstractGridSpace})
-    Tuple(rand(abmrng(model), CartesianIndices(abmspace(model).stored_ids)))
+    return Tuple(rand(abmrng(model), CartesianIndices(abmspace(model).stored_ids)))
 end
 
 offsets_within_radius_no_0(model::ABM, r::Real) = offsets_within_radius_no_0(abmspace(model), r)
@@ -178,13 +182,13 @@ end
 # utilizes the above `offsets_within_radius_no_0`. We complicated it a bit more because
 # we want to be able to re-use it in `ContinuousSpace`, so we allow it to either
 # find positions with the 0 or without.
-function nearby_positions(pos::GridPos{D}, model::ABM{<:AbstractGridSpace{D}}, args::Vararg{Any,N}) where {D,N}
+function nearby_positions(pos::GridPos{D}, model::ABM{<:AbstractGridSpace{D}}, args::Vararg{Any, N}) where {D, N}
     return nearby_positions(pos, abmspace(model), args...)
 end
 function nearby_positions(
-    pos::GridPos{D}, space::AbstractGridSpace{D,true}, r=1,
-    get_indices_f=offsets_within_radius_no_0 # NOT PUBLIC API! For `ContinuousSpace`.
-) where {D}
+        pos::GridPos{D}, space::AbstractGridSpace{D, true}, r = 1,
+        get_indices_f = offsets_within_radius_no_0 # NOT PUBLIC API! For `ContinuousSpace`.
+    ) where {D}
     nindices = get_indices_f(space, r)
     space_size = spacesize(space)
     stored_ids = space.stored_ids
@@ -194,9 +198,9 @@ function nearby_positions(
     )
 end
 function nearby_positions(
-    pos::GridPos{D}, space::AbstractGridSpace{D,false}, r=1,
-    get_indices_f=offsets_within_radius_no_0 # NOT PUBLIC API! For `ContinuousSpace`.
-) where {D}
+        pos::GridPos{D}, space::AbstractGridSpace{D, false}, r = 1,
+        get_indices_f = offsets_within_radius_no_0 # NOT PUBLIC API! For `ContinuousSpace`.
+    ) where {D}
     nindices = get_indices_f(space, r)
     space_size = spacesize(space)
     stored_ids = space.stored_ids
@@ -208,9 +212,9 @@ end
 
 # TODO: create custom iterator also for this case
 function nearby_positions(
-    pos::GridPos{D}, space::AbstractGridSpace{D,P}, r=1,
-    get_indices_f=offsets_within_radius_no_0 # NOT PUBLIC API! For `ContinuousSpace`.
-) where {D,P}
+        pos::GridPos{D}, space::AbstractGridSpace{D, P}, r = 1,
+        get_indices_f = offsets_within_radius_no_0 # NOT PUBLIC API! For `ContinuousSpace`.
+    ) where {D, P}
     stored_ids = space.stored_ids
     nindices = get_indices_f(space, r)
     space_size = size(space)
@@ -220,14 +224,14 @@ function nearby_positions(
     else
         return (
             checkbounds(Bool, stored_ids, (n .+ pos)...) ?
-            n .+ pos : mod1.(n .+ pos, space_size)
-            for n in nindices
-            if all(P[i] || checkbounds(Bool, axes(stored_ids,i), n[i]+pos[i]) for i in 1:D)
+                n .+ pos : mod1.(n .+ pos, space_size)
+                for n in nindices
+                if all(P[i] || checkbounds(Bool, axes(stored_ids, i), n[i] + pos[i]) for i in 1:D)
         )
     end
 end
 
-struct PeriodicNearbyPositions{D,Q,I}
+struct PeriodicNearbyPositions{D, Q, I}
     pos::GridPos{D}
     len::Int
     nindices::Vector{Q}
@@ -235,7 +239,7 @@ struct PeriodicNearbyPositions{D,Q,I}
     space_size::NTuple{D, Int}
     do_bounds::Bool
 end
-@inline function Base.iterate(iter::PeriodicNearbyPositions, state=1)
+@inline function Base.iterate(iter::PeriodicNearbyPositions, state = 1)
     state > iter.len && return nothing
     @inbounds offset = iter.nindices[state]
     nearby_pos = iter.pos .+ offset
@@ -249,7 +253,7 @@ Base.IteratorSize(::Type{<:PeriodicNearbyPositions}) = Base.HasLength()
 Base.length(iter::PeriodicNearbyPositions) = iter.len
 Base.eltype(::PeriodicNearbyPositions{D}) where {D} = GridPos{D}
 
-struct NonPeriodicNearbyPositions{D,Q,I}
+struct NonPeriodicNearbyPositions{D, Q, I}
     pos::GridPos{D}
     len::Int
     nindices::Vector{Q}
@@ -257,7 +261,7 @@ struct NonPeriodicNearbyPositions{D,Q,I}
     space_size::NTuple{D, Int}
     do_bounds::Bool
 end
-@inline function Base.iterate(iter::NonPeriodicNearbyPositions, state=1)
+@inline function Base.iterate(iter::NonPeriodicNearbyPositions, state = 1)
     state > iter.len && return nothing
     @inbounds offset = iter.nindices[state]
     nearby_pos = iter.pos .+ offset
@@ -275,7 +279,7 @@ end
 Base.IteratorSize(::Type{<:NonPeriodicNearbyPositions}) = Base.SizeUnknown()
 Base.eltype(::NonPeriodicNearbyPositions{D}) where {D} = GridPos{D}
 
-function random_nearby_position(pos::GridPos{D}, model::ABM{<:AbstractGridSpace{D,false}}, r=1; kwargs...) where {D}
+function random_nearby_position(pos::GridPos{D}, model::ABM{<:AbstractGridSpace{D, false}}, r = 1; kwargs...) where {D}
     nindices = offsets_within_radius_no_0(abmspace(model), r)
     stored_ids = abmspace(model).stored_ids
     rng = abmrng(model)
@@ -284,9 +288,10 @@ function random_nearby_position(pos::GridPos{D}, model::ABM{<:AbstractGridSpace{
         chosen_pos = pos .+ chosen_offset
         checkbounds(Bool, stored_ids, chosen_pos...) && return chosen_pos
     end
+    return
 end
 
-function random_nearby_position(pos::GridPos{D}, model::ABM{<:AbstractGridSpace{D,true}}, r=1; kwargs...) where {D}
+function random_nearby_position(pos::GridPos{D}, model::ABM{<:AbstractGridSpace{D, true}}, r = 1; kwargs...) where {D}
     nindices = offsets_within_radius_no_0(abmspace(model), r)
     stored_ids = abmspace(model).stored_ids
     chosen_offset = rand(abmrng(model), nindices)
@@ -301,8 +306,8 @@ end
 Base.size(space::AbstractGridSpace) = size(space.stored_ids)
 spacesize(space::AbstractGridSpace) = size(space)
 
-function Base.show(io::IO, space::AbstractGridSpace{D,P}) where {D,P}
+function Base.show(io::IO, space::AbstractGridSpace{D, P}) where {D, P}
     name = nameof(typeof(space))
     s = "$name with size $(size(space)), metric=$(space.metric), periodic=$(P)"
-    print(io, s)
+    return print(io, s)
 end

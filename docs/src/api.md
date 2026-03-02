@@ -12,7 +12,7 @@ In this page we list the remaining API functions, which constitute the bulk of A
 
 ```@docs
 AgentBasedModel
-step!(::AgentBasedModel, args...)
+Agents.step!(::AgentBasedModel, args...)
 ```
 
 ## Discrete time ABM
@@ -126,22 +126,18 @@ get_direction
 
 ### Movement with paths
 
-For [`OpenStreetMapSpace`](@ref), and [`GridSpace`](@ref)/[`ContinuousSpace`](@ref) using [`Pathfinding`](@ref), a special
-movement method is available.
-
-```@docs
-plan_route!
+For [`OpenStreetMapSpace`](@ref), and [`GridSpace`](@ref)/[`ContinuousSpace`](@ref) using [`Pathfinding`](@ref), it is possible to move along planned routes.
+See the functions `plan_route!
 plan_best_route!
-move_along_route!
-is_stationary
-```
+move_along_route!`  of the respective submodules.
+
 
 ## Removing agents
 
 ```@docs
 remove_agent!
 remove_all!
-sample!
+Agents.sample!
 ```
 
 ## Space utility functions
@@ -169,7 +165,6 @@ random_empty
 add_agent_single!
 move_agent_single!
 swap_agents!
-isempty(::Int, ::ABM)
 ```
 
 ## `GraphSpace` exclusives
@@ -198,17 +193,20 @@ manhattan_distance
 
 ```@docs
 OSM
+OSM.test_map
+OSM.random_road_position
+OSM.plan_route!
+OSM.plan_random_route!
+OSM.move_along_route!
+OSM.distance
 OSM.lonlat
 OSM.nearest_node
-OSM.nearest_road
-OSM.random_road_position
-OSM.plan_random_route!
 OSM.road_length
 OSM.route_length
+OSM.get_geoloc
 OSM.same_position
 OSM.same_road
-OSM.test_map
-OSM.download_osm_network
+OSM.closest_node_on_edge
 ```
 
 ## Nearby Agents
@@ -323,7 +321,7 @@ return df_agent, df_model
 
 ```@docs
 Schedulers
-schedule(::ABM)
+Agents.schedule
 ```
 
 ### Predefined schedulers
@@ -337,7 +335,6 @@ Schedulers.Randomly
 Schedulers.Partially
 Schedulers.ByProperty
 Schedulers.ByType
-Schedulers.ByKind
 ```
 
 ### [Advanced scheduling](@id advanced_scheduling)
@@ -386,6 +383,15 @@ To use the `parallel=true` option of [`ensemblerun!`](@ref) you need to load `Ag
 Pathfinding
 Pathfinding.AStar
 Pathfinding.penaltymap
+```
+
+### Path-finding planning and moving
+
+```@docs
+Pathfinding.plan_route!
+Pathfinding.plan_best_route!
+Pathfinding.move_along_route!
+Pathfinding.is_stationary
 Pathfinding.nearby_walkable
 Pathfinding.random_walkable
 ```
@@ -430,7 +436,6 @@ abmplot!
 abmexploration
 abmvideo
 ABMObservable
-add_interaction!
 translate_polygon
 scale_polygon
 rotate_polygon

@@ -22,11 +22,7 @@ export move_agent!,
     nearby_agents,
     random_nearby_id,
     random_nearby_agent,
-    random_nearby_position,
-    plan_route!,
-    plan_best_route!,
-    move_along_route!,
-    is_stationary
+    random_nearby_position
 
 #######################################################################################
 # %% IMPLEMENT
@@ -91,29 +87,6 @@ given position.
 nearby_positions(pos, model, r = 1) = notimplemented(model)
 
 #######################################################################################
-# %% OPTIONAL IMPLEMENT
-#######################################################################################
-plan_route!(agent, dest, model_or_pathfinder; kwargs...) =
-    notimplemented(model_or_pathfinder)
-
-plan_best_route!(agent, dests, model_or_pathfinder; kwargs...) =
-    notimplemented(model_or_pathfinder)
-
-# """
-#     move_along_route!(agent, model, args...; kwargs...)
-# Move `agent` along the route planned for it. Used in situations like path-finding
-# or open street map space movement.
-# """
-move_along_route!(agent, model, args...; kwargs...) = notimplemented(model)
-
-"""
-    is_stationary(agent, model)
-Return `true` if agent has reached the end of its route, or no route
-has been set for it. Used in setups where using [`move_along_route!`](@ref) is valid.
-"""
-is_stationary(agent, model) = notimplemented(model)
-
-#######################################################################################
 # %% Space agnostic removing and moving
 #######################################################################################
 """
@@ -131,7 +104,7 @@ function move_agent!(agent::AbstractAgent, pos::Any, model::ABM)
     return agent
 end
 function move_agent!(agent, model::ABM)
-    move_agent!(agent, random_position(model), model)
+    return move_agent!(agent, random_position(model), model)
 end
 
 """
@@ -142,7 +115,7 @@ Remove an agent from the model.
 """
 function remove_agent!(a::AbstractAgent, model::ABM)
     remove_agent_from_container!(a, model)
-    remove_agent_from_space!(a, model)
+    return remove_agent_from_space!(a, model)
 end
 remove_agent!(id::Integer, model::ABM) = remove_agent!(model[id], model)
 
@@ -153,7 +126,7 @@ Remove all the agents of the model.
 function remove_all!(model::ABM)
     remove_all_from_space!(model)
     remove_all_from_model!(model)
-    getfield(model, :maxid)[] = 0
+    return getfield(model, :maxid)[] = 0
 end
 
 """
@@ -164,7 +137,7 @@ function remove_all!(model::ABM, n::Integer)
     for id in allids(model)
         id > n && remove_agent!(id, model)
     end
-    getfield(model, :maxid)[] = n
+    return getfield(model, :maxid)[] = n
 end
 
 """
@@ -175,6 +148,7 @@ function remove_all!(model::ABM, ids)
     for id in ids
         remove_agent!(id, model)
     end
+    return
 end
 
 """
@@ -185,6 +159,7 @@ function remove_all!(model::ABM, f::Function)
     for a in allagents(model)
         f(a) && remove_agent!(a, model)
     end
+    return
 end
 
 #######################################################################################
@@ -215,12 +190,12 @@ The type of `pos` must match the underlying space position type.
 """
 function add_agent!(agent::AbstractAgent, model::ABM)
     agent.pos = random_position(model)
-    add_agent_own_pos!(agent, model)
+    return add_agent_own_pos!(agent, model)
 end
 
 function add_agent!(agent::AbstractAgent, pos::Any, model::ABM)
     agent.pos = pos
-    add_agent_own_pos!(agent, model)
+    return add_agent_own_pos!(agent, model)
 end
 
 """
@@ -260,44 +235,51 @@ add_agent!(model; w = 0.5) # use keywords: w becomes 0.5, k becomes false
 """
 function add_agent!(model::ABM, args::Vararg{Any, N}; kwargs...) where {N}
     A = agenttype(model)
-    add_agent!(A, model, args...; kwargs...)
-end
-
-function add_agent!(A::Union{Function, Type}, model::ABM, 
-        args::Vararg{Any, N}; kwargs...) where {N}
-    add_agent!(random_position(model), A, model, args...; kwargs...)
+    return add_agent!(A, model, args...; kwargs...)
 end
 
 function add_agent!(
-    pos::Any,
-    model::ABM,
-    args::Vararg{Any, N};
-    kwargs...,
-) where {N}
+        A::Union{Function, Type}, model::ABM,
+        args::Vararg{Any, N}; kwargs...
+    ) where {N}
+    return add_agent!(random_position(model), A, model, args...; kwargs...)
+end
+
+function add_agent!(
+        pos::Any,
+        model::ABM,
+        args::Vararg{Any, N};
+        kwargs...,
+    ) where {N}
     A = agenttype(model)
-    add_agent!(pos, A, model, args...; kwargs...)
+    return add_agent!(pos, A, model, args...; kwargs...)
 end
 
 # lowest level - actually constructs the agent
 function add_agent!(
-    pos::Any,
-    A::Union{Function, Type},
-    model::ABM,
-    args::Vararg{Any, N};
-    kwargs...,
-) where {N}
+        pos::Any,
+        A::Union{Function, Type},
+        model::ABM,
+        args::Vararg{Any, N};
+        kwargs...,
+    ) where {N}
+
     id = nextid(model)
+
     if !isempty(args)
         newagent = A(id, pos, args...)
     else
         newagent = A(; id = id, pos = pos, kwargs...)
     end
-    try
-        add_agent_own_pos!(newagent, model)
-    catch err
-        remove_agent_from_container!(newagent, model)
-        rethrow(err)
-    end
+
+    # try inserting into space first
+    add_agent_to_space!(newagent, model)
+
+    # only after successful insertion update container
+    add_agent_to_container!(newagent, model)
+    extra_actions_after_add!(newagent, model)
+
+    return newagent
 end
 
 #######################################################################################
@@ -311,7 +293,7 @@ Same as `nearby_ids(agent.pos, model, r)` but the iterable *excludes* the given
 """
 function nearby_ids(agent::AbstractAgent, model::ABM, r = 1; kwargs...)
     all = nearby_ids(agent.pos, model, r; kwargs...)
-    Iterators.filter(i -> i ≠ getid(agent), all)
+    return Iterators.filter(i -> i ≠ getid(agent), all)
 end
 
 """
@@ -320,7 +302,7 @@ end
 Same as `nearby_positions(agent.pos, model, r)`.
 """
 function nearby_positions(agent::AbstractAgent, model::ABM, r = 1; kwargs...)
-    nearby_positions(agent.pos, model, r; kwargs...)
+    return nearby_positions(agent.pos, model, r; kwargs...)
 end
 
 """
@@ -409,7 +391,7 @@ the function returns `true`. The argument `alloc` can be used if the filtering c
 is expensive since in this case the allocating version can be more performant.
 `nothing` is returned if no nearby position satisfies `f`.
 """
-function random_nearby_position(pos, model, r=1, f = nothing, alloc = false; kwargs...)
+function random_nearby_position(pos, model, r = 1, f = nothing, alloc = false; kwargs...)
     iter = nearby_positions(pos, model, r; kwargs...)
     if isnothing(f)
         return itsample(abmrng(model), iter, StreamSampling.AlgRSWRSKIP())

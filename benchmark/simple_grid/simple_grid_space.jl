@@ -9,7 +9,7 @@ function initialize_sologridspace()
     properties = Dict(:min_to_be_happy => min_to_be_happy)
     rng = Random.Xoshiro(rand(UInt))
     model = StandardABM(SoloGridSpaceAgent, space; properties, rng)
-    N = grid_size[1]*grid_size[2]*grid_occupation
+    N = grid_size[1] * grid_size[2] * grid_occupation
     for n in 1:N
         group = n < N / 2 ? 1 : 2
         add_agent_single!(SoloGridSpaceAgent, model, group, false)

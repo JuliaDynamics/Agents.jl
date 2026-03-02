@@ -34,5 +34,5 @@ end
 agent_not_removed(id, model::DictABM) = hasid(model, id)
 agent_not_removed(::Int, ::VecABM) = true
 # this one just checks until when we should step in a `while` loop
-until(t1, t0, n::Real, ::ABM) = t1 < t0+n
-until(t1, t0, f, model::ABM) = !f(model, t1-t0)
+until(t1, t0, n::Real, ::ABM) = t1 < t0 + n
+until(t1, t0, f, model::ABM) = !f(model, t1 - t0)

@@ -25,7 +25,7 @@
     @agent struct Bar(GridAgent{2})
     end
 
-    model = StandardABM(Union{Foo,Bar}, GridSpace((5,5)); warn = false, warn_deprecation = false)
+    model = StandardABM(Union{Foo, Bar}, GridSpace((5, 5)); warn = false, warn_deprecation = false)
 
     @test_throws AssertionError AgentsIO.populate_from_csv!(model, "test.csv")
 
@@ -108,4 +108,3 @@
 
     rm("test.csv")
 end
-

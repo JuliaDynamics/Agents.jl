@@ -60,7 +60,7 @@
 using Agents, Random, Statistics, Distributions
 
 # while we also need to import the library required for the RL extension
-using Crux
+import Crux
 
 # and define the agent type as usual
 
@@ -96,11 +96,11 @@ end
 function boltzmann_rl_step!(agent::RLBoltzmannAgent, model, action::Int)
     ## Action definitions: 1=stay, 2=north, 3=south, 4=east, 5=west
     dirs = ((0, 0), (0, 1), (0, -1), (1, 0), (-1, 0))
-    walk!(agent, dirs[action], model; ifempty=false)
+    walk!(agent, dirs[action], model; ifempty = false)
 
     ## Wealth exchange mechanism
     other = random_agent_in_position(agent.pos, model, a -> a.id != agent.id)
-    if !isnothing(other)
+    return if !isnothing(other)
         ## Transfer wealth from richer to poorer agent
         if other.wealth > agent.wealth && other.wealth > 0
             agent.wealth += 1
@@ -210,15 +210,16 @@ boltzmann_is_terminal_rl(env) = gini(env) < 0.1
 # without an RL configuration. This function will be further used during training to
 # generate new models while updating the overall model policies.
 
-function create_fresh_boltzmann_model(num_agents, dims, initial_wealth, observation_radius, seed=rand(Int))
+function create_fresh_boltzmann_model(num_agents, dims, initial_wealth, observation_radius, seed = rand(Int))
     rng = MersenneTwister(seed)
-    space = GridSpace(dims; periodic=true)
+    space = GridSpace(dims; periodic = true)
 
-    properties = Dict{Symbol,Any}(:observation_radius => observation_radius)
+    properties = Dict{Symbol, Any}(:observation_radius => observation_radius)
 
-    model = ReinforcementLearningABM(RLBoltzmannAgent, space;
-        agent_step=boltzmann_rl_step!,
-        properties=properties, rng=rng, scheduler=Schedulers.Randomly()
+    model = ReinforcementLearningABM(
+        RLBoltzmannAgent, space;
+        agent_step = boltzmann_rl_step!,
+        properties = properties, rng = rng, scheduler = Schedulers.Randomly()
     )
 
     ## Add agents with random initial wealth
@@ -232,7 +233,7 @@ end
 # We then use this function to create another keyword-based function,
 # which initializes an RL model with the RL training functions we have created so far:
 
-function initialize_boltzmann_rl_model(; num_agents=10, dims=(10, 10), initial_wealth=10, observation_radius=4)
+function initialize_boltzmann_rl_model(; num_agents = 10, dims = (10, 10), initial_wealth = 10, observation_radius = 4)
     ## Create the main model using the initialization function
     model = create_fresh_boltzmann_model(num_agents, dims, initial_wealth, observation_radius)
 
@@ -268,17 +269,19 @@ end
 boltzmann_rl_model = initialize_boltzmann_rl_model()
 
 # Train the Boltzmann agents
-train_model!(
+@time train_model!(
     boltzmann_rl_model;
-    training_steps=200000,
-    max_steps=50,
-    solver_params=Dict(
+    training_steps = 25_000,
+    max_steps = 50,
+    solver_params = Dict(
         :ΔN => 200,            # Custom batch size for PPO updates
-        :log => (period=1000,) # Log every 1000 steps
-    ))
+        :log => (period = 5000,) # Log every 1000 steps
+    )
+)
 
 # Plot the learning curve to see how agents improved over training
-plot_learning(boltzmann_rl_model.training_history[RLBoltzmannAgent])
+
+Crux.plot_learning(boltzmann_rl_model.training_history[RLBoltzmannAgent])
 
 # ## Running the trained model
 
@@ -293,14 +296,13 @@ copy_trained_policies!(fresh_boltzmann_model, boltzmann_rl_model)
 
 # Let's visualize the initial state and run a simulation to see the trained behavior.
 using CairoMakie
-using CairoMakie.Makie.ColorSchemes
 
 function agent_color(agent) # Custom color function based on wealth
     max_expected_wealth = 10
     clamped_wealth = clamp(agent.wealth, 0, max_expected_wealth)
     normalized_wealth = clamped_wealth / max_expected_wealth
     ## Color scheme: red (poor) to green (rich)
-    return ColorSchemes.RdYlGn_4[normalized_wealth]
+    return CairoMakie.Makie.ColorSchemes.RdYlGn_4[normalized_wealth]
 end
 function agent_size(agent) # Custom size function based on wealth
     max_expected_wealth = 10
@@ -309,32 +311,32 @@ function agent_size(agent) # Custom size function based on wealth
     return 10 + size_factor * 15
 end
 
-fig, ax = abmplot(fresh_boltzmann_model;
-    agent_color=agent_color,
-    agent_size=agent_size,
-    agent_marker=:circle
+fig, ax = abmplot(
+    fresh_boltzmann_model;
+    agent_color = agent_color,
+    agent_size = agent_size,
+    agent_marker = :circle
 )
 ax.title = "Boltzmann Wealth Distribution (Initial State)"
 ax.xlabel = "X Position"
 ax.ylabel = "Y Position"
 fig
 
-# Run simulation with trained agents on the fresh model
+# The initial Gini coefficient is
 initial_gini = gini(fresh_boltzmann_model)
-"Initial Gini coefficient: $initial_gini"
 
 # Step the model forward to see the trained behavior
 Agents.step!(fresh_boltzmann_model, 10)
 
 # Check the results after simulation
 final_gini = gini(fresh_boltzmann_model)
-"Final Gini coefficient: $final_gini"
 
-# Plot the final state
-fig, ax = abmplot(fresh_boltzmann_model;
-    agent_color=agent_color,
-    agent_size=agent_size,
-    agent_marker=:circle
+# and indeed the coefficient is reduced. Let's plot the final state
+fig, ax = abmplot(
+    fresh_boltzmann_model;
+    agent_color = agent_color,
+    agent_size = agent_size,
+    agent_marker = :circle
 )
 ax.title = "Boltzmann Wealth Distribution (After 10 RL Steps)"
 ax.xlabel = "X Position"
@@ -344,25 +346,26 @@ fig
 # Finally, let's create a video showing the trained agents in action over multiple steps
 # on a bigger scale, and compare visually with a random policy
 
-# Random policy because no policy is specified
-fresh_boltzmann_model = initialize_boltzmann_rl_model(; num_agents=500, dims=(100, 100))
+fresh_boltzmann_model = initialize_boltzmann_rl_model(; num_agents = 500, dims = (100, 100))
 plotkwargs = (;
-    agent_color=agent_color,
-    agent_size=agent_size,
-    agent_marker=:circle
+    agent_color = agent_color,
+    agent_size = agent_size,
+    agent_marker = :circle,
 )
-abmvideo("rn_boltzmann.mp4", fresh_boltzmann_model; frames=100,
-    framerate=20,
-    title="Boltzmann Wealth Model with Random Agents",
+abmvideo(
+    "rn_boltzmann.mp4", fresh_boltzmann_model; frames = 100,
+    framerate = 20,
+    title = "Boltzmann Wealth Model with Random Agents",
     plotkwargs...
 )
 
-# We know copy the trained policies and the agents are...smarter!
-fresh_boltzmann_model = initialize_boltzmann_rl_model(; num_agents=500, dims=(100, 100))
+# We now copy the trained policies and the agents are... smarter!
+fresh_boltzmann_model = initialize_boltzmann_rl_model(; num_agents = 500, dims = (100, 100))
 copy_trained_policies!(fresh_boltzmann_model, boltzmann_rl_model)
-abmvideo("rl_boltzmann.mp4", fresh_boltzmann_model; frames=100,
-    framerate=20,
-    title="Boltzmann Wealth Model with RL Agents",
+abmvideo(
+    "rl_boltzmann.mp4", fresh_boltzmann_model; frames = 100,
+    framerate = 20,
+    title = "Boltzmann Wealth Model with RL Agents",
     plotkwargs...
 )
 
@@ -380,4 +383,3 @@ abmvideo("rl_boltzmann.mp4", fresh_boltzmann_model; frames=100,
 
 # 4. **Policy Transfer**: Trained policies can be copied to fresh model instances,
 #    enabling evaluation and deployment of learned behaviors.
-

@@ -21,8 +21,8 @@ since `model[id]` is a `SoaType{A}`.
 """
 const SoAType = AgentWrapperSoA
 
-function AgentWrapperSoA{A}(soa::C, id::Int) where {A<:AbstractAgent, C}
-    return AgentWrapperSoA{A,C}(soa, id)
+function AgentWrapperSoA{A}(soa::C, id::Int) where {A <: AbstractAgent, C}
+    return AgentWrapperSoA{A, C}(soa, id)
 end
 
 function Base.getproperty(agent::AgentWrapperSoA, name::Symbol)
@@ -39,8 +39,8 @@ end
 
 Return the container type for storing agents of type `A` in the specified container type `container`.
 """
-agent_container_type(::Type{T}, A) where {T<:AbstractDict} = T{Int,A}
-agent_container_type(::Type{T}, A) where {T<:AbstractVector} = T{A}
+agent_container_type(::Type{T}, A) where {T <: AbstractDict} = T{Int, A}
+agent_container_type(::Type{T}, A) where {T <: AbstractVector} = T{A}
 agent_container_type(container, A) = throw(
     ArgumentError("Unrecognised container $container, please provide a valid container type")
 )

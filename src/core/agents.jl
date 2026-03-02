@@ -22,9 +22,11 @@ abstract type AbstractAgent end
 
 const __AGENT_GENERATOR__ = Dict{Symbol, Expr}()
 
-__AGENT_GENERATOR__[:NoSpaceAgent] = :(mutable struct NoSpaceAgent <: AbstractAgent
-                                           const id::Int
-                                       end)
+__AGENT_GENERATOR__[:NoSpaceAgent] = :(
+    mutable struct NoSpaceAgent <: AbstractAgent
+        const id::Int
+    end
+)
 
 """
     NoSpaceAgent <: AbstractAgent
@@ -202,54 +204,80 @@ end
 function _agent(struct_repr)
     new_type, base_type_spec, abstract_type, new_fields = decompose_struct_base(struct_repr)
     base_fields = compute_base_fields(base_type_spec)
-    expr_new_type = :(mutable struct $new_type <: $abstract_type
-                        $(base_fields...)
-                        $(new_fields...)
-                      end)
+    expr_new_type = :(
+        mutable struct $new_type <: $abstract_type
+            $(base_fields...)
+            $(new_fields...)
+        end
+    )
     new_type_no_params = namify(new_type)
     __AGENT_GENERATOR__[new_type_no_params] = MacroTools.prewalk(rmlines, expr_new_type)
     @capture(new_type, _{new_params__})
     new_params === nothing && (new_params = [])
     expr = quote
-           @kwdef $expr_new_type
-           $(new_type_no_params)(m::ABM, args...) =
-               $(new_type_no_params)(Agents.nextid(m), args...)
-           $(new_type_no_params)(m::ABM; kwargs...) =
-               $(new_type_no_params)(; id = Agents.nextid(m), kwargs...)
-           if $(new_params) != []
-               $(new_type)(m::ABM, args...) where {$(new_params...)} =
-                   $(new_type)(Agents.nextid(m), args...)
-               $(new_type)(m::ABM; kwargs...) where {$(new_params...)} =
-                   $(new_type)(; id = Agents.nextid(m), kwargs...)
-           end
+        @kwdef $expr_new_type
+        $(new_type_no_params)(m::ABM, args...) =
+            $(new_type_no_params)(Agents.nextid(m), args...)
+        $(new_type_no_params)(m::ABM; kwargs...) =
+            $(new_type_no_params)(; id = Agents.nextid(m), kwargs...)
+        if $(new_params) != []
+            $(new_type)(m::ABM, args...) where {$(new_params...)} =
+                $(new_type)(Agents.nextid(m), args...)
+            $(new_type)(m::ABM; kwargs...) where {$(new_params...)} =
+                $(new_type)(; id = Agents.nextid(m), kwargs...)
         end
+    end
     return expr
 end
 
 function decompose_struct_base(struct_repr)
-    if !@capture(struct_repr, struct new_type_(base_type_spec_) <: abstract_type_ new_fields__ end)
-        @capture(struct_repr, struct new_type_(base_type_spec_) new_fields__ end)
+    if !@capture(
+            struct_repr, struct new_type_(base_type_spec_) <: abstract_type_
+                new_fields__
+            end
+        )
+        @capture(
+            struct_repr, struct new_type_(base_type_spec_)
+                new_fields__
+            end
+        )
     end
     abstract_type === nothing && (abstract_type = :(Agents.AbstractAgent))
     return new_type, base_type_spec, abstract_type, new_fields
 end
 
 function decompose_struct(struct_repr)
-    if !@capture(struct_repr, struct new_type_ new_fields__ end)
-        @capture(struct_repr, struct new_type_ new_fields__ end)
+    if !@capture(
+            struct_repr, struct new_type_
+                new_fields__
+            end
+        )
+        @capture(
+            struct_repr, struct new_type_
+                new_fields__
+            end
+        )
     end
     return new_type, new_fields
 end
 
 function compute_base_fields(base_type_spec)
     base_agent = __AGENT_GENERATOR__[namify(base_type_spec)]
-    @capture(base_agent, mutable struct base_type_general_ <: _ __ end)
+    @capture(
+        base_agent, mutable struct base_type_general_ <: _
+            __
+        end
+    )
     old_args = base_type_general isa Symbol ? [] : base_type_general.args[2:end]
     new_args = base_type_spec isa Symbol ? [] : base_type_spec.args[2:end]
     for (old, new) in zip(old_args, new_args)
         base_agent = MacroTools.postwalk(ex -> ex == old ? new : ex, base_agent)
     end
-    @capture(base_agent, mutable struct _ <: _ base_fields__ end)
+    @capture(
+        base_agent, mutable struct _ <: _
+            base_fields__
+        end
+    )
     return base_fields
 end
 

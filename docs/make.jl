@@ -1,9 +1,9 @@
 cd(@__DIR__)
 println("Loading packages...")
 using Agents
-using LightOSM
 using CairoMakie
-using Crux # precompile it to avoid doc messages
+import LightOSM
+import Crux # precompile it to avoid doc messages
 import Literate
 
 pages = [
@@ -17,7 +17,7 @@ pages = [
         "examples/rabbit_fox_hawk.md",
         "examples/event_rock_paper_scissors.md",
         "examples/rl_boltzmann.md",
-        "examples.md"
+        "examples.md",
     ],
     "api.md",
     "Plotting and Interactivity" => "examples/agents_visualizations.md",
@@ -47,7 +47,7 @@ indir = joinpath(@__DIR__, "..", "examples")
 outdir = joinpath(@__DIR__, "src", "examples")
 rm(outdir; force = true, recursive = true) # cleans up previous examples
 mkpath(outdir)
-toskip = ()
+toskip = ("rl_wolfsheep.jl",)
 for file in readdir(indir)
     file ∈ toskip && continue
     Literate.markdown(joinpath(indir, file), outdir; credit = false)
@@ -63,11 +63,16 @@ Downloads.download(
 )
 include("build_docs_with_style.jl")
 
-build_docs_with_style(pages, Agents, LightOSM;
+ENV["JULIA_DEBUG"] = "Documenter" # Change this from "Documenter" to "" to disable docs debugging
+
+step! = Agents.step!
+
+build_docs_with_style(
+    pages, Agents;
     expandfirst = ["index.md"],
     authors = "George Datseris and contributors.",
     warnonly = true,
-    htmlkw = (size_threshold = 20000 * 2^10, ),
+    htmlkw = (size_threshold = 20000 * 2^10,),
 )
 
 println("Finished")

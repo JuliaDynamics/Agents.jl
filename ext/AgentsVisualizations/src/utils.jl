@@ -1,98 +1,6 @@
 export subscript, superscript
 export record_interaction
 
-function Agents.check_space_visualization_API(::ABM{S}) where {S}
-    checkmark(i) = checks[i] ? "✔" : "❌"
-    checks = [
-        # Required
-        hasmethod(agents_space_dimensionality, (S, )),
-        hasmethod(get_axis_limits, (ABM{S}, )),
-        hasmethod(agentsplot!, (Axis, ABMP{S})) ||
-            hasmethod(agentsplot!, (Axis3, ABMP{S})),
-        # Preplots (Optional)
-        hasmethod(spaceplot!, (Axis, ABMP{S}), (:agent_color, :agent_marker, :agent_size)) ||
-            hasmethod(spaceplot!, (Axis3, ABMP{S}), (:agent_color, :agent_marker, :agent_size)),
-        hasmethod(static_preplot!, (Axis, ABMP{S})) ||
-            hasmethod(static_preplot!, (Axis3, ABMP{S})),
-        # Lifting (optional)
-        hasmethod(abmplot_heatobs, (ABM{S}, Any)),
-        hasmethod(abmplot_pos, (ABM{S}, Any)),
-        hasmethod(abmplot_colors, (ABM{S}, Function)) ||
-            hasmethod(abmplot_colors, (ABM{S}, Any)),
-        hasmethod(abmplot_markers, (ABM{S}, Function, Any)) ||
-            hasmethod(abmplot_markers, (ABM{S}, Any, Any)),
-        hasmethod(abmplot_markersizes, (ABM{S}, Function)) ||
-            hasmethod(abmplot_markersizes, (ABM{S}, Any)),
-        # Inspection (optional)
-        hasmethod(convert_element_pos, (S, Any)),
-        hasmethod(ids_to_inspect, (ABM{S}, Any)),
-    ]
-    @info """Checking for methods that have to be defined to plot an ABM with custom space \
-    type S <: $S.
-    === Required
-    $(checkmark(1))\tagents_space_dimensionality(space::$S)
-    $(checkmark(2))\tget_axis_limits(model::ABM{S})
-    $(checkmark(3))\tagentsplot!(ax, p::ABMPlot)
-    === Preplots (optional)
-    $(checkmark(4))\tspaceplot!(ax, p::ABMPlot; spaceplotkwargs...)
-    $(checkmark(5))\tstatic_preplot!(ax, p::ABMPlot)
-    === Lifting (optional)
-    $(checkmark(6))\tabmplot_heatobs(model::ABM{S}, heatarray)
-    $(checkmark(7))\tabmplot_pos(model::ABM{S}, offset)
-    $(checkmark(8))\tabmplot_colors(model::ABM{S}, ac)
-    $(checkmark(9))\tabmplot_marker(model::ABM{S}, am, pos)
-    $(checkmark(10))\tabmplot_markersizes(model::ABM{$S}, as)
-    === Inspection (optional)
-    $(checkmark(11))\tconvert_element_pos(::S, pos)
-    $(checkmark(12))\tids_to_inspect(model::ABM{S}, pos)
-    $(count(checks))/$(length(checks)) checks were successful.
-    """
-    if !all(checks[1:3])
-        @error """Requirements for plotting of space not met.
-        Please reference the Agents.jl documentation \
-        (https://juliadynamics.github.io/Agents.jl/stable/) for help."""
-    end
-    return checks
-end
-
-function has_custom_space(::ABM{S}) where {S}
-    S <: Nothing &&
-        @info "An empty plot will be drawn for agents in a model with Nothing space."
-    if S <: Union{GridSpace, GridSpaceSingle, OSMSpace, ContinuousSpace, 
-        GraphSpace, Nothing}
-        return false
-    end
-    return true
-end
-
-first_abmplot_in(ax) = ax.scene.plots[findfirst(p -> isa(p, _ABMPlot), ax.scene.plots)]
-
-function merge_spaceplotkwargs!(p)
-    if hasproperty(p, :osmplotkwargs)
-        @warn "Usage of osmplotkwargs is deprecated. " *
-            "Please remove it from the call to abmplot and " * 
-            "use only spaceplotkwargs instead." maxlog=1
-        merge!(p.spaceplotkwargs, p.osmplotkwargs)
-    end
-    return p.spaceplotkwargs
-end
-
-function merge_agentsplotkwargs!(p)
-    if hasproperty(p, :scatterkwargs)
-        @warn """Usage of the scatterkwargs keyword argument is deprecated.
-            Please remove it from the call to abmplot and \
-            use only agentsplotkwargs instead.""" maxlog=1
-        merge!(p.agentsplotkwargs, p.scatterkwargs)
-    end
-    if hasproperty(p, :graphplotkwargs)
-        @warn """Usage of the graphplotkwargs keyword argument is deprecated.
-            Please remove it from the call to abmplot and \
-            use only agentsplotkwargs instead.""" maxlog=1
-        merge!(p.agentsplotkwargs, p.graphplotkwargs)
-    end
-    return p.agentsplotkwargs
-end
-
 ##########################################################################################
 # Check/get/set
 ##########################################################################################
@@ -101,6 +9,7 @@ end
     has_key(p, key)
 Check if `p` has given key. For `AbstractDict` this is `haskey`,
 for anything else it is `hasproperty`.
+
     has_key(p, keys...)
 When given multiple keys, `has_key` is called recursively, i.e.
 `has_key(p, key1, key2) = has_key(has_key(p, key1), key2)` and so on.
@@ -113,6 +22,7 @@ has_key(p, key) = hasproperty(p, key)
     get_value(p, key)
 Retrieve value of `p` with given key. For `AbstractDict` this is `getindex`,
 for anything else it is `getproperty`.
+
     get_value(p, keys...)
 When given multiple keys, `get_value` is called recursively, i.e.
 `get_value(p, key1, key2) = get_value(get_value(p, key1), key2)` and so on.
@@ -130,9 +40,12 @@ Set `key` of `p` to `val`. For `AbstractDict` this is `p[key] = val`,
 for anything else it is `setproperty`. Changing the values of `NamedTuple`s is impossible.
 """
 set_value!(p::AbstractDict, key, val) = (p[key] = val)
-set_value!(p::NamedTuple, key, val) = error("""
+set_value!(p::NamedTuple, key, val) = error(
+    """
     Immutable struct of type NamedTuple cannot be changed.
-    Please use a mutable container to interactively change the model properties.""")
+    Please use a mutable container to interactively change the model properties."""
+)
+
 set_value!(p, key, val) = setproperty!(p, key, val)
 
 ##########################################################################################
@@ -149,22 +62,23 @@ output in `file` (recommended to end in `".mp4"`).
 * `total_time = 10`: Time to record for, in seconds
 * `sleep_time = 1`: Time to call `sleep()` before starting to save.
 """
-function record_interaction(file, figure;
+function record_interaction(
+        file, figure;
         framerate = 30, total_time = 10, sleep_time = 1,
     )
     ispath(dirname(file)) || mkpath(dirname(file))
     sleep(sleep_time)
-    framen = framerate*total_time
+    framen = framerate * total_time
     record(figure, file; framerate) do io
-        for i = 1:framen
-            sleep(1/framerate)
+        for i in 1:framen
+            sleep(1 / framerate)
             recordframe!(io)
         end
     end
     return
 end
 record_interaction(figure::Figure, file; kwargs...) =
-record_interaction(file, figure; kwargs...)
+    record_interaction(file, figure; kwargs...)
 
 
 """
@@ -172,8 +86,8 @@ record_interaction(file, figure; kwargs...)
 Transform `i` to a string that has `i` as a subscript.
 """
 function subscript(i::Int)
-    if i < 0
-        "₋"*subscript(-i)
+    return if i < 0
+        "₋" * subscript(-i)
     elseif i == 1
         "₁"
     elseif i == 2
@@ -204,8 +118,8 @@ end
 Transform `i` to a string that has `i` as a superscript.
 """
 function superscript(i::Int)
-    if i < 0
-        "⁻"*superscript(-i)
+    return if i < 0
+        "⁻" * superscript(-i)
     elseif i == 1
         "¹"
     elseif i == 2
@@ -266,7 +180,7 @@ Base.size(c::CyclicContainer) = size(c.c)
 Base.getindex(c::CyclicContainer, i) = c.c[mod1(i, length(c.c))]
 function Base.getindex(c::CyclicContainer)
     c.n += 1
-    c[c.n]
+    return c[c.n]
 end
 Base.iterate(c::CyclicContainer, i = 1) = iterate(c.c, i)
 
@@ -282,10 +196,12 @@ Agents.translate_polygon(p::Polygon, point) = Polygon(decompose(Point2f, p.exter
 
 function Agents.rotate_polygon(p::Polygon, θ)
     sinφ, cosφ = sincos(θ)
-    Polygon(map(
-        p -> Point2f(cosφ*p[1] - sinφ*p[2], sinφ*p[1] + cosφ*p[2]),
-        decompose(Point2f, p.exterior)
-    ))
+    return Polygon(
+        map(
+            p -> Point2f(cosφ * p[1] - sinφ * p[2], sinφ * p[1] + cosφ * p[2]),
+            decompose(Point2f, p.exterior)
+        )
+    )
 end
 
 Agents.scale_polygon(p::Polygon, s) = Polygon(decompose(Point2f, p.exterior) .* Float32(s))

@@ -23,6 +23,7 @@ with a `GraphSpace` to obtain the number of nodes or edges in the graph.
 The underlying graph can be altered using [`add_vertex!`](@ref) and [`rem_vertex!`](@ref).
 
 An example using `GraphSpace` is [SIR model for the spread of COVID-19](@ref).
+To visualize this space with [`abmplot`](@ref) you need to be `using GraphMakie`.
 
 !!! note "Not for social networks!"
     `GraphSpace` is not intended for "social-network-like" agent based
@@ -30,10 +31,10 @@ An example using `GraphSpace` is [SIR model for the spread of COVID-19](@ref).
     the graph represents connections between agents. Rather, `GraphSpace` is
     suitable for when the coordinates of spatial locations are not as important as the
     connections between them. `GraphSpace` is suited for e.g., modelling cities
-    where each can host many agents.
+    where each can host many agents and agents may move between cities.
 
     If you want to make a "social-network" like simulation, see [the integration with
-    Graphs.jl example](@ref social_networks). Typically you won't need a space structure at all!
+    Graphs.jl example](@ref social_networks). Likely you won't need a space structure at all!
 
 
 ## Distance specification
@@ -57,7 +58,7 @@ function GraphSpace(graph::G) where {G <: AbstractGraph}
 end
 
 function Base.show(io::IO, s::GraphSpace)
-    print(io, "GraphSpace with $(nv(s.graph)) positions and $(ne(s.graph)) edges")
+    return print(io, "GraphSpace with $(nv(s.graph)) positions and $(ne(s.graph)) edges")
 end
 
 """
@@ -101,22 +102,22 @@ ids_in_position(n::Integer, space::GraphSpace) = space.stored_ids[n]
 #######################################################################################
 function nearby_ids(pos::Int, model::ABM{<:GraphSpace}, r = 1; kwargs...)
     np = nearby_positions(pos, model, r; kwargs...)
-    vcat(abmspace(model).stored_ids[pos], abmspace(model).stored_ids[np]...)
+    return vcat(abmspace(model).stored_ids[pos], abmspace(model).stored_ids[np]...)
 end
 
 # This function is here purely because of performance reasons
 function nearby_ids(agent::AbstractAgent, model::ABM{<:GraphSpace}, r = 1; kwargs...)
     all = nearby_ids(agent.pos, model, r; kwargs...)
-    filter!(i -> i ≠ getid(agent), all)
+    return filter!(i -> i ≠ getid(agent), all)
 end
 
 function nearby_positions(
-    position::Int,
-    model::ABM{<:GraphSpace};
-    neighbor_type::Symbol = :default,
-)
+        position::Int,
+        model::ABM{<:GraphSpace};
+        neighbor_type::Symbol = :default,
+    )
     @assert neighbor_type ∈ (:default, :all, :in, :out)
-    if neighbor_type == :default
+    return if neighbor_type == :default
         Graphs.neighbors(abmspace(model).graph, position)
     elseif neighbor_type == :in
         Graphs.inneighbors(abmspace(model).graph, position)
@@ -150,7 +151,7 @@ function Graphs.rem_vertex!(model::ABM{<:GraphSpace}, n::Int)
     n > V && error("Node number exceeds amount of nodes in graph!")
     s = abmspace(model).stored_ids
     s[V], s[n] = s[n], s[V]
-    pop!(s)
+    return pop!(s)
 end
 
 """

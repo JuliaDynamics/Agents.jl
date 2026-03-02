@@ -68,7 +68,8 @@ properties = Dict(:min_to_be_happy => 3)
 model = StandardABM(
     Schelling, # type of agents
     space; # space they live in
-    agent_step! = schelling_step!, properties
+    agent_step! = schelling_step!, # dynamics of the simulation
+    properties # model-levle properties
 )
 
 ## populate the model with agents by automatically creating and adding them
@@ -164,8 +165,8 @@ using Agents
 # the Chebyshev one, which means that diagonal and orthogonal directions quantify
 # as the same distance away. We also specify that the space should _not_ be periodic.
 
-size = (10, 10)
-space = GridSpaceSingle(size; periodic = false, metric = :chebyshev)
+extent = (10, 10)
+space = GridSpaceSingle(extent; periodic = false, metric = :chebyshev)
 
 # ## Step 2: the `@agent` command
 
@@ -284,7 +285,7 @@ Stacktrace:
 # ```
 
 # This is not a limitation of Agents.jl but a fundamental limitation of the Julia
-# language that very likely will be addressed in the near future.
+# language that is currently being addressed (and is already solved if you use Revise.jl).
 # Normally, you would need to restart your Julia session to redefine a custom `struct`.
 # However, it is simpler to just do a mass rename in the text editor you use to
 # write Julia code (for example, Ctrl+Shift+H in VSCode can do a mass rename).
@@ -423,7 +424,7 @@ schelling = StandardABM(
     SchellingAgent, space;
     ## keyword arguments
     properties, # in Julia if the input variable and keyword are named the same,
-                ## you don't need to repeat the keyword!
+    ## you don't need to repeat the keyword!
     agent_step! = schelling_step!
 )
 
@@ -507,7 +508,7 @@ nagents(schelling)
 # `AbstractRNG`. For example a common RNG is `Xoshiro`,
 # and we give this to the model via the `rng` keyword:
 
-using Random: Xoshiro # access the RNG object
+using Random: Xoshiro, shuffle! # access the RNG object
 
 schelling = StandardABM(
     SchellingAgent,
@@ -528,7 +529,7 @@ schelling = StandardABM(
 # change its parameters. Second, because the function is defined based on keywords,
 # it will be of further use in [`paramscan`](@ref) as we will discuss below.
 
-function initialize(; total_agents = 320, gridsize = (20, 20), min_to_be_happy = 3, seed = 125)
+function initialize(; total_agents = 320, gridsize = (20, 20), min_to_be_happy = 3, seed = 42)
     space = GridSpaceSingle(gridsize; periodic = false)
     properties = Dict(:min_to_be_happy => min_to_be_happy)
     rng = Xoshiro(seed)
@@ -540,8 +541,9 @@ function initialize(; total_agents = 320, gridsize = (20, 20), min_to_be_happy =
     )
     ## populate the model with agents, adding equal amount of the two types of agents
     ## at random positions in the model. At the start all agents are unhappy.
+    groups = shuffle!(vcat(fill(1, total_agents ÷ 2), fill(2, total_agents ÷ 2)))
     for n in 1:total_agents
-        add_agent_single!(model; mood = false, group = n < total_agents / 2 ? 1 : 2)
+        add_agent_single!(model; mood = false, group = groups[n])
     end
     return model
 end
@@ -565,7 +567,7 @@ step!(schelling, 3)
 # the current model time evaluates to `true`.
 # For example, lets step until at least 90% of the agents are happy.
 
-happy90(model, time) = count(a -> a.mood == true, allagents(model))/nagents(model) ≥ 0.9
+happy90(model, time) = count(a -> a.mood == true, allagents(model)) / nagents(model) ≥ 0.9
 
 step!(schelling, happy90)
 
@@ -600,16 +602,19 @@ groupmarker(a) = a.group == 1 ? :circle : :rect
 
 # We pass those functions to [`abmplot`](@ref)
 
-figure, _ = abmplot(schelling; agent_color = groupcolor, agent_marker = groupmarker, agent_size = 10)
+figure, _ = abmplot(
+    schelling;
+    agent_color = groupcolor, agent_marker = groupmarker
+)
 figure # returning the figure displays it
 
 # The function [`abmvideo`](@ref) can be used to save an animation of the ABM into a video.
 
-schelling = initialize()
+schelling = initialize(total_agents = 1200, gridsize = (40, 40))
 abmvideo(
     "schelling.mp4", schelling;
-    agent_color = groupcolor, agent_marker = groupmarker, as = 10,
-    framerate = 4, frames = 20,
+    agent_color = groupcolor, agent_marker = groupmarker, agent_size = 10,
+    framerate = 4, frames = 25,
     title = "Schelling's segregation model"
 )
 
@@ -641,7 +646,7 @@ adata = [:pos, :mood, :group]
 
 schelling = initialize()
 adf, mdf = run!(schelling, 5; adata) # run for 5 steps
-adf[end-10:end, :] # display only the last few rows
+adf[(end - 10):end, :] # display only the last few rows
 
 # [`run!`](@ref) collects data in the form of a `DataFrame` which is Julia's
 # premier format for tabular data (and you probably need to learn how to use it independently
@@ -654,7 +659,7 @@ x(agent) = agent.pos[1]
 schelling = initialize()
 adata = [x, :mood, :group]
 adf, mdf = run!(schelling, 5; adata)
-adf[end-10:end, :] # display only the last few rows
+adf[(end - 10):end, :] # display only the last few rows
 
 # With the above `adata` vector, we collected all agent's data.
 # We can instead collect aggregated data for the agents.
@@ -719,11 +724,6 @@ end
 
 
 # When making the model we specify the `Union` type for the agents
-
-model = StandardABM(
-    Union{Schelling, Politician}, # type of agents
-    space; # space they live in
-)
 
 model = StandardABM(
     Union{Schelling, Politician}, # type of agents

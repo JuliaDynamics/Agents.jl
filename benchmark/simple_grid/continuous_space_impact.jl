@@ -6,7 +6,7 @@ extent = (1.0, 1.0)
 spacing = 0.1
 r = 0.1
 space = ContinuousSpace(extent, spacing)
-@agent struct Agent(ContinuousAgent{2,Float64})
+@agent struct Agent(ContinuousAgent{2, Float64})
 end
 model = StandardABM(Agent, space; rng = StableRNG(42))
 
@@ -25,7 +25,7 @@ function count_nearby_same(agent, model)
 end
 function count_nearby_same_exact(agent, model)
     nearby_same = 0
-    for neighbor in nearby_agents_exact(agent, model, r)
+    for neighbor in nearby_agents(agent, model, r; search = :exact)
         nearby_same += neighbor.id
     end
     return nearby_same

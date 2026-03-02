@@ -1,5 +1,5 @@
 export run!, offline_run!, collect_agent_data!, collect_model_data!,
-       init_agent_dataframe, init_model_dataframe, dataname
+    init_agent_dataframe, init_model_dataframe, dataname
 
 ###################################################
 # Definition of the data collection API
@@ -97,7 +97,8 @@ If `a1.weight` but `a2` (type: Agent2) has no `weight`, use
 """
 function run! end
 
-function run!(model::ABM, n::Union{Function, Real};
+function run!(
+        model::ABM, n::Union{Function, Real};
         when = 1,
         when_model = when,
         mdata = nothing,
@@ -139,17 +140,19 @@ function run!(model::ABM, n::Union{Function, Real};
     end
 
     p = if typeof(n) <: Int
-        ProgressMeter.Progress(n; enabled=showprogress, desc="run! progress: ")
+        ProgressMeter.Progress(n; enabled = showprogress, desc = "run! progress: ")
     else
-        ProgressMeter.ProgressUnknown(desc="run! steps done: ", enabled=showprogress)
+        ProgressMeter.ProgressUnknown(desc = "run! steps done: ", enabled = showprogress)
     end
 
     # introduce function barrier for the collection loop.
-    _run!(model, df_agent, df_model, n, when, when_model,
+    return _run!(
+        model, df_agent, df_model, n, when, when_model,
         mdata, adata, obtainer, dt, p
     )
 end
-function _run!(model, df_agent, df_model, n, when, when_model,
+function _run!(
+        model, df_agent, df_model, n, when, when_model,
         mdata, adata, obtainer, dt, p
     )
 
@@ -185,7 +188,7 @@ get_data(a, f::Function, obtainer::Function = identity) = obtainer(f(a))
 get_data_missing(a, s::Symbol, obtainer::Function) =
     hasproperty(a, s) ? obtainer(getproperty(a, s)) : missing
 function get_data_missing(a, f::Function, obtainer::Function)
-    try
+    return try
         obtainer(f(a))
     catch
         missing
@@ -222,7 +225,8 @@ function offline_run! end
 
 # TODO: This whole function can be merged with `run!` by adding
 # an additional dispatch to `collect_agent_data!` that has more arguments........
-function offline_run!(model::ABM, n::Union{Function, Real};
+function offline_run!(
+        model::ABM, n::Union{Function, Real};
         when = true,
         when_model = when,
         mdata = nothing,
@@ -261,7 +265,8 @@ function offline_run!(model::ABM, n::Union{Function, Real};
     end
 
     writer = get_writer(backend)
-    run_and_write!(model, df_agent, df_model, n;
+    return run_and_write!(
+        model, df_agent, df_model, n;
         when, when_model,
         mdata, adata,
         obtainer,
@@ -270,7 +275,8 @@ function offline_run!(model::ABM, n::Union{Function, Real};
     )
 end
 
-function run_and_write!(model, df_agent, df_model, n;
+function run_and_write!(
+        model, df_agent, df_model, n;
         when, when_model,
         mdata, adata,
         obtainer,
@@ -278,9 +284,9 @@ function run_and_write!(model, df_agent, df_model, n;
         writer, adata_filename, mdata_filename, writing_interval, init, dt
     )
     p = if typeof(n) <: Int
-        ProgressMeter.Progress(n; enabled=showprogress, desc="run! progress: ")
+        ProgressMeter.Progress(n; enabled = showprogress, desc = "run! progress: ")
     else
-        ProgressMeter.ProgressUnknown(desc="run! steps done: ", enabled=showprogress)
+        ProgressMeter.ProgressUnknown(desc = "run! steps done: ", enabled = showprogress)
     end
 
     # this part of the data collection is practically identical to `run!`
@@ -353,7 +359,7 @@ Initialize a dataframe to add data later with [`collect_agent_data!`](@ref).
 """
 init_agent_dataframe(model, properties::Nothing) = DataFrame()
 function init_agent_dataframe(model::ABM, properties::AbstractArray)
-    nagents(model) < 1 && throw(ArgumentError("Model must have at least one agent to initialize data collection",))
+    nagents(model) < 1 && throw(ArgumentError("Model must have at least one agent to initialize data collection"))
     A = agenttype(model)
     utypes = union_types(A)
     std_headers = length(utypes) > 1 ? 3 : 2
@@ -363,7 +369,7 @@ function init_agent_dataframe(model::ABM, properties::AbstractArray)
     headers[2] = "id"
 
     for i in 1:length(properties)
-        headers[i+std_headers] = dataname(properties[i])
+        headers[i + std_headers] = dataname(properties[i])
     end
 
     types = Vector{Vector}(undef, std_headers + length(properties))
@@ -381,12 +387,14 @@ function init_agent_dataframe(model::ABM, properties::AbstractArray)
         single_agent_types!(types, model, properties)
     end
 
-    DataFrame(types, headers)
+    return DataFrame(types, headers)
 end
 function init_agent_dataframe(model::ABM, properties::Vector{<:Tuple})
-    nagents(model) < 1 && throw(ArgumentError(
-        "Model must have at least one agent to initialize data collection",
-    ))
+    nagents(model) < 1 && throw(
+        ArgumentError(
+            "Model must have at least one agent to initialize data collection",
+        )
+    )
     headers = Vector{String}(undef, 1 + length(properties))
     types = Vector{Vector}(undef, 1 + length(properties))
     A = agenttype(model)
@@ -404,7 +412,7 @@ function init_agent_dataframe(model::ABM, properties::Vector{<:Tuple})
     else
         single_agent_agg_types!(types, headers, model, properties)
     end
-    DataFrame(types, headers)
+    return DataFrame(types, headers)
 end
 
 """
@@ -416,7 +424,7 @@ function init_model_dataframe(model::ABM, properties::Vector)
     headers = Vector{String}(undef, 1 + length(properties))
     headers[1] = "time"
     for i in 1:length(properties)
-        headers[i+1] = dataname(properties[i])
+        headers[i + 1] = dataname(properties[i])
     end
 
     types = Vector{Vector}(undef, 1 + length(properties))
@@ -426,7 +434,7 @@ function init_model_dataframe(model::ABM, properties::Vector)
         types[1] = Int[]
     end
     for (i, k) in enumerate(properties)
-        types[i+1] = if typeof(k) <: Symbol
+        types[i + 1] = if typeof(k) <: Symbol
             current_props = abmproperties(model)
             # How the properties are accessed depends on the type
             if typeof(current_props) <: Dict || typeof(current_props) <: Tuple
@@ -438,12 +446,12 @@ function init_model_dataframe(model::ABM, properties::Vector)
             current_type = typeof(k(model))
             isconcretetype(current_type) || @warn(
                 "Type is not concrete when using $(k)" *
-                "on the model. Considering narrowing the type signature of $(k).",
+                    "on the model. Considering narrowing the type signature of $(k).",
             )
             current_type[]
         end
     end
-    DataFrame(types, headers)
+    return DataFrame(types, headers)
 end
 init_model_dataframe(model::ABM, properties::Function) =
     init_model_dataframe(model, properties(model))
@@ -458,7 +466,7 @@ collect_agent_data!(df, model, properties::Nothing, step::Int = 0; kwargs...) = 
 function collect_agent_data!(df, model, properties::Vector, step::Int = 0; kwargs...)
     if step != 0
         @warn "Passing the `step` argument to `collect_agent_data!` is deprecated,
-             now `abmtime(model)` is used automatically" maxlog=1
+             now `abmtime(model)` is used automatically" maxlog = 1
     end
     alla = sort!(collect(allagents(model)), by = a -> getid(a))
     dd = DataFrame()
@@ -475,20 +483,20 @@ function collect_agent_data!(df, model, properties::Vector, step::Int = 0; kwarg
     return df
 end
 function collect_agent_data!(
-    df,
-    model::ABM,
-    properties::Vector{<:Tuple},
-    step::Int = 0;
-    kwargs...,
-)
+        df,
+        model::ABM,
+        properties::Vector{<:Tuple},
+        step::Int = 0;
+        kwargs...,
+    )
     if step != 0
         @warn "Passing the `step` argument to `collect_agent_data!` is deprecated,
-             now `abmtime(model)` is used automatically" maxlog=1
+             now `abmtime(model)` is used automatically" maxlog = 1
     end
     alla = allagents(model)
     push!(df[!, 1], abmtime(model))
     for (i, prop) in enumerate(properties)
-        _add_col_data!(df[!, i+1], prop, alla; kwargs...)
+        _add_col_data!(df[!, i + 1], prop, alla; kwargs...)
     end
     return df
 end
@@ -499,15 +507,15 @@ Same as [`collect_agent_data!`](@ref) but for model data instead.
 `properties` can be a `Vector` or generator `Function`.
 """
 function collect_model_data!(
-    df,
-    model,
-    properties::Vector,
-    step::Real = 0;
-    obtainer = identity,
-)
+        df,
+        model,
+        properties::Vector,
+        step::Real = 0;
+        obtainer = identity,
+    )
     if step != 0
         @warn "Passing the `step` argument to `collect_model_data!` is deprecated,
-             now `abmtime(model)` is used automatically" maxlog=1
+             now `abmtime(model)` is used automatically" maxlog = 1
     end
     push!(df[!, :time], abmtime(model))
     for fn in properties
@@ -525,39 +533,43 @@ function single_agent_types!(types::Vector{<:Vector}, model::ABM, properties::Ab
         current_type = typeof(get_data(a, k, identity))
         isconcretetype(current_type) || @warn(
             "Type is not concrete when using $(k) " *
-            "on agents. Consider narrowing the type signature of $(k).",
+                "on agents. Consider narrowing the type signature of $(k).",
         )
-        types[i+2] = current_type[]
+        types[i + 2] = current_type[]
     end
+    return
 end
 
 function single_agent_agg_types!(
-    types::Vector{Vector{T} where T},
-    headers::Vector{String},
-    model::ABM,
-    properties::AbstractArray,
-)
+        types::Vector{Vector{T} where {T}},
+        headers::Vector{String},
+        model::ABM,
+        properties::AbstractArray,
+    )
     for (i, property) in enumerate(properties)
         k, agg = property
-        headers[i+1] = dataname(property)
+        headers[i + 1] = dataname(property)
         # This line assumes that `agg` can work with iterators directly
-        current_type = typeof(agg(
-            get_data(a, k, identity) for a in Iterators.take(allagents(model), 1)
-        ))
+        current_type = typeof(
+            agg(
+                get_data(a, k, identity) for a in Iterators.take(allagents(model), 1)
+            )
+        )
         isconcretetype(current_type) || @warn(
             "Type is not concrete when using function $(agg) " *
-            "on key $(k). Consider using type annotation, e.g. $(agg)(a)::Float64 = ...",
+                "on key $(k). Consider using type annotation, e.g. $(agg)(a)::Float64 = ...",
         )
-        types[i+1] = current_type[]
+        types[i + 1] = current_type[]
     end
+    return
 end
 
 function multi_agent_types!(
-    types::Vector{Vector{T} where T},
-    utypes::Tuple,
-    model::ABM,
-    properties::AbstractArray,
-)
+        types::Vector{Vector{T} where {T}},
+        utypes::Tuple,
+        model::ABM,
+        properties::AbstractArray,
+    )
     types[3] = Symbol[]
 
     for (i, k) in enumerate(properties)
@@ -584,7 +596,7 @@ function multi_agent_types!(
             end
             isconcretetype(current_type) || @warn(
                 "Type is not concrete when using $(k) " *
-                "on $(atype) agents. Consider narrowing the type signature of $(k).",
+                    "on $(atype) agents. Consider narrowing the type signature of $(k).",
             )
             push!(current_types, current_type)
         end
@@ -592,23 +604,24 @@ function multi_agent_types!(
         if length(current_types) == 1
             current_types[1] <: Missing &&
                 error(lazy"$(k) does not yield a valid agent property.")
-            types[i+3] = current_types[1][]
+            types[i + 3] = current_types[1][]
         else
-            types[i+3] = Union{current_types...}[]
+            types[i + 3] = Union{current_types...}[]
         end
     end
+    return
 end
 
 function multi_agent_agg_types!(
-    types::Vector{Vector{T} where T},
-    utypes::Tuple,
-    headers::Vector{String},
-    model::ABM,
-    properties::AbstractArray,
-)
+        types::Vector{Vector{T} where {T}},
+        utypes::Tuple,
+        headers::Vector{String},
+        model::ABM,
+        properties::AbstractArray,
+    )
     for (i, property) in enumerate(properties)
         k, agg = property
-        headers[i+1] = dataname(property)
+        headers[i + 1] = dataname(property)
         current_types = DataType[]
         for atype in utypes
             a = try
@@ -629,20 +642,21 @@ function multi_agent_agg_types!(
             end
             isconcretetype(current_type) || @warn(
                 "Type is not concrete when using function $(agg) " *
-                "on key $(k) for $(atype) agents. Consider using type annotation, e.g. $(agg)(a)::Float64 = ...",
+                    "on key $(k) for $(atype) agents. Consider using type annotation, e.g. $(agg)(a)::Float64 = ...",
             )
             push!(current_types, current_type)
         end
         unique!(current_types)
         filter!(t -> !(t <: Missing), current_types) # Ignore missings here
         if length(current_types) == 1
-            types[i+1] = current_types[1][]
+            types[i + 1] = current_types[1][]
         elseif length(current_types) > 1
             error(lazy"Multiple types found for aggregate function $(agg) on key $(k).")
         else
             error(lazy"No possible aggregation for $(k) using $(agg)")
         end
     end
+    return
 end
 
 """
@@ -654,7 +668,7 @@ Return the name of the column of the `i`-th collected data where `k = adata[i]`
 """
 dataname(x::Tuple) =
     join(vcat([dataname(x[2]), dataname(x[1])], [dataname(s) for s in x[3:end]]), "_")
-dataname(x::Union{Symbol,String}) = string(x)
+dataname(x::Union{Symbol, String}) = string(x)
 # This takes care to include fieldnames and values in the column name to make column names unique
 # if the same function is used with different values of outer scope variables.
 dataname(x::Function) = join(
@@ -663,43 +677,43 @@ dataname(x::Function) = join(
 )
 
 function _add_col_data!(
-    dd::DataFrame,
-    col::Type{T},
-    property,
-    agent_iter;
-    obtainer = identity,
-) where {T}
-    dd[!, dataname(property)] = collect(get_data(a, property, obtainer) for a in agent_iter)
+        dd::DataFrame,
+        col::Type{T},
+        property,
+        agent_iter;
+        obtainer = identity,
+    ) where {T}
+    return dd[!, dataname(property)] = collect(get_data(a, property, obtainer) for a in agent_iter)
 end
 function _add_col_data!(
-    dd::DataFrame,
-    col::Type{T},
-    property,
-    agent_iter;
-    obtainer = identity,
-) where {T>:Missing}
-    dd[!, dataname(property)] =
+        dd::DataFrame,
+        col::Type{T},
+        property,
+        agent_iter;
+        obtainer = identity,
+    ) where {T >: Missing}
+    return dd[!, dataname(property)] =
         collect(get_data_missing(a, property, obtainer) for a in agent_iter)
 end
 # Normal aggregates
 function _add_col_data!(
-    col::AbstractVector{T},
-    property::Tuple{K,A},
-    agent_iter;
-    obtainer = identity,
-) where {T,K,A}
+        col::AbstractVector{T},
+        property::Tuple{K, A},
+        agent_iter;
+        obtainer = identity,
+    ) where {T, K, A}
     k, agg = property
     res::T = agg(get_data(a, k, obtainer) for a in agent_iter)
-    push!(col, res)
+    return push!(col, res)
 end
 # Conditional aggregates
 function _add_col_data!(
-    col::AbstractVector{T},
-    property::Tuple{K,A,C},
-    agent_iter;
-    obtainer = identity,
-) where {T,K,A,C}
+        col::AbstractVector{T},
+        property::Tuple{K, A, C},
+        agent_iter;
+        obtainer = identity,
+    ) where {T, K, A, C}
     k, agg, condition = property
     res::T = agg(get_data(a, k, obtainer) for a in Iterators.filter(condition, agent_iter))
-    push!(col, res)
+    return push!(col, res)
 end

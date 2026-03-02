@@ -1,0 +1,34 @@
+name: Format Check
+on:
+  push:
+    branches:
+      - 'main'
+    paths:
+      - '.github/workflows/FormatCheck.yml'
+      - '**.jl'
+  pull_request:
+    branches:
+      - 'main'
+    paths:
+      - '.github/workflows/FormatCheck.yml'
+      - '**.jl'
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+
+jobs:
+  runic:
+    name: Runic
+    runs-on: ubuntu-latest
+    if: ${{ !github.event.pull_request.draft }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: '1'
+      - uses: julia-actions/cache@v2
+      - uses: fredrikekre/runic-action@v1
+        with:
+          version: '1'

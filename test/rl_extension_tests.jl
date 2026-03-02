@@ -20,15 +20,15 @@ end
 end
 
 # Helper functions for RL extension testing
-function create_simple_rl_model(; n_agents=5, dims=(8, 8), seed=42, observation_radius=2)
+function create_simple_rl_model(; n_agents = 5, dims = (8, 8), seed = 42, observation_radius = 2)
     rng = StableRNG(seed)
-    space = GridSpace(dims; periodic=true)
+    space = GridSpace(dims; periodic = true)
 
-    properties = Dict{Symbol,Any}(
+    properties = Dict{Symbol, Any}(
         :observation_radius => observation_radius
     )
 
-    model = ReinforcementLearningABM(RLExtensionTestAgent, space; rng=rng, properties=properties)
+    model = ReinforcementLearningABM(RLExtensionTestAgent, space; rng = rng, properties = properties)
 
     for _ in 1:n_agents
         add_agent!(RLExtensionTestAgent, model, rand(rng) * 50.0, rand(rng) * 100.0, 0)
@@ -37,15 +37,15 @@ function create_simple_rl_model(; n_agents=5, dims=(8, 8), seed=42, observation_
     return model
 end
 
-function create_multi_agent_rl_model(; n_predators=3, n_prey=7, dims=(10, 10), seed=42, observation_radius=3)
+function create_multi_agent_rl_model(; n_predators = 3, n_prey = 7, dims = (10, 10), seed = 42, observation_radius = 3)
     rng = StableRNG(seed)
-    space = GridSpace(dims; periodic=true)
+    space = GridSpace(dims; periodic = true)
 
-    properties = Dict{Symbol,Any}(
+    properties = Dict{Symbol, Any}(
         :observation_radius => observation_radius
     )
 
-    model = ReinforcementLearningABM(Union{RLExtensionTestPredator,RLExtensionTestPrey}, space; rng=rng, properties=properties)
+    model = ReinforcementLearningABM(Union{RLExtensionTestPredator, RLExtensionTestPrey}, space; rng = rng, properties = properties)
 
     for _ in 1:n_predators
         add_agent!(RLExtensionTestPredator, model, rand(rng) * 30.0, 0)
@@ -63,7 +63,7 @@ function simple_observation_fn(agent, model)
     observation_radius = model.observation_radius
     # Simple observation: agent position, energy, wealth, and neighbor count
     neighbor_count = length([a for a in nearby_agents(agent, model, observation_radius)])
-    return Float32[agent.pos[1], agent.pos[2], agent.energy/50.0, agent.wealth/100.0, neighbor_count/10.0]
+    return Float32[agent.pos[1], agent.pos[2], agent.energy / 50.0, agent.wealth / 100.0, neighbor_count / 10.0]
 end
 
 function simple_reward_fn(agent, action, previous_model, current_model)
@@ -124,7 +124,7 @@ function simple_agent_step_fn(agent, model, action)
     end
 
     # Remove agent if energy depleted
-    if agent.energy <= 0
+    return if agent.energy <= 0
         remove_agent!(agent, model)
     end
 end
@@ -135,14 +135,22 @@ function multi_agent_observation_fn(agent, model)
     # Different observations for different agent types
     if agent isa RLExtensionTestPredator
         # Predators see prey positions and energy
-        prey_nearby = length([a for a in nearby_agents(agent, model, observation_radius)
-                              if a isa RLExtensionTestPrey])
-        return Float32[agent.pos[1], agent.pos[2], agent.energy/30.0, Float32(prey_nearby)]
+        prey_nearby = length(
+            [
+                a for a in nearby_agents(agent, model, observation_radius)
+                    if a isa RLExtensionTestPrey
+            ]
+        )
+        return Float32[agent.pos[1], agent.pos[2], agent.energy / 30.0, Float32(prey_nearby)]
     else  # Prey
         # Prey see predator positions and escape routes
-        predators_nearby = length([a for a in nearby_agents(agent, model, observation_radius)
-                                   if a isa RLExtensionTestPredator])
-        return Float32[agent.pos[1], agent.pos[2], agent.energy/20.0, Float32(predators_nearby)]
+        predators_nearby = length(
+            [
+                a for a in nearby_agents(agent, model, observation_radius)
+                    if a isa RLExtensionTestPredator
+            ]
+        )
+        return Float32[agent.pos[1], agent.pos[2], agent.energy / 20.0, Float32(predators_nearby)]
     end
 end
 
@@ -200,8 +208,10 @@ function multi_agent_agent_step_fn(agent, model, action)
         agent.energy = max(0.0, agent.energy - 1.0)  # Higher energy cost
 
         # Check for prey to hunt
-        prey_here = [a for a in agents_in_position(agent.pos, model)
-                     if a isa RLExtensionTestPrey]
+        prey_here = [
+            a for a in agents_in_position(agent.pos, model)
+                if a isa RLExtensionTestPrey
+        ]
         if !isempty(prey_here)
             prey = prey_here[1]
             remove_agent!(prey, model)
@@ -212,8 +222,10 @@ function multi_agent_agent_step_fn(agent, model, action)
         agent.energy = max(0.0, agent.energy - 0.5)  # Lower energy cost
 
         # Check if escaping from predator
-        predators_nearby = [a for a in nearby_agents(agent, model, 1)
-                            if a isa RLExtensionTestPredator]
+        predators_nearby = [
+            a for a in nearby_agents(agent, model, 1)
+                if a isa RLExtensionTestPredator
+        ]
         if !isempty(predators_nearby) && action != 1  # Moving away counts as escape attempt
             agent.escape_count += 1
         end
@@ -225,7 +237,7 @@ function multi_agent_agent_step_fn(agent, model, action)
     end
 
     # Remove agent if energy depleted
-    if agent.energy <= 0
+    return if agent.energy <= 0
         remove_agent!(agent, model)
     end
 end
@@ -254,7 +266,7 @@ end
         set_rl_config!(model, rl_config)
 
         # Test setup_rl_training function from extension
-        env, solver = Agents.setup_rl_training(model, RLExtensionTestAgent; training_steps=1000)
+        env, solver = Agents.setup_rl_training(model, RLExtensionTestAgent; training_steps = 1000)
 
         @test env isa POMDPs.POMDP
         @test solver isa OnPolicySolver
@@ -300,10 +312,11 @@ end
         @test policy_net isa DiscreteNetwork
 
         # Test with custom networks
-        env, solver = Agents.setup_rl_training(model, RLExtensionTestAgent;
-            training_steps=500,
-            value_network=value_net_fn,
-            policy_network=policy_net_fn
+        env, solver = Agents.setup_rl_training(
+            model, RLExtensionTestAgent;
+            training_steps = 500,
+            value_network = value_net_fn,
+            policy_network = policy_net_fn
         )
 
         @test solver.agent.π.A isa DiscreteNetwork
@@ -334,10 +347,11 @@ end
         set_rl_config!(model, rl_config)
 
         # Test sequential training with small parameters for speed
-        policies, solvers = Agents.train_agent_sequential(model,
+        policies, solvers = Agents.train_agent_sequential(
+            model,
             [RLExtensionTestPredator, RLExtensionTestPrey];
-            training_steps=10,
-            solver_params=Dict(:ΔN => 5)
+            training_steps = 10,
+            solver_params = Dict(:ΔN => 5)
         )
 
         @test length(policies) == 2
@@ -357,10 +371,10 @@ end
     end
 
     @testset "Simultaneous Training" begin
-        model = create_multi_agent_rl_model(n_predators=2, n_prey=3)
+        model = create_multi_agent_rl_model(n_predators = 2, n_prey = 3)
 
         rl_config = RLConfig(;
-            model_init_fn = () -> create_multi_agent_rl_model(n_predators=2, n_prey=3),
+            model_init_fn = () -> create_multi_agent_rl_model(n_predators = 2, n_prey = 3),
             observation_fn = multi_agent_observation_fn,
             reward_fn = multi_agent_reward_fn,
             terminal_fn = (model) -> length(allagents(model)) < 2 || abmtime(model) >= 25,
@@ -379,11 +393,12 @@ end
         set_rl_config!(model, rl_config)
 
         # Test simultaneous training with small parameters
-        policies, solvers = Agents.train_agent_simultaneous(model,
+        policies, solvers = Agents.train_agent_simultaneous(
+            model,
             [RLExtensionTestPredator, RLExtensionTestPrey];
-            n_iterations=2,
-            batch_size=10,
-            solver_params=Dict(:ΔN => 5)
+            n_iterations = 2,
+            batch_size = 10,
+            solver_params = Dict(:ΔN => 5)
         )
 
         @test length(policies) == 2
@@ -401,10 +416,10 @@ end
     end
 
     @testset "Train Model Function Integration" begin
-        model = create_simple_rl_model(n_agents=3)
+        model = create_simple_rl_model(n_agents = 3)
 
         rl_config = RLConfig(;
-            model_init_fn = () -> create_simple_rl_model(n_agents=3),
+            model_init_fn = () -> create_simple_rl_model(n_agents = 3),
             observation_fn = simple_observation_fn,
             reward_fn = simple_reward_fn,
             terminal_fn = simple_terminal_fn,
@@ -421,9 +436,10 @@ end
         set_rl_config!(model, rl_config)
 
         # Test single agent training via train_model!
-        train_model!(model;
-            training_steps=10,
-            solver_params=Dict(:ΔN => 5)
+        train_model!(
+            model;
+            training_steps = 10,
+            solver_params = Dict(:ΔN => 5)
         )
 
         policies = get_trained_policies(model)
@@ -431,13 +447,14 @@ end
         @test policies[RLExtensionTestAgent] isa Crux.ActorCritic
 
         # Test with different solver types
-        model2 = create_simple_rl_model(n_agents=3)
+        model2 = create_simple_rl_model(n_agents = 3)
         set_rl_config!(model2, rl_config)
 
-        train_model!(model2;
-            solver_types=Dict(RLExtensionTestAgent => :A2C),
-            training_steps=10,
-            solver_params=Dict(:ΔN => 5)
+        train_model!(
+            model2;
+            solver_types = Dict(RLExtensionTestAgent => :A2C),
+            training_steps = 10,
+            solver_params = Dict(:ΔN => 5)
         )
 
         policies2 = get_trained_policies(model2)
@@ -447,12 +464,12 @@ end
 
     @testset "Solver Parameter Processing" begin
         # Test process_solver_params function
-        global_params = Dict(:ΔN => 100, :log => (period=500,))
+        global_params = Dict(:ΔN => 100, :log => (period = 500,))
 
         # Test with single agent type
         processed = Agents.process_solver_params(global_params, RLExtensionTestAgent)
         @test processed[:ΔN] == 100
-        @test processed[:log] == (period=500,)
+        @test processed[:log] == (period = 500,)
 
         # Test with agent-specific parameters
         agent_specific_params = Dict(
@@ -491,8 +508,10 @@ end
         set_rl_config!(source_model, rl_config)
 
         # Train source model
-        train_model!(source_model; training_steps=10,
-            solver_params=Dict(:ΔN => 5))
+        train_model!(
+            source_model; training_steps = 10,
+            solver_params = Dict(:ΔN => 5)
+        )
 
         # Create target model and copy policies
         target_model = create_simple_rl_model()
@@ -530,18 +549,24 @@ end
         set_rl_config!(model, rl_config)
 
         # Test DQN solver
-        env, solver = Agents.setup_rl_training(model, RLExtensionTestAgent;
-            solver_type=:DQN, training_steps=100)
+        env, solver = Agents.setup_rl_training(
+            model, RLExtensionTestAgent;
+            solver_type = :DQN, training_steps = 100
+        )
         @test solver isa OffPolicySolver
 
         # Test A2C solver
-        env, solver = Agents.setup_rl_training(model, RLExtensionTestAgent;
-            solver_type=:A2C, training_steps=100)
+        env, solver = Agents.setup_rl_training(
+            model, RLExtensionTestAgent;
+            solver_type = :A2C, training_steps = 100
+        )
         @test solver isa OnPolicySolver
 
         # Test PPO solver (default)
-        env, solver = Agents.setup_rl_training(model, RLExtensionTestAgent;
-            solver_type=:PPO, training_steps=100)
+        env, solver = Agents.setup_rl_training(
+            model, RLExtensionTestAgent;
+            solver_type = :PPO, training_steps = 100
+        )
         @test solver isa OnPolicySolver
     end
 end
