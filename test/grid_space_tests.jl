@@ -500,4 +500,3 @@ end
     # Ensure NO agent was added after error
     @test nagents(model) == 0
 end
-
