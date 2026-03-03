@@ -42,9 +42,9 @@
     ) where {D} = @test true
 
     function test_costmetric(
-        metric::Pathfinding.PenaltyMap{D},
-        other::Pathfinding.PenaltyMap{D}
-    ) where {D}
+            metric::Pathfinding.PenaltyMap{D},
+            other::Pathfinding.PenaltyMap{D}
+        ) where {D}
         @test metric.pmap == other.pmap
         test_costmetric(metric.base_metric, other.base_metric)
     end
@@ -94,7 +94,7 @@
         rm("test.jld2")
     end
 
-    @testset "ModelType=$(ModelType)" for ModelType in (StandardABM, )
+    @testset "ModelType=$(ModelType)" for ModelType in (StandardABM,)
         @testset "ContainerType=$(ContainerType)" for ContainerType in (Dict, Vector)
 
             @testset "ContinuousSpace" begin
@@ -152,7 +152,7 @@
         struct ModelData
             i::Int
             f::Float32
-            d::Dict{Int,String}
+            d::Dict{Int, String}
         end
 
         model = StandardABM(
@@ -191,8 +191,8 @@
         rm("test.jld2")
     end
 
-    @testset "Grid Pathfinder" begin
-        astep!(a, m) = move_along_route!(a, m, m.pathfinder)
+    @testset "Grid Pathfinding" begin
+        astep!(a, m) = Pathfinding.move_along_route!(a, m, m.pathfinder)
         walk = BitArray(fill(true, 10, 10))
         walk[2, 2] = false
         walk[9, 9] = false
@@ -212,7 +212,7 @@
                 rng = MersenneTwister(42)
             )
             add_agent!((1, 1), model)
-            plan_route!(model[1], (10, 10), model.pathfinder)
+            Pathfinding.plan_route!(model[1], (10, 10), model.pathfinder)
             step!(model)
 
             AgentsIO.save_checkpoint("test.jld2", model)
@@ -234,8 +234,8 @@
         rm("test.jld2")
     end
 
-    @testset "Continuous Pathfinder" begin
-        astep!(a, m) = move_along_route!(a, m, m.pathfinder, 0.89, 0.56)
+    @testset "Continuous Pathfinding" begin
+        astep!(a, m) = Pathfinding.move_along_route!(a, m, m.pathfinder, 0.89, 0.56)
         walk = BitArray(fill(true, 10, 10))
         walk[2, 2] = false
         walk[9, 9] = false
@@ -255,7 +255,7 @@
                 rng = MersenneTwister(42), warn_deprecation = false
             )
             add_agent!(SVector(1.3, 1.5), model, SVector(0.0, 0.0), 0.0)
-            plan_route!(model[1], SVector(9.7, 4.8), model.pathfinder)
+            Pathfinding.plan_route!(model[1], SVector(9.7, 4.8), model.pathfinder)
             step!(model)
 
             AgentsIO.save_checkpoint("test.jld2", model)
@@ -277,7 +277,7 @@
     end
 
     @testset "Multi-agent" begin
-        model = StandardABM(Union{Agent1,Agent3}, GridSpace((10, 10)); warn = false, warn_deprecation = false)
+        model = StandardABM(Union{Agent1, Agent3}, GridSpace((10, 10)); warn = false, warn_deprecation = false)
         AgentsIO.save_checkpoint("test.jld2", model)
         other = AgentsIO.load_checkpoint("test.jld2"; warn = false, warn_deprecation = false)
 
@@ -304,13 +304,13 @@
             start = random_position(model)
             finish = OSM.random_road_position(model)
             human = add_agent!(start, Zombiee, model, false)
-            plan_route!(human, finish, model)
+            OSM.plan_route!(human, finish, model)
         end
 
         start = OSM.nearest_road((51.530876112711745, 9.945125635913511), model)
         finish = OSM.nearest_node((51.5328328, 9.9351811), model)
         zombie = add_agent!(start, model, true)
-        plan_route!(zombie, finish, model)
+        OSM.plan_route!(zombie, finish, model)
 
         AgentsIO.save_checkpoint("test.jld2", model)
         @test_throws AssertionError AgentsIO.load_checkpoint("test.jld2", warn_deprecation = false)
@@ -319,7 +319,7 @@
         # agent data
         @test nagents(other) == nagents(model)
         @test all(haskey(Agents.agent_container(other), i) for i in allids(model))
-        @test all(OSM.latlon(model[i].pos, model) == OSM.latlon(other[i].pos, other) for i in allids(model))
+        @test all(OSM.lonlat(model[i].pos, model) == OSM.lonlat(other[i].pos, other) for i in allids(model))
         @test all(model[i].infected == other[i].infected for i in allids(model))
         # model data
         test_model_data(model, other)

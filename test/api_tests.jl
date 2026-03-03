@@ -190,7 +190,7 @@ end
 
     model = StandardABM(ContinuousAgent{2, Float64}, ContinuousSpace((10, 10)), warn_deprecation = false)
     for i in 1:20
-        add_agent!(ContinuousAgent{2, Float64}, model, SVector(10*rand(), 10*rand()))
+        add_agent!(ContinuousAgent{2, Float64}, model, SVector(10 * rand(), 10 * rand()))
     end
     remove_all!(model)
     @test nagents(model) == 0
@@ -215,7 +215,7 @@ end
     end
 
     space = GridSpace((10, 10))
-    model = StandardABM(Union{Daisy,Land}, space; warn = false, warn_deprecation = false)
+    model = StandardABM(Union{Daisy, Land}, space; warn = false, warn_deprecation = false)
     fill_space!(Daisy, model, "black")
     @test nagents(model) == 100
     for a in allagents(model)
@@ -224,7 +224,7 @@ end
     end
 
     space = GridSpace((10, 10), periodic = true)
-    model = StandardABM(Union{Daisy,Land}, space; warn = false, warn_deprecation = false)
+    model = StandardABM(Union{Daisy, Land}, space; warn = false, warn_deprecation = false)
     temperature(pos) = (pos[1] / 10,) # make it Tuple!
     fill_space!(Land, model, temperature)
     @test nagents(model) == 100
@@ -247,8 +247,10 @@ end
     end
 
     for agents_first in (true, false)
-        model = StandardABM(Agent2; agent_step!, model_step!,
-                    properties = Dict(:count => 0), agents_first = agents_first)
+        model = StandardABM(
+            Agent2; agent_step!, model_step!,
+            properties = Dict(:count => 0), agents_first = agents_first
+        )
         for i in 1:100
             add_agent!(model, rand(abmrng(model)))
         end
@@ -350,13 +352,13 @@ end
     @test agent2.pos == (2, 4)
 end
 
-@agent struct Wolf{T,N}(GridAgent{2})
+@agent struct Wolf{T, N}(GridAgent{2})
     energy::T = 0.5
     ground_speed::N
     const fur_color::Symbol
 end
 
-@agent struct Hawk{T,N,J}(GridAgent{2})
+@agent struct Hawk{T, N, J}(GridAgent{2})
     energy::T = 0.1
     ground_speed::N
     flight_speed::J
@@ -379,7 +381,7 @@ end
     d::Vector{Int}
     a::T
 end
-@multiagent A(B,C,D)
+@multiagent A(B, C, D)
 
 abstract type AbstractE <: AbstractAgent end
 
@@ -389,14 +391,14 @@ end
 @agent struct G(NoSpaceAgent)
     y::Int
 end
-@multiagent E(F,G) <: AbstractE
+@multiagent E(F, G) <: AbstractE
 
 @testset "@multiagent macro" begin
 
-    hawk_1 = (Animal∘Hawk)(1, (1, 1), 1.0, 2.0, 3)
-    hawk_2 = (Animal∘Hawk)(; id = 2, pos = (1, 2), ground_speed = 2.3, flight_speed = 2)
-    wolf_1 = (Animal∘Wolf)(3, (2, 2), 2.0, 3.0, :black)
-    wolf_2 = (Animal∘Wolf)(; id = 4, pos = (2, 1), ground_speed = 2.0, fur_color = :white)
+    hawk_1 = (Animal ∘ Hawk)(1, (1, 1), 1.0, 2.0, 3)
+    hawk_2 = (Animal ∘ Hawk)(; id = 2, pos = (1, 2), ground_speed = 2.3, flight_speed = 2)
+    wolf_1 = (Animal ∘ Wolf)(3, (2, 2), 2.0, 3.0, :black)
+    wolf_2 = (Animal ∘ Wolf)(; id = 4, pos = (2, 1), ground_speed = 2.0, fur_color = :white)
 
     @test hawk_1.energy == 1.0
     @test hawk_2.energy == 0.1
@@ -414,18 +416,18 @@ end
     fake_step!(a) = nothing
     model = StandardABM(Animal, GridSpace((5, 5)); agent_step! = fake_step!)
 
-    add_agent!(Animal∘Hawk, model, 1.0, 2.0, 3)
-    add_agent!(Animal∘Wolf, model, 2.0, 3.0, :black)
+    add_agent!(Animal ∘ Hawk, model, 1.0, 2.0, 3)
+    add_agent!(Animal ∘ Wolf, model, 2.0, 3.0, :black)
     @test nagents(model) == 2
     sample!(model, 2)
     @test nagents(model) == 2
 
-    b1 = (A∘B)(1, 2, 1, :s)
-    c1 = (A∘C)(1, 1, :s, Int[])
-    d1 = (A∘D)(1, :s, [1], 1.0)
-    b2 = (A∘B)(; id = 1, b = 1, c = :s)
-    c2 = (A∘C)(; id = 1, c = :s, d = [1,2])
-    d2 = (A∘D)(; id = 1, d = [1], a = true)
+    b1 = (A ∘ B)(1, 2, 1, :s)
+    c1 = (A ∘ C)(1, 1, :s, Int[])
+    d1 = (A ∘ D)(1, :s, [1], 1.0)
+    b2 = (A ∘ B)(; id = 1, b = 1, c = :s)
+    c2 = (A ∘ C)(; id = 1, c = :s, d = [1, 2])
+    d2 = (A ∘ D)(; id = 1, d = [1], a = true)
 
     @test b2.a == 1
     @test c2.b == 2
@@ -444,15 +446,15 @@ end
 
     model = StandardABM(A; agent_step! = fake_step!)
 
-    add_agent!(A∘B, model, 2, 1, :s)
-    add_agent!(A∘C, model, 1, :s, Int[])
-    add_agent!(A∘D, model, :s, [1], 1.0)
+    add_agent!(A ∘ B, model, 2, 1, :s)
+    add_agent!(A ∘ C, model, 1, :s, Int[])
+    add_agent!(A ∘ D, model, :s, [1], 1.0)
     @test nagents(model) == 3
     sample!(model, 2)
     @test nagents(model) == 2
 
-    f = (E∘F)(1, 1)
-    g = (E∘G)(2, 2)
+    f = (E ∘ F)(1, 1)
+    g = (E ∘ G)(2, 2)
 
     @test f.id == 1
     @test g.id == 2
@@ -465,4 +467,3 @@ end
     @test E <: AbstractE && E <: AbstractE
     @test f isa E && g isa E
 end
-

@@ -13,24 +13,28 @@ for space in ["graph", "grid", "continuous"]
     SUITE[space]["add_union"] = BenchmarkGroup(["agent_pos"])
     if space == "continuous"
         SUITE[space]["move"] = BenchmarkGroup(["update"])
-        SUITE[space]["neighbors"] = BenchmarkGroup([
-            "nearby_ids",
-            "nearby_agents",
-            "nearby_ids_iterate",
-            "nearby_agents_iterate",
-            "nearest",
-            #        "interacting",
-        ])
+        SUITE[space]["neighbors"] = BenchmarkGroup(
+            [
+                "nearby_ids",
+                "nearby_agents",
+                "nearby_ids_iterate",
+                "nearby_agents_iterate",
+                "nearest",
+                #        "interacting",
+            ]
+        )
     else
         SUITE[space]["move"] = BenchmarkGroup(["random", "pos", "single"])
-        SUITE[space]["neighbors"] = BenchmarkGroup([
-            "nearby_ids",
-            "nearby_agents",
-            "nearby_ids_iterate",
-            "nearby_agents_iterate",
-            "position_pos",
-            "position_agent",
-        ])
+        SUITE[space]["neighbors"] = BenchmarkGroup(
+            [
+                "nearby_ids",
+                "nearby_agents",
+                "nearby_ids_iterate",
+                "nearby_agents_iterate",
+                "position_pos",
+                "position_agent",
+            ]
+        )
     end
     SUITE[space]["collect"] = BenchmarkGroup(["store_agent"])
 end
@@ -62,7 +66,7 @@ end
 
 graph_model = StandardABM(GraphAgent, GraphSpace(complete_digraph(200)))
 graph_union_model = StandardABM(
-    Union{GraphAgentOne,GraphAgentTwo,GraphAgentThree,GraphAgentFour,GraphAgentFive},
+    Union{GraphAgentOne, GraphAgentTwo, GraphAgentThree, GraphAgentFour, GraphAgentFive},
     GraphSpace(complete_digraph(200)),
     warn = false,
 )
@@ -107,10 +111,10 @@ SUITE["graph"]["neighbors"]["nearby_agents"] =
     @benchmarkable nearby_ids($a, $graph_model) setup = (nearby_ids($a, $graph_model))
 SUITE["graph"]["neighbors"]["nearby_ids_iterate"] =
     @benchmarkable iterate_over_neighbors($pos, $graph_model, 1) setup =
-        (nearby_ids($pos, $graph_model))
+    (nearby_ids($pos, $graph_model))
 SUITE["graph"]["neighbors"]["nearby_agents_iterate"] =
     @benchmarkable iterate_over_neighbors($a, $graph_model, 1) setup =
-        (nearby_ids($a, $graph_model))
+    (nearby_ids($a, $graph_model))
 SUITE["graph"]["neighbors"]["position_pos"] =
     @benchmarkable nearby_positions($pos, $graph_model)
 SUITE["graph"]["neighbors"]["position_agent"] =
@@ -123,7 +127,7 @@ SUITE["graph"]["position"]["positions"] = @benchmarkable positions($graph_model)
 
 grid_model = StandardABM(GridAgent, GridSpace((15, 15)))
 grid_union_model = StandardABM(
-    Union{GridAgentOne,GridAgentTwo,GridAgentThree,GridAgentFour,GridAgentFive},
+    Union{GridAgentOne, GridAgentTwo, GridAgentThree, GridAgentFour, GridAgentFive},
     GridSpace((15, 15));
     warn = false,
 )
@@ -154,17 +158,17 @@ SUITE["grid"]["move"]["single"] = @benchmarkable move_agent_single!($a, $grid_mo
 
 SUITE["grid"]["neighbors"]["nearby_ids"] =
     @benchmarkable nearby_ids($pos, $grid_model, 5) setup =
-        (nearby_ids($pos, $grid_model, 5))
+    (nearby_ids($pos, $grid_model, 5))
 SUITE["grid"]["neighbors"]["nearby_agents"] =
     @benchmarkable nearby_ids($a, $grid_model, 5) setup = (nearby_ids($a, $grid_model, 5))
 
 SUITE["grid"]["neighbors"]["nearby_ids_iterate"] =
     @benchmarkable iterate_over_neighbors($pos, $grid_model, 30) setup =
-        (nearby_ids($pos, $grid_model, 30))
+    (nearby_ids($pos, $grid_model, 30))
 
 SUITE["grid"]["neighbors"]["nearby_agents_iterate"] =
     @benchmarkable iterate_over_neighbors($a, $grid_model, 30) setup =
-        (nearby_ids($a, $grid_model, 30))
+    (nearby_ids($a, $grid_model, 30))
 
 SUITE["grid"]["neighbors"]["position_pos"] =
     @benchmarkable nearby_positions($a, $grid_model)
@@ -176,29 +180,29 @@ SUITE["graph"]["position"]["positions"] = @benchmarkable positions($graph_model)
 
 #### API -> CONTINUOUS ####
 
-continuous_model = StandardABM(ContinuousAgent{3,Float64}, ContinuousSpace((10.0, 10.0, 10.0); spacing = 0.5))
+continuous_model = StandardABM(ContinuousAgent{3, Float64}, ContinuousSpace((10.0, 10.0, 10.0); spacing = 0.5))
 
 # We must use setup create the model inside some benchmarks here, otherwise we hit the issue from #226.
 # For tuning, this is actually impossible. So until ContinuousSpace is implemented, we drop these tests.
 SUITE["continuous"]["add"]["agent_pos"] =
     @benchmarkable add_agent!((2.2, 1.9, 7.5), $ContinuousAgent, cmodel, (0.5, 1.0, 0.01), 6.5, false) setup =
-        (cmodel = StandardABM(ContinuousAgent, ContinuousSpace((10.0, 10.0, 10.0); spacing = 0.5))) samples =
-        100
+    (cmodel = StandardABM(ContinuousAgent, ContinuousSpace((10.0, 10.0, 10.0); spacing = 0.5))) samples =
+    100
 
 SUITE["continuous"]["add_union"]["agent_pos"] =
     @benchmarkable add_agent!((2.2, 1.9, 7.5), $ContinuousAgent, cmodel, (0.5, 1.0, 0.01), 6.5, false) setup = (
-        cmodel = StandardABM(
-            Union{
-                ContinuousAgentOne,
-                ContinuousAgentTwo,
-                ContinuousAgentThree,
-                ContinuousAgentFour,
-                ContinuousAgentFive,
-            },
-            ContinuousSpace((10.0, 10.0, 10.0), spacing = 0.5);
-            warn = false,
-        )
-    ) samples = 100
+    cmodel = StandardABM(
+        Union{
+            ContinuousAgentOne,
+            ContinuousAgentTwo,
+            ContinuousAgentThree,
+            ContinuousAgentFour,
+            ContinuousAgentFive,
+        },
+        ContinuousSpace((10.0, 10.0, 10.0), spacing = 0.5);
+        warn = false,
+    )
+) samples = 100
 
 for x in range(0, stop = 9.99, length = 7)
     for y in range(0, stop = 9.99, length = 7)
@@ -208,23 +212,23 @@ for x in range(0, stop = 9.99, length = 7)
     end
 end
 a = continuous_model[139]
-pos = (7.07, 8.10, 6.58)
+pos = (7.07, 8.1, 6.58)
 SUITE["continuous"]["move"]["update"] = @benchmarkable move_agent!($a, $continuous_model)
 
 SUITE["continuous"]["neighbors"]["nearby_ids"] =
     @benchmarkable nearby_ids($pos, $continuous_model, 5) setup =
-        (nearby_ids($pos, $continuous_model, 5))
+    (nearby_ids($pos, $continuous_model, 5))
 
 SUITE["continuous"]["neighbors"]["nearby_agents"] =
     @benchmarkable nearby_ids($a, $continuous_model, 5) setup =
-        (nearby_ids($a, $continuous_model, 5))
+    (nearby_ids($a, $continuous_model, 5))
 
 SUITE["continuous"]["neighbors"]["nearby_ids_iterate"] =
     @benchmarkable iterate_over_neighbors($pos, $continuous_model, 10) setup =
-        (nearby_ids($pos, $continuous_model, 10))
+    (nearby_ids($pos, $continuous_model, 10))
 SUITE["continuous"]["neighbors"]["nearby_agents_iterate"] =
     @benchmarkable iterate_over_neighbors($a, $continuous_model, 10) setup =
-        (nearby_ids($a, $continuous_model, 10))
+    (nearby_ids($a, $continuous_model, 10))
 SUITE["continuous"]["neighbors"]["nearest"] =
     @benchmarkable nearest_neighbor($a, $continuous_model, 5)
 

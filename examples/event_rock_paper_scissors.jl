@@ -1,4 +1,3 @@
-
 # # [Spatial rock-paper-scissors (event based)](@id eventbased_tutorial)
 
 # ```@raw html
@@ -44,7 +43,7 @@ using Agents
 @agent struct Paper(GridAgent{2}) end
 @agent struct Scissors(GridAgent{2}) end
 
-# we use [`@multiagent`](@ref) in the simulation, but everything works 
+# we use [`@multiagent`](@ref) in the simulation, but everything works
 # also with a single agent type or a `Union` of types
 
 @multiagent RPS(Rock, Paper, Scissors)
@@ -281,7 +280,7 @@ populations = adf[:, Not(:time)]
 alabels = ["rocks", "papers", "scissors"]
 
 fig = Figure();
-ax = Axis(fig[1,1]; xlabel = "time", ylabel = "population")
+ax = Axis(fig[1, 1]; xlabel = "time", ylabel = "population")
 for (i, l) in enumerate(alabels)
     lines!(ax, tvec, populations[!, i]; label = l)
 end
@@ -305,7 +304,8 @@ fig
 #
 
 model = initialize_rps()
-abmvideo("rps_eventqueue.mp4", model;
+abmvideo(
+    "rps_eventqueue.mp4", model;
     dt = 0.5, frames = 300,
     title = "Rock Paper Scissors (event based)", plotkw...,
 )

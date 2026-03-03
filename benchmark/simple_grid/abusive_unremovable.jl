@@ -5,7 +5,7 @@
 # die in this simulation.
 # Based on https://github.com/JuliaDynamics/Agents.jl/issues/640#issuecomment-1166330815
 mutable struct AbusiveUnremovableAgent
-    pos::Tuple{Int,Int}
+    pos::Tuple{Int, Int}
     group::Int
     happy::Bool
 end
@@ -50,6 +50,7 @@ function simulate_abusiveunremovable!(model)
             abmspace(model)[agent.pos...] = i
         end
     end
+    return
 end
 
 function count_nearby_same_abusiveunremovable(agent, model)

@@ -31,11 +31,11 @@ Example usage in [Battle Royale](
     https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/battle/).
 """
 function walk!(
-    agent::AbstractAgent,
-    direction::NTuple{D,Int},
-    model::ABM{<:AbstractGridSpace};
-    ifempty::Bool = true
-) where {D}
+        agent::AbstractAgent,
+        direction::NTuple{D, Int},
+        model::ABM{<:AbstractGridSpace};
+        ifempty::Bool = true
+    ) where {D}
     target = normalize_position(agent.pos .+ direction, model)
     if !ifempty || isempty(target, model)
         move_agent!(agent, target, model)
@@ -44,10 +44,10 @@ function walk!(
 end
 
 function walk!(
-    agent::AbstractAgent,
-    direction::NTuple{D,Int},
-    model::ABM{<:GridSpaceSingle}
-) where {D}
+        agent::AbstractAgent,
+        direction::NTuple{D, Int},
+        model::ABM{<:GridSpaceSingle}
+    ) where {D}
     target = normalize_position(agent.pos .+ direction, model)
     if isempty(target, model) # if target unoccupied
         move_agent!(agent, target, model)
@@ -56,10 +56,10 @@ function walk!(
 end
 
 function walk!(
-    agent::AbstractAgent,
-    direction::ContinuousPos,
-    model::ABM{<:ContinuousSpace}
-)
+        agent::AbstractAgent,
+        direction::ContinuousPos,
+        model::ABM{<:ContinuousSpace}
+    )
     target = normalize_position(agent.pos .+ direction, model)
     move_agent!(agent, target, model)
     return agent
@@ -74,33 +74,33 @@ spaces this clamps the position to the space extent.
 """
 normalize_position(pos, model::ABM) = normalize_position(pos, abmspace(model))
 
-function normalize_position(pos::SVector{D}, space::ContinuousSpace{D,true}) where {D}
+function normalize_position(pos::SVector{D}, space::ContinuousSpace{D, true}) where {D}
     return mod.(pos, spacesize(space))
 end
 
-function normalize_position(pos::SVector{D}, space::ContinuousSpace{D,false}) where {D}
+function normalize_position(pos::SVector{D}, space::ContinuousSpace{D, false}) where {D}
     return clamp.(pos, 0.0, prevfloat.(spacesize(space)))
 end
 
-function normalize_position(pos::SVector{D}, space::ContinuousSpace{D,P}) where {D,P}
+function normalize_position(pos::SVector{D}, space::ContinuousSpace{D, P}) where {D, P}
     s = spacesize(space)
     return SVector{D}(
         P[i] ? mod(pos[i], s[i]) : clamp(pos[i], 0.0, prevfloat(s[i]))
-        for i in 1:D
+            for i in 1:D
     )
 end
 
 #----
 # for backward compatibility
-function normalize_position(pos::NTuple{D}, space::ContinuousSpace{D,true}) where {D}
+function normalize_position(pos::NTuple{D}, space::ContinuousSpace{D, true}) where {D}
     return Tuple(mod.(pos, spacesize(space)))
 end
 
-function normalize_position(pos::NTuple{D}, space::ContinuousSpace{D,false}) where {D}
+function normalize_position(pos::NTuple{D}, space::ContinuousSpace{D, false}) where {D}
     return Tuple(clamp.(pos, 0.0, prevfloat.(spacesize(space))))
 end
 
-function normalize_position(pos::NTuple{D}, space::ContinuousSpace{D,P}) where {D,P}
+function normalize_position(pos::NTuple{D}, space::ContinuousSpace{D, P}) where {D, P}
     s = spacesize(space)
     return ntuple(
         i -> P[i] ? mod(pos[i], s[i]) : clamp(pos[i], 0.0, prevfloat(s[i])),
@@ -109,15 +109,15 @@ function normalize_position(pos::NTuple{D}, space::ContinuousSpace{D,P}) where {
 end
 #----
 
-function normalize_position(pos::Any, space::AbstractGridSpace{D,true}) where {D}
+function normalize_position(pos::Any, space::AbstractGridSpace{D, true}) where {D}
     return mod1.(pos, spacesize(space))
 end
 
-function normalize_position(pos::Any, space::AbstractGridSpace{D,false}) where {D}
+function normalize_position(pos::Any, space::AbstractGridSpace{D, false}) where {D}
     return clamp.(pos, 1, spacesize(space))
 end
 
-function normalize_position(pos::Any, space::AbstractGridSpace{D,P}) where {D,P}
+function normalize_position(pos::Any, space::AbstractGridSpace{D, P}) where {D, P}
     s = spacesize(space)
     return ntuple(
         i -> P[i] ? mod1(pos[i], s[i]) : clamp(pos[i], 1, s[i]),
@@ -152,43 +152,47 @@ will move to any of the 4 surrounding cells.
   By default this is false.
 """
 function randomwalk!(
-    agent::AbstractAgent,
-    model::ABM{<:AbstractGridSpace},
-    r::Real = 1;
-    ifempty = true,
-    force_motion = false
-)
+        agent::AbstractAgent,
+        model::ABM{<:AbstractGridSpace},
+        r::Real = 1;
+        ifempty = true,
+        force_motion = false
+    )
     if abmspace(model).metric == :euclidean
-        throw(ArgumentError(
-            "Random walks on a `GridSpace` with Euclidean metric are not defined. " *
-            "You might want to use a `ContinuousSpace` or a different metric."
-        ))
+        throw(
+            ArgumentError(
+                "Random walks on a `GridSpace` with Euclidean metric are not defined. " *
+                    "You might want to use a `ContinuousSpace` or a different metric."
+            )
+        )
     end
     offsets = offsets_at_radius(model, r)
-    if force_motion && ifempty
+    return if force_motion && ifempty
         choice = random_empty_pos_in_offsets(offsets, agent, model)
         isnothing(choice) && return agent
-        walk!(agent, choice, model; ifempty=ifempty)
+        walk!(agent, choice, model; ifempty = ifempty)
     else
-        walk!(agent, rand(abmrng(model), offsets), model; ifempty=ifempty)
+        walk!(agent, rand(abmrng(model), offsets), model; ifempty = ifempty)
     end
 end
 
 function randomwalk!(
-    agent::AbstractAgent,
-    model::ABM{<:GridSpaceSingle},
-    r::Real = 1;
-    ifempty = true,
-    force_motion = false
-)
+        agent::AbstractAgent,
+        model::ABM{<:GridSpaceSingle},
+        r::Real = 1;
+        ifempty = true,
+        force_motion = false
+    )
     if abmspace(model).metric == :euclidean
-        throw(ArgumentError(
-            "Random walks on a `GridSpace` with Euclidean metric are not defined. " *
-            "You might want to use a `ContinuousSpace` or a different metric."
-        ))
+        throw(
+            ArgumentError(
+                "Random walks on a `GridSpace` with Euclidean metric are not defined. " *
+                    "You might want to use a `ContinuousSpace` or a different metric."
+            )
+        )
     end
     offsets = offsets_at_radius(model, r)
-    if force_motion
+    return if force_motion
         choice = random_empty_pos_in_offsets(offsets, agent, model)
         isnothing(choice) && return agent
         walk!(agent, choice, model)
@@ -198,7 +202,7 @@ function randomwalk!(
 end
 
 function random_empty_pos_in_offsets(offsets, agent, model)
-    n_attempts = 2*length(offsets)
+    n_attempts = 2 * length(offsets)
     while n_attempts != 0
         pos_choice = normalize_position(agent.pos .+ rand(abmrng(model), offsets), model)
         isempty(pos_choice, model) && return pos_choice
@@ -232,26 +236,26 @@ Anything that supports `rand` can be used as an angle distribution instead.
 This can be useful to create correlated random walks.
 """
 function randomwalk!(
-    agent::AbstractAgent,
-    model::ABM{<:ContinuousSpace{D}},
-    r::Real;
-) where {D}
+        agent::AbstractAgent,
+        model::ABM{<:ContinuousSpace{D}},
+        r::Real
+    ) where {D}
     return uniform_randomwalk!(agent, model, r)
 end
 
 function randomwalk!(
-    agent::AbstractAgent,
-    model::ABM{<:ContinuousSpace{D}},
-) where {D}
+        agent::AbstractAgent,
+        model::ABM{<:ContinuousSpace{D}},
+    ) where {D}
     return uniform_randomwalk!(agent, model)
 end
 
 function randomwalk!(
-    agent::AbstractAgent,
-    model::ABM{<:ContinuousSpace{2}},
-    r::Real;
-    polar=nothing,
-)
+        agent::AbstractAgent,
+        model::ABM{<:ContinuousSpace{2}},
+        r::Real;
+        polar = nothing,
+    )
     if isnothing(polar)
         return uniform_randomwalk!(agent, model, r)
     end
@@ -260,18 +264,18 @@ function randomwalk!(
     end
     T = typeof(agent.pos)
     θ = rand(abmrng(model), polar)
-    relative_r = r/LinearAlgebra.norm(agent.vel)
+    relative_r = r / LinearAlgebra.norm(agent.vel)
     direction = T(rotate(SVector(agent.vel), θ) .* relative_r)
     agent.vel = direction
-    walk!(agent, direction, model)
+    return walk!(agent, direction, model)
 end
 
 # Code degeneracy here but makes much faster version without r
 function randomwalk!(
-    agent::AbstractAgent,
-    model::ABM{<:ContinuousSpace{2}};
-    polar=nothing,
-)
+        agent::AbstractAgent,
+        model::ABM{<:ContinuousSpace{2}};
+        polar = nothing,
+    )
     if isnothing(polar)
         return uniform_randomwalk!(agent, model)
     end
@@ -279,16 +283,16 @@ function randomwalk!(
     θ = rand(abmrng(model), polar)
     direction = T(rotate(SVector(agent.vel), θ))
     agent.vel = direction
-    walk!(agent, direction, model)
+    return walk!(agent, direction, model)
 end
 
 function randomwalk!(
-    agent::AbstractAgent,
-    model::ABM{<:ContinuousSpace{3}},
-    r::Real;
-    polar=nothing,
-    azimuthal=nothing,
-)
+        agent::AbstractAgent,
+        model::ABM{<:ContinuousSpace{3}},
+        r::Real;
+        polar = nothing,
+        azimuthal = nothing,
+    )
     if isnothing(polar) && isnothing(azimuthal)
         return uniform_randomwalk!(agent, model, r)
     end
@@ -296,29 +300,29 @@ function randomwalk!(
         throw(ArgumentError("The displacement must be larger than 0."))
     end
     T = typeof(agent.pos)
-    θ = rand(abmrng(model), isnothing(polar) ? Uniform(-π,π) : polar)
-    ϕ = rand(abmrng(model), isnothing(azimuthal) ? Arccos(-1,1) : azimuthal)
-    relative_r = r/LinearAlgebra.norm(agent.vel)
+    θ = rand(abmrng(model), isnothing(polar) ? Uniform(-π, π) : polar)
+    ϕ = rand(abmrng(model), isnothing(azimuthal) ? Arccos(-1, 1) : azimuthal)
+    relative_r = r / LinearAlgebra.norm(agent.vel)
     direction = T(rotate(SVector(agent.vel), θ, ϕ) .* relative_r)
     agent.vel = direction
-    walk!(agent, direction, model)
+    return walk!(agent, direction, model)
 end
 
 function randomwalk!(
-    agent::AbstractAgent,
-    model::ABM{<:ContinuousSpace{3}};
-    polar=nothing,
-    azimuthal=nothing,
-)
+        agent::AbstractAgent,
+        model::ABM{<:ContinuousSpace{3}};
+        polar = nothing,
+        azimuthal = nothing,
+    )
     if isnothing(polar) && isnothing(azimuthal)
         return uniform_randomwalk!(agent, model)
     end
     T = typeof(agent.pos)
-    θ = rand(abmrng(model), isnothing(polar) ? Uniform(-π,π) : polar)
-    ϕ = rand(abmrng(model), isnothing(azimuthal) ? Arccos(-1,1) : azimuthal)
+    θ = rand(abmrng(model), isnothing(polar) ? Uniform(-π, π) : polar)
+    ϕ = rand(abmrng(model), isnothing(azimuthal) ? Arccos(-1, 1) : azimuthal)
     direction = T(rotate(SVector(agent.vel), θ, ϕ))
     agent.vel = direction
-    walk!(agent, direction, model)
+    return walk!(agent, direction, model)
 end
 
 """
@@ -342,31 +346,31 @@ The resulting vector (`v`) satisfies (v⋅w)/(|v|*|w|) = cos(θ) ∀ ϕ.
 function rotate(w::SVector{3}, θ::Real, ϕ::Real)
     # find a vector normal to w
     m = findfirst(w .≠ 0)
-    n = m%3 + 1
+    n = m % 3 + 1
     u = SVector{3}(0.0, 0.0, 0.0)
     u = setindex(u, w[m], n)
     u = setindex(u, -w[n], m)
     # rotate w around u by the polar angle θ
     a = AngleAxis(θ, u...) * w
     # rotate a around the original vector w by the azimuthal angle ϕ
-    AngleAxis(ϕ, w...) * a
+    return AngleAxis(ϕ, w...) * a
 end # function
 
 # define new distribution to obtain spherically uniform rotations in 3D
-struct Arccos{T<:Real} <: ContinuousUnivariateDistribution
+struct Arccos{T <: Real} <: ContinuousUnivariateDistribution
     a::T
     b::T
-    Arccos{T}(a::T,b::T) where {T} = new{T}(a::T,b::T)
+    Arccos{T}(a::T, b::T) where {T} = new{T}(a::T, b::T)
 end
 """
     Arccos(a, b)
 Create a `ContinuousUnivariateDistribution` corresponding to `acos(Uniform(a,b))`.
 """
 function Arccos(a::Real, b::Real; check_args = true)
-    Distributions.@check_args Arccos a<b -1≤a≤1 -1≤b≤1
+    Distributions.@check_args Arccos a < b -1 ≤ a ≤ 1 -1 ≤ b ≤ 1
     return Arccos{Float64}(Float64(a), Float64(b))
 end
-Arccos() = Arccos(-1,1)
+Arccos() = Arccos(-1, 1)
 Base.rand(rng::AbstractRNG, d::Arccos) = acos(rand(rng, Uniform(d.a, d.b)))
 
 """
@@ -374,10 +378,10 @@ This is called internally by `randomwalk!` for more performant isotropic/uniform
 random walks; it also works for any number of dimensions.
 """
 function uniform_randomwalk!(
-    agent::AbstractAgent,
-    model::ABM{<:ContinuousSpace{D}},
-    r::Real=sqrt(sum(abs2.(agent.vel)))
-) where {D}
+        agent::AbstractAgent,
+        model::ABM{<:ContinuousSpace{D}},
+        r::Real = sqrt(sum(abs2.(agent.vel)))
+    ) where {D}
     if r ≤ 0
         throw(ArgumentError("The displacement must be larger than 0."))
     end
@@ -391,5 +395,5 @@ function uniform_randomwalk!(
         direction = T(rand(rng, (-1, 1)) * r / sqrt(D) for _ in 1:D)
     end
     agent.vel = direction
-    walk!(agent, direction, model)
+    return walk!(agent, direction, model)
 end

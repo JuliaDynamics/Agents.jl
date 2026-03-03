@@ -55,24 +55,24 @@ using CairoMakie
 end
 
 function model_initiation(;
-    Ns,
-    migration_rates,
-    β_und,
-    β_det,
-    infection_period = 30,
-    reinfection_probability = 0.05,
-    detection_time = 14,
-    death_rate = 0.02,
-    Is = [zeros(Int, length(Ns) - 1)..., 1],
-    seed = 0,
-)
+        Ns,
+        migration_rates,
+        β_und,
+        β_det,
+        infection_period = 30,
+        reinfection_probability = 0.05,
+        detection_time = 14,
+        death_rate = 0.02,
+        Is = [zeros(Int, length(Ns) - 1)..., 1],
+        seed = 0,
+    )
 
     rng = Xoshiro(seed)
     @assert length(Ns) ==
-    length(Is) ==
-    length(β_und) ==
-    length(β_det) ==
-    size(migration_rates, 1) "length of Ns, Is, and B, and number of rows/columns in migration_rates should be the same "
+        length(Is) ==
+        length(β_und) ==
+        length(β_det) ==
+        size(migration_rates, 1) "length of Ns, Is, and B, and number of rows/columns in migration_rates should be the same "
     @assert size(migration_rates, 1) == size(migration_rates, 2) "migration_rates rates should be a square matrix"
 
     C = length(Ns)
@@ -126,18 +126,18 @@ end
 using LinearAlgebra: diagind
 
 function create_params(;
-    C,
-    max_travel_rate,
-    infection_period = 30,
-    reinfection_probability = 0.05,
-    detection_time = 14,
-    death_rate = 0.02,
-    Is = [zeros(Int, C - 1)..., 1],
-    seed = 19,
-)
+        C,
+        max_travel_rate,
+        infection_period = 30,
+        reinfection_probability = 0.05,
+        detection_time = 14,
+        death_rate = 0.02,
+        Is = [zeros(Int, C - 1)..., 1],
+        seed = 19,
+    )
 
     Random.seed!(seed)
-    Ns = rand(50:5000, C)
+    Ns = rand(50:500, C)
     β_und = rand(0.3:0.02:0.6, C)
     β_det = β_und ./ 10
 
@@ -175,7 +175,7 @@ function agent_step!(agent, model)
     migrate!(agent, model)
     transmit!(agent, model)
     update!(agent, model)
-    recover_or_die!(agent, model)
+    return recover_or_die!(agent, model)
 end
 
 function migrate!(agent, model)
@@ -184,6 +184,7 @@ function migrate!(agent, model)
     if m ≠ pid
         move_agent!(agent, m, model)
     end
+    return
 end
 
 function transmit!(agent, model)
@@ -200,18 +201,19 @@ function transmit!(agent, model)
     for contactID in ids_in_position(agent, model)
         contact = model[contactID]
         if contact.status == :S ||
-           (contact.status == :R && rand(abmrng(model)) ≤ model.reinfection_probability)
+                (contact.status == :R && rand(abmrng(model)) ≤ model.reinfection_probability)
             contact.status = :I
             n -= 1
             n <= 0 && return
         end
     end
+    return
 end
 
 update!(agent, model) = agent.status == :I && (agent.days_infected += 1)
 
 function recover_or_die!(agent, model)
-    if agent.days_infected ≥ model.infection_period
+    return if agent.days_infected ≥ model.infection_period
         if rand(abmrng(model)) ≤ model.death_rate
             remove_agent!(agent, model)
         else
@@ -224,39 +226,71 @@ end
 params = create_params(C = 8, max_travel_rate = 0.01)
 model = model_initiation(; params...)
 
-# ## Example animation
-# At the moment [`abmplot`](@ref) does not plot `GraphSpace`s, but we can still
-# utilize the [`ABMObservable`](@ref). We do not need to collect data here,
-# only the current status of the model will be used in visualization
+# %% #src
+# ## Visualizing `GraphSpace`s
+# `GraphSpace`s can be visualized by leveraging the GraphMakie.jl package.
+# Plotting for such spaces is handled a bit differently though.
+# Normally the `agent_color, agent_size, agent_marker` keyword arguments generally relate to *agent* colors, markersizes,
+# and markers. For `GraphSpace`s, they collect those plot attributes for each node of the underlying graph which can
+# contain multiple agents. So the function given to `agent_color` inputs an _iterable of agents_.
 
-using CairoMakie
-CairoMakie.activate!() # hide
-abmobs = ABMObservable(model)
+# In this model, we color each cite according to the infected population
+# and make the marker size proportional to the population.
+# And remember, the package `GraphMakie` must be in scope for this plotting to work!
 
-# We then initialize elements that are lifted observables from `abmobs`:
-infected_fraction(m, x) = count(m[id].status == :I for id in x) / length(x)
-infected_fractions(m) = [infected_fraction(m, ids_in_position(p, m)) for p in positions(m)]
-fracs = lift(infected_fractions, abmobs.model)
-color = lift(fs -> [cgrad(:inferno)[f] for f in fs], fracs)
-title = lift(
-    (m) -> "step = $(abmtime(m)), infected = $(round(Int, 100*infected_fraction(m, allids(m))))%",
-    abmobs.model
+using GraphMakie
+city_size(agents_here) = 0.1 * length(agents_here)
+function city_color(agents_here)
+    l_agents_here = length(agents_here)
+    infected = count(a.status == :I for a in agents_here)
+    recovered = count(a.status == :R for a in agents_here)
+    return Makie.RGB(infected / l_agents_here, recovered / l_agents_here, 0)
+end
+
+# Since the underlying graph will be visualized we have the power to
+# also style how the edges of the graph will be plotted.
+# We do this through the keyword` agentsplotkwargs` of `abmplot`,
+# which contains options that will be propagated to `GraphMakie.graphplot`.
+# Special keywords there are `edge_color, edge_width`, both of which
+# can be functions inputting the model and outputting
+# a vector with the same length (or twice) as current number of edges in the underlying
+# graph, to style the color and width of the edges.
+
+edge_color(model) = fill((:grey, 0.5), ne(abmspace(model).graph))
+function edge_width(model)
+    w = zeros(ne(abmspace(model).graph))
+    for e in edges(abmspace(model).graph)
+        w[e.src] = 0.002 * length(abmspace(model).stored_ids[e.src])
+        w[e.dst] = 0.002 * length(abmspace(model).stored_ids[e.dst])
+    end
+    return w
+end
+
+agentsplotkwargs = (
+    layout = GraphMakie.Shell(), # node positions layout
+    arrow_show = false, # hide directions of graph edges
+    edge_color = edge_color, # change edge colors and widths with own functions
+    edge_width = edge_width,
+    edge_plottype = :linesegments, # needed for tapered edge widths
 )
 
-# And lastly we use them to plot things in a figure
-fig = Figure(size = (600, 400))
-ax = Axis(fig[1, 1]; title, xlabel = "City", ylabel = "Population")
-barplot!(ax, model.Ns; strokecolor = :black, strokewidth = 1, color)
+# we now put everything together:
+
+fig, ax, abmobs = abmplot(
+    model;
+    agent_size = city_size, agent_color = city_color, agentsplotkwargs
+)
 fig
 
-# Now we can even make an animation of it
-record(fig, "covid_evolution.mp4"; framerate = 5) do io
-    for j in 1:30
-        recordframe!(io)
-        Agents.step!(abmobs, 1)
-    end
-    recordframe!(io)
-end
+# Naturally, animating the evolution of this model through [`abmvideo`](@ref)
+# is the same as any other example:
+
+abmvideo(
+    "covid_evolution.mp4", model;
+    agent_size = city_size, agent_color = city_color, agentsplotkwargs,
+    framerate = 4, frames = 25,
+    title = "SIR model for COVID-19 spread"
+)
 
 # ```@raw html
 # <video width="auto" controls autoplay loop>
@@ -267,19 +301,20 @@ end
 # One can really see "explosive growth" in this animation. Things look quite calm for
 # a while and then suddenly supermarkets have no toilet paper anymore!
 
+# %% #src
 # ## Exponential growth
 
-# We now run the model and collect data. We define two useful functions for
+# This observation is characterized by the exponential growth in the number of infected.
+# We now run the model and collect data to quantify this. We define two useful functions for
 # data collection:
 infected(x) = count(i == :I for i in x)
 recovered(x) = count(i == :R for i in x)
-nothing # hide
 
 # and then collect data
 model = model_initiation(; params...)
 
 to_collect = [(:status, f) for f in (infected, recovered, length)]
-data, _ = run!(model, 100; adata = to_collect)
+data, _ = run!(model, 50; adata = to_collect)
 data[1:10, :]
 
 # We now plot how quantities evolved in time to show

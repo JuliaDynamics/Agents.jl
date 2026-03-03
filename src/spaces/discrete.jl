@@ -11,8 +11,8 @@ agents are stored in a field `stored_ids` of the space.
 =#
 
 export positions, npositions, ids_in_position, agents_in_position,
-       empty_positions, random_empty, has_empty_positions, empty_nearby_positions,
-       random_id_in_position, random_agent_in_position
+    empty_positions, random_empty, has_empty_positions, empty_nearby_positions,
+    random_id_in_position, random_agent_in_position
 
 
 positions(model::ABM) = positions(abmspace(model))
@@ -71,7 +71,7 @@ agents_in_position(pos, model) = (model[id] for id in ids_in_position(pos, model
 Return a list of positions that currently have no agents on them.
 """
 function empty_positions(model::ABM{<:DiscreteSpace})
-    Iterators.filter(i -> length(ids_in_position(i, model)) == 0, positions(model))
+    return Iterators.filter(i -> length(ids_in_position(i, model)) == 0, positions(model))
 end
 
 """
@@ -244,15 +244,15 @@ models where the agent constructor cannot be deduced (since it is a union).
 """
 function fill_space!(model::ABM, args::Vararg{Any, N}; kwargs...) where {N}
     A = agenttype(model)
-    fill_space!(A, model, args...; kwargs...)
+    return fill_space!(A, model, args...; kwargs...)
 end
 
 function fill_space!(
-    A::Union{Function, Type}, 
-    model::ABM{<:DiscreteSpace},
-    args::Vararg{Any, N};
-    kwargs...,
-) where {N}
+        A::Union{Function, Type},
+        model::ABM{<:DiscreteSpace},
+        args::Vararg{Any, N};
+        kwargs...,
+    ) where {N}
     for p in positions(model)
         add_agent!(p, A, model, args...; kwargs...)
     end
@@ -276,10 +276,10 @@ per position. If there are no empty positions, the agent won't move.
 The keyword `cutoff = 0.998` is sent to [`random_empty`](@ref).
 """
 function move_agent_single!(
-    agent::AbstractAgent,
-    model::ABM{<:DiscreteSpace};
-    cutoff = 0.998,
-)
+        agent::AbstractAgent,
+        model::ABM{<:DiscreteSpace};
+        cutoff = 0.998,
+    )
     position = random_empty(model, cutoff)
     isnothing(position) && return nothing
     move_agent!(agent, position, model)
@@ -305,4 +305,5 @@ function remove_all_from_space!(model::ABM{<:DiscreteSpace})
     for p in positions(model)
         empty!(ids_in_position(p, model))
     end
+    return
 end

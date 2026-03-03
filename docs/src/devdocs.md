@@ -15,13 +15,20 @@ wanted to add a new space, they would **not** have to care about neither
 the model stepping dynamics, nor the majority of the remaining Agents.jl
 API, such as sampling, data collection, etc. etc.
 
-## Cloning the repository
+## Cloning the repository and formatting
 
 Since we include documentation with many animated gifs and videos in the repository, a standard clone can be larger than expected.
 If you wish to do any development work, it is better to use
 
 ```bash
 git clone https://github.com/JuliaDynamics/Agents.jl.git --single-branch
+```
+
+Agents.jl uses the Runic.jl formatter. Make sure your contributions apply it!
+To apply the formatter use
+```bash
+shell> julia --project=@runic --startup-file=no -e 'using Pkg; Pkg.add("Runic")'
+shell> julia --project=@runic --startup-file=no -e 'using Runic; exit(Runic.main(ARGS))' -- --inplace path/to/developed/Agents
 ```
 
 ## [Creating a new model type](@id make_new_model)
@@ -49,19 +56,18 @@ The rest of the methods by default return a "not implemented" error message
 
 ## [Creating a new space type](@id make_new_space)
 
-Creating a new space type within Agents.jl is quite simple and requires the extension of only 5 methods to support the entire Agents.jl API. The exact specifications on how to create a new space type are contained within the source file: [`src/core/space_interaction_API.jl`](https://github.com/JuliaDynamics/Agents.jl/blob/main/src/core/space_interaction_API.jl).
-
-In principle, the following should be done:
+Creating a new space type within Agents.jl is quite simple and requires the extension of only 5 methods to support the entire Agents.jl API.
+Here are the steps to follow to create a new space:
 
 1. Think about what the agent position type should be.
 2. Think about how the space type will keep track of the agent positions, so that it is possible to implement the function [`nearby_ids`](@ref).
-3. Implement the `struct` that represents your new space, while making it a subtype of `AbstractSpace`.
-4. Extend `random_position(model)`.
-5. Extend `add_agent_to_space!(agent, model), remove_agent_from_space!(agent, model)`. This already provides access to `add_agent!, kill_agent!` and `move_agent!`.
-6. Extend `nearby_ids(pos, model, r)`.
-7. Create a new "minimal" agent type to be used with [`@agent`](@ref) (see the source code of [`GraphAgent`](@ref) for an example).
+3. Create the `struct` that represents your new space, while making it a subtype of `Agents.AbstractSpace`. Let now `const ABMS = ABM{<:YourSpaceType}`.
+4. Extend `random_position(model::ABMS)`.
+5. Extend `add_agent_to_space!(agent, model::ABMS), remove_agent_from_space!(agent, model::ABMS)`. This already provides access to `add_agent!, kill_agent!` and `move_agent!`.
+6. Extend `nearby_ids(pos, model::ABMS, r; kw...)`.
+7. Create a new "minimal" agent type to be used with [`@agent`](@ref) (see the source code of e.g., [`GraphAgent`](@ref) for an example).
 
-And that's it! Every function of the main API will now work. In some situations you might want to explicitly extend other functions such as `move_agent!` or `remove_all_from_space!` for performance reasons.
+And that's it! Every function of the main API will now work. In some situations you might want to explicitly extend other functions such as `move_agent!` or `remove_all_from_space!` for performance reasons, but they will work out of the box with a generic implementation.
 
 
 ## Designing a new Pathfinder Cost Metric

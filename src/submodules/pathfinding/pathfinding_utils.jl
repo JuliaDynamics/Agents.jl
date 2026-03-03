@@ -3,16 +3,16 @@
 Returns the absolute difference in coordinates between `from` and `to` taking into account
 periodicity of `pathfinder`.
 """
-position_delta(pathfinder::GridPathfinder{D,true}, from::Dims{D}, to::Dims{D}) where {D} =
+position_delta(pathfinder::GridPathfinder{D, true}, from::Dims{D}, to::Dims{D}) where {D} =
     min.(abs.(to .- from), size(pathfinder.walkmap) .- abs.(to .- from))
 
-position_delta(pathfinder::GridPathfinder{D,false}, from::Dims{D}, to::Dims{D}) where {D} =
+position_delta(pathfinder::GridPathfinder{D, false}, from::Dims{D}, to::Dims{D}) where {D} =
     abs.(to .- from)
 
-@inline function position_delta(pathfinder::GridPathfinder{D,P}, from::Dims{D}, to::Dims{D}) where {D,P}
+@inline function position_delta(pathfinder::GridPathfinder{D, P}, from::Dims{D}, to::Dims{D}) where {D, P}
     s = size(pathfinder.walkmap)
     delta = abs.(to .- from)
-    ntuple(i -> P[i] ? min(delta[i], s[i] - delta[i]) : delta[i], D)
+    return ntuple(i -> P[i] ? min(delta[i], s[i] - delta[i]) : delta[i], D)
 end
 
 """
@@ -21,29 +21,29 @@ Calculate an approximation for the cost of travelling from `from` to `to` (both 
 type `NTuple{N,Int}`. Expects a return value of `Float64`.
 """
 function delta_cost(
-    pathfinder::GridPathfinder{D,periodic,true},
-    metric::DirectDistance{D},
-    from::Dims{D},
-    to::Dims{D},
-) where {D,periodic}
+        pathfinder::GridPathfinder{D, periodic, true},
+        metric::DirectDistance{D},
+        from::Dims{D},
+        to::Dims{D},
+    ) where {D, periodic}
     delta = collect(position_delta(pathfinder, from, to))
 
     sort!(delta)
     carry = 0
     hdist = 0
     for i in D:-1:1
-        hdist += metric.direction_costs[i] * (delta[D+1-i] - carry)
-        carry = delta[D+1-i]
+        hdist += metric.direction_costs[i] * (delta[D + 1 - i] - carry)
+        carry = delta[D + 1 - i]
     end
     return hdist
 end
 
 function delta_cost(
-    pathfinder::GridPathfinder{D,periodic,false},
-    metric::DirectDistance{D},
-    from::Dims{D},
-    to::Dims{D},
-) where {D,periodic}
+        pathfinder::GridPathfinder{D, periodic, false},
+        metric::DirectDistance{D},
+        from::Dims{D},
+        to::Dims{D},
+    ) where {D, periodic}
     delta = position_delta(pathfinder, from, to)
 
     return sum(delta) * metric.direction_costs[1]

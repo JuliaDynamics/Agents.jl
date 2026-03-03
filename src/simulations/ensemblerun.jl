@@ -1,5 +1,5 @@
 export ensemblerun!
-Vector_or_Tuple = Union{AbstractArray,Tuple}
+Vector_or_Tuple = Union{AbstractArray, Tuple}
 
 """
     ensemblerun!(models::Vector, n; kwargs...)
@@ -28,18 +28,22 @@ The following keywords modify the `ensemblerun!` function:
 All other keywords are propagated to [`run!`](@ref) as-is.
 """
 function ensemblerun!(
-    models::Vector_or_Tuple,
-    n::Union{Function, Int};
-    showprogress = false,
-    parallel = false,
-    kwargs...,
-)
+        models::Vector_or_Tuple,
+        n::Union{Function, Int};
+        showprogress = false,
+        parallel = false,
+        kwargs...,
+    )
     if parallel
-        return parallel_ensemble(models, n;
-                                 showprogress, kwargs...)
+        return parallel_ensemble(
+            models, n;
+            showprogress, kwargs...
+        )
     else
-        return series_ensemble(models, n;
-                               showprogress, kwargs...)
+        return series_ensemble(
+            models, n;
+            showprogress, kwargs...
+        )
     end
 end
 
@@ -51,17 +55,19 @@ the provided `generator` which is a one-argument function whose input is a seed.
 This method has additional keywords `ensemble = 5, seeds = rand(UInt32, ensemble)`.
 """
 function ensemblerun!(
-    generator;
-    ensemble = 5,
-    seeds = rand(UInt32, ensemble),
-    kwargs...,
-)
+        generator, n;
+        ensemble = 5,
+        seeds = rand(UInt32, ensemble),
+        kwargs...,
+    )
     models = [generator(seed) for seed in seeds]
-    ensemblerun!(models; kwargs...)
+    return ensemblerun!(models, n; kwargs...)
 end
 
-function series_ensemble(models, n;
-                         showprogress = false, kwargs...)
+function series_ensemble(
+        models, n;
+        showprogress = false, kwargs...
+    )
 
     @assert models[1] isa ABM
 
@@ -90,8 +96,10 @@ function series_ensemble(models, n;
     return df_agent, df_model, models
 end
 
-function parallel_ensemble(models, n;
-                           showprogress = false, kwargs...)
+function parallel_ensemble(
+        models, n;
+        showprogress = false, kwargs...
+    )
 
     progress = ProgressMeter.Progress(length(models); enabled = showprogress)
     all_data = ProgressMeter.progress_pmap(models; progress) do model
@@ -112,5 +120,5 @@ function parallel_ensemble(models, n;
 end
 
 function add_ensemble_index!(df, m)
-    df[!, :ensemble] = fill(m, size(df, 1))
+    return df[!, :ensemble] = fill(m, size(df, 1))
 end

@@ -6,10 +6,11 @@ using Agents, Test
             @testset "ContainerType=$(ContainerType)" for ContainerType in (Dict, Vector, StructVector)
 
                 extra_args = ifelse(ModelType != EventQueueABM, (), ((),))
-                extra_kwargs = ifelse(ModelType != EventQueueABM, (warn_deprecation = false, ), ((autogenerate_on_add=false),))
+                extra_kwargs = ifelse(ModelType != EventQueueABM, (warn_deprecation = false,), ((autogenerate_on_add = false),))
                 # For StructVector container, we need to wrap the agent type with SoAType
                 agent_type = ContainerType == StructVector ? SoAType{NoSpaceAgent} : NoSpaceAgent
-                model = ModelType(agent_type, extra_args...;
+                model = ModelType(
+                    agent_type, extra_args...;
                     properties = Dict(:a => 2, :b => "test"),
                     container = ContainerType, extra_kwargs...
                 )
@@ -60,7 +61,7 @@ using Agents, Test
                     par2::Float64
                     par3::String
                 end
-                properties = Properties(1,1.0,"Test")
+                properties = Properties(1, 1.0, "Test")
                 model = ModelType(agent_type, extra_args...; properties, container = ContainerType, extra_kwargs...)
                 @test abmproperties(model) isa Properties
                 @test model.par1 == 1
@@ -101,15 +102,15 @@ using Agents, Test
     end
 
     @testset "Core methods" begin
-        model = StandardABM(GridAgent{2}, GridSpace((5,5)), warn_deprecation = false)
+        model = StandardABM(GridAgent{2}, GridSpace((5, 5)), warn_deprecation = false)
         @test Agents.agenttype(model) == GridAgent{2}
         @test Agents.spacetype(model) <: GridSpace
-        @test size(abmspace(model)) == (5,5)
+        @test size(abmspace(model)) == (5, 5)
         @test all(isempty(p, model) for p in positions(model))
-        model_soa = StandardABM(SoAType{GridAgent{2}}, GridSpace((5,5)), container = StructVector, warn_deprecation = false)
+        model_soa = StandardABM(SoAType{GridAgent{2}}, GridSpace((5, 5)), container = StructVector, warn_deprecation = false)
         @test Agents.agenttype(model_soa) == GridAgent{2}
         @test Agents.spacetype(model_soa) <: GridSpace
-        @test size(abmspace(model_soa)) == (5,5)
+        @test size(abmspace(model_soa)) == (5, 5)
         @test all(isempty(p, model_soa) for p in positions(model_soa))
     end
 
@@ -117,10 +118,10 @@ using Agents, Test
         using Agents.Graphs: path_graph
         model = StandardABM(NoSpaceAgent, warn_deprecation = false)
         @test occursin("no spatial structure", sprint(show, model))
-        model = StandardABM(GridAgent{2}, GridSpace((5,5)), warn_deprecation = false)
+        model = StandardABM(GridAgent{2}, GridSpace((5, 5)), warn_deprecation = false)
         @test sprint(show, model)[1:25] == "StandardABM with 0 agents"
         @test sprint(show, Agents.abmspace(model)) == "GridSpace with size (5, 5), metric=chebyshev, periodic=true"
-        model = StandardABM(ContinuousAgent{2}, ContinuousSpace((1.0,1.0)), warn_deprecation = false)
+        model = StandardABM(ContinuousAgent{2}, ContinuousSpace((1.0, 1.0)), warn_deprecation = false)
         @test sprint(show, Agents.abmspace(model)) == "periodic continuous space with [1.0, 1.0] extent and spacing=0.05"
         model = StandardABM(GraphAgent, GraphSpace(path_graph(5)), warn_deprecation = false)
         @test sprint(show, Agents.abmspace(model)) == "GraphSpace with 5 positions and 4 edges"
@@ -166,8 +167,8 @@ end
         @test typeof(wrapped_agent) != typeof(agent)
     end
     @testset "SoAType wrapper functionality with EventQueueABM" begin
-        events = (AgentEvent((action!)=dummystep),)
-        model = EventQueueABM(SoAType{NoSpaceAgent}, events, container=StructVector, autogenerate_on_add=false)
+        events = (AgentEvent((action!) = dummystep),)
+        model = EventQueueABM(SoAType{NoSpaceAgent}, events, container = StructVector, autogenerate_on_add = false)
         for i in 1:3
             add_agent!(NoSpaceAgent, model)
         end
@@ -185,8 +186,8 @@ end
         @test soa.id[1] == 200
     end
     @testset "add_agent! with StructVector in EventQueueABM" begin
-        events = (AgentEvent((action!)=dummystep),)
-        model = EventQueueABM(SoAType{NoSpaceAgent}, events, container=StructVector, autogenerate_on_add=false)
+        events = (AgentEvent((action!) = dummystep),)
+        model = EventQueueABM(SoAType{NoSpaceAgent}, events, container = StructVector, autogenerate_on_add = false)
         agent = add_agent!(NoSpaceAgent, model)
         @test agent isa NoSpaceAgent
         @test agent.id == 1

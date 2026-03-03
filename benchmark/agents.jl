@@ -34,20 +34,19 @@ end
 @agent struct GridAgentFive(GridAgent{2}) <: AbstractAgent
 end
 
-@agent struct ContinuousAgentOne(ContinuousAgent{3,Float64}) <: AbstractAgent
+@agent struct ContinuousAgentOne(ContinuousAgent{3, Float64}) <: AbstractAgent
     one::Float64
     two::Bool
 end
 
-@agent struct ContinuousAgentTwo(ContinuousAgent{3,Float64})
+@agent struct ContinuousAgentTwo(ContinuousAgent{3, Float64})
 end
 
-@agent struct ContinuousAgentThree(ContinuousAgent{3,Float64})
+@agent struct ContinuousAgentThree(ContinuousAgent{3, Float64})
 end
 
-@agent struct ContinuousAgentFour(ContinuousAgent{3,Float64})
+@agent struct ContinuousAgentFour(ContinuousAgent{3, Float64})
 end
 
-@agent struct ContinuousAgentFive(ContinuousAgent{3,Float64})
+@agent struct ContinuousAgentFive(ContinuousAgent{3, Float64})
 end
-

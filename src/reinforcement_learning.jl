@@ -4,10 +4,11 @@ export get_trained_policies, set_rl_config!, copy_trained_policies!
 export train_model!, create_policy_network, create_value_network
 
 struct ReinforcementLearningABM{
-    S<:SpaceType,
-    A<:AbstractAgent,
-    C<:Union{AbstractDict{Int,A},AbstractVector{A}},
-    T,G,K,F,P,R<:AbstractRNG} <: AgentBasedModel{S}
+        S <: SpaceType,
+        A <: AbstractAgent,
+        C <: Union{AbstractDict{Int, A}, AbstractVector{A}},
+        T, G, K, F, P, R <: AbstractRNG,
+    } <: AgentBasedModel{S}
     # Standard ABM components
     agents::C
     agent_step::G
@@ -23,8 +24,8 @@ struct ReinforcementLearningABM{
 
     # RL-specific components
     rl_config::Base.RefValue{Any}
-    trained_policies::Dict{Type,Any}
-    training_history::Dict{Type,Any}
+    trained_policies::Dict{Type, Any}
+    training_history::Dict{Type, Any}
     is_training::Base.RefValue{Bool}
     current_training_agent_type::Base.RefValue{Any}
     current_training_agent_id::Base.RefValue{Int}  # Counter/index for cycling through agents of training type (not actual agent ID)
@@ -33,35 +34,39 @@ end
 # Configuration container for Reinforcement Learning setup.
 # Use keyword constructor `RLConfig(...)` to create instances.
 struct RLConfig
-    model_init_fn::Union{Nothing,Function}
+    model_init_fn::Union{Nothing, Function}
     observation_fn::Function
     reward_fn::Function
-    terminal_fn::Union{Nothing,Function}
-    agent_step_fn::Union{Nothing,Function}
-    action_spaces::Union{Nothing,Dict{Type,Any}}
-    observation_spaces::Union{Nothing,Dict{Type,Any}}
-    training_agent_types::Union{Nothing,Vector{Type}}
-    discount_rates::Union{Nothing,Dict{Type,Float64}}
-    state_spaces::Union{Nothing,Dict{Type,Any}}
+    terminal_fn::Union{Nothing, Function}
+    agent_step_fn::Union{Nothing, Function}
+    action_spaces::Union{Nothing, Dict{Type, Any}}
+    observation_spaces::Union{Nothing, Dict{Type, Any}}
+    training_agent_types::Union{Nothing, Vector{Type}}
+    discount_rates::Union{Nothing, Dict{Type, Float64}}
+    state_spaces::Union{Nothing, Dict{Type, Any}}
 end
 
-function RLConfig(; model_init_fn=nothing,
-    observation_fn::Function,
-    reward_fn::Function,
-    terminal_fn=nothing,
-    agent_step_fn=nothing,
-    action_spaces=Dict{Type,Any}(),
-    observation_spaces=Dict{Type,Any}(),
-    training_agent_types=Vector{Type}(),
-    discount_rates=Dict{Type,Float64}(),
-    state_spaces=Dict{Type,Any}())
-    return RLConfig(model_init_fn, observation_fn, reward_fn, terminal_fn, agent_step_fn,
-        action_spaces, observation_spaces, training_agent_types, discount_rates, state_spaces)
+function RLConfig(;
+        model_init_fn = nothing,
+        observation_fn::Function,
+        reward_fn::Function,
+        terminal_fn = nothing,
+        agent_step_fn = nothing,
+        action_spaces = Dict{Type, Any}(),
+        observation_spaces = Dict{Type, Any}(),
+        training_agent_types = Vector{Type}(),
+        discount_rates = Dict{Type, Float64}(),
+        state_spaces = Dict{Type, Any}()
+    )
+    return RLConfig(
+        model_init_fn, observation_fn, reward_fn, terminal_fn, agent_step_fn,
+        action_spaces, observation_spaces, training_agent_types, discount_rates, state_spaces
+    )
 end
 
 # Extend mandatory internal API for `AgentBasedModel`
-containertype(::ReinforcementLearningABM{S,A,C}) where {S,A,C} = C
-agenttype(::ReinforcementLearningABM{S,A}) where {S,A} = A
+containertype(::ReinforcementLearningABM{S, A, C}) where {S, A, C} = C
+agenttype(::ReinforcementLearningABM{S, A}) where {S, A} = A
 discretimeabm(::ReinforcementLearningABM) = true
 
 # Override property access to handle RL-specific fields
@@ -69,8 +74,10 @@ function Base.getproperty(m::ReinforcementLearningABM, s::Symbol)
     # Handle RL-specific fields directly
     if s in (:rl_config, :trained_policies, :training_history, :is_training, :current_training_agent_type, :current_training_agent_id)
         return getfield(m, s)
-    elseif s in (:agents, :agent_step, :model_step, :space, :scheduler, :rng,
-        :agents_types, :agents_first, :maxid, :time, :properties)
+    elseif s in (
+            :agents, :agent_step, :model_step, :space, :scheduler, :rng,
+            :agents_types, :agents_first, :maxid, :time, :properties,
+        )
         return getfield(m, s)
     else
         # Delegate to properties for other fields
@@ -88,8 +95,10 @@ function Base.setproperty!(m::ReinforcementLearningABM, s::Symbol, x)
     if s in (:rl_config, :trained_policies, :training_history, :is_training, :current_training_agent_type, :current_training_agent_id)
         return setfield!(m, s, x)
         # Handle standard ABM fields directly (except properties which is immutable)
-    elseif s in (:agents, :agent_step, :model_step, :space, :scheduler, :rng,
-        :agents_types, :agents_first, :maxid, :time)
+    elseif s in (
+            :agents, :agent_step, :model_step, :space, :scheduler, :rng,
+            :agents_types, :agents_first, :maxid, :time,
+        )
         return setfield!(m, s, x)
         # Special handling for properties - can't setfield! but can modify Dict contents
     elseif s == :properties
@@ -99,7 +108,7 @@ function Base.setproperty!(m::ReinforcementLearningABM, s::Symbol, x)
         properties = abmproperties(m)
         exception = ErrorException(
             "Cannot set property $(s) for model $(nameof(typeof(m))) with " *
-            "properties container type $(typeof(properties))."
+                "properties container type $(typeof(properties))."
         )
         properties === nothing && throw(exception)
         if properties isa Dict && haskey(properties, s)
@@ -255,19 +264,19 @@ The `rl_config` argument is an instance of the `RLConfig` struct with the follow
 
 """
 function ReinforcementLearningABM(
-    A::Type,
-    space::S=nothing,
-    rl_config=nothing;
-    agent_step!::G=dummystep,
-    model_step!::K=dummystep,
-    container::Type=Dict,
-    scheduler::F=Schedulers.Randomly(),
-    properties::P=nothing,
-    rng::R=Random.default_rng(),
-    agents_first::Bool=true,
-    warn=true,
-    kwargs...
-) where {S<:SpaceType,G,K,F,P,R<:AbstractRNG}
+        A::Type,
+        space::S = nothing,
+        rl_config = nothing;
+        agent_step!::G = dummystep,
+        model_step!::K = dummystep,
+        container::Type = Dict,
+        scheduler::F = Schedulers.Randomly(),
+        properties::P = nothing,
+        rng::R = Random.default_rng(),
+        agents_first::Bool = true,
+        warn = true,
+        kwargs...
+    ) where {S <: SpaceType, G, K, F, P, R <: AbstractRNG}
 
     # Initialize agent container using proper construction
     agents = construct_agent_container(container, A)
@@ -275,7 +284,7 @@ function ReinforcementLearningABM(
     T = typeof(agents_types)
     C = typeof(agents)
 
-    model = ReinforcementLearningABM{S,A,C,T,G,K,F,P,R}(
+    model = ReinforcementLearningABM{S, A, C, T, G, K, F, P, R}(
         agents,
         agent_step!,
         model_step!,
@@ -288,8 +297,8 @@ function ReinforcementLearningABM(
         Ref(0),
         Ref(0),
         Ref{Any}(rl_config),
-        Dict{Type,Any}(),
-        Dict{Type,Any}(),
+        Dict{Type, Any}(),
+        Dict{Type, Any}(),
         Ref(false),
         Ref{Any}(nothing),
         Ref(1)
@@ -324,7 +333,7 @@ function set_rl_config!(model::ReinforcementLearningABM, config)
     model.rl_config[] = config
 
     # Initialize training history for each training agent type
-    if !isnothing(config.training_agent_types)
+    return if !isnothing(config.training_agent_types)
         for agent_type in config.training_agent_types
             if !haskey(model.training_history, agent_type)
                 model.training_history[agent_type] = nothing  # Will be set during training
@@ -451,7 +460,7 @@ function reset_model_for_episode!(model::ReinforcementLearningABM)
 
     # If there's a model initialization function, use it
     # Handle both RLConfig struct and NamedTuple
-    if config.model_init_fn !== nothing
+    return if config.model_init_fn !== nothing
         new_model = config.model_init_fn()
         # Copy agents and properties from new model
         remove_all!(model)

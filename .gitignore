@@ -20,3 +20,5 @@ test/mdata.arrow
 tutorial.md
 log
 examples/rl/log
+style.jl
+build_docs_with_style.jl

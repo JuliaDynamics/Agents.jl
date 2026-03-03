@@ -18,7 +18,7 @@
 using Agents
 using Random, LinearAlgebra
 
-@agent struct Bird(ContinuousAgent{2,Float64})
+@agent struct Bird(ContinuousAgent{2, Float64})
     const speed::Float64
     const cohere_factor::Float64
     const separation::Float64
@@ -43,16 +43,16 @@ end
 # The function `initialize_model` generates birds and returns
 # a model object using default values.
 function initialize_model(;
-    n_birds = 100,
-    speed = 1.0,
-    cohere_factor = 0.1,
-    separation = 2.0,
-    separate_factor = 0.25,
-    match_factor = 0.04,
-    visual_distance = 5.0,
-    extent = (100, 100),
-    seed = 42,
-)
+        n_birds = 100,
+        speed = 1.0,
+        cohere_factor = 0.1,
+        separation = 2.0,
+        separate_factor = 0.25,
+        match_factor = 0.04,
+        visual_distance = 5.0,
+        extent = (100, 100),
+        seed = 42,
+    )
     space2d = ContinuousSpace(extent; spacing = visual_distance / 1.5)
     rng = Random.MersenneTwister(seed)
 
@@ -104,7 +104,7 @@ function agent_step!(bird, model)
     bird.vel += (cohere + separate + match) / max(N, 1)
     bird.vel /= norm(bird.vel)
     ## Move bird according to new velocity and speed
-    move_agent!(bird, model, bird.speed)
+    return move_agent!(bird, model, bird.speed)
 end
 
 model = initialize_model()
@@ -122,7 +122,7 @@ CairoMakie.activate!() # hide
 const bird_polygon = Makie.Polygon(Point2f[(-1, -1), (2, 0), (-1, 1)])
 function bird_marker(b::Bird)
     φ = atan(b.vel[2], b.vel[1]) #+ π/2 + π
-    rotate_polygon(bird_polygon, φ)
+    return rotate_polygon(bird_polygon, φ)
 end
 
 # Where we have used the utility functions `scale_polygon` and `rotate_polygon` to act on a
