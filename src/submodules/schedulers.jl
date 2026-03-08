@@ -61,7 +61,7 @@ module Schedulers
 
     """
         Schedulers.fastest
-    
+
     A scheduler that orders all agent IDs in the fastest way possible,
     which is the default order dictated by the agent container.
     """
@@ -69,7 +69,7 @@ module Schedulers
 
     """
         Schedulers.ByID()
-    
+
     A scheduler that orders all agent IDs by their integer value.
     """
     struct ByID
@@ -87,7 +87,7 @@ module Schedulers
 
     """
         Schedulers.Randomly()
-    
+
     A scheduler that randomly orders all agent IDs.
     Different random ordering is used at each different step.
     """
@@ -103,7 +103,7 @@ module Schedulers
 
     """
         Schedulers.Partially(p)
-    
+
     A scheduler that orders only `p` percentage of randomly chosen agent IDs.
     """
     struct Partially{R <: Real}
@@ -121,7 +121,7 @@ module Schedulers
 
     """
         Schedulers.ByProperty(property)
-    
+
     A scheduler that orders agent IDs by their `property`, with agents with greater `property`
     being ordered first. `property` can be a
     `Symbol`, which just dictates which field of the agents to compare, or a function which
@@ -152,17 +152,17 @@ module Schedulers
 
     """
         Schedulers.ByType(shuffle_types::Bool, shuffle_agents::Bool, agent_union)
-    
+
     A scheduler useful only for mixed agent models using `Union` types.
     - Setting `shuffle_types = true` groups by agent type, but randomizes the type order.
         Otherwise returns agent IDs grouped in order of appearance in the `Union`.
     - `shuffle_agents = true` randomizes the order of agents within each group, `false` returns
         the default order of the container (equivalent to [`Schedulers.fastest`](@ref)).
     - `agent_union` is a `Union` of all valid agent types (as passed to [`ABM`](@ref ABM_Implementations))
-    
-    
+
+
         Schedulers.ByType((C, B, A), shuffle_agents::Bool)
-    
+
     A scheduler that orders agent IDs by type in specified order (since
     `Union`s are not order preserving). `shuffle_agents = true` randomizes the order of
     agents within each group.
