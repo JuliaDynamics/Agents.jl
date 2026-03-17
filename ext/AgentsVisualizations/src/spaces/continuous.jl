@@ -5,7 +5,7 @@ function Agents.space_axis_limits(space::ContinuousSpace)
     return Tuple(zip(o, e))
 end
 
-function Agents.abmheatmap!(ax, abmobs::ABMObservable, space::ContinuousSpace, heatobs, heatkwargs)
+function abmheatmap!(ax, abmobs::ABMObservable, space::ContinuousSpace, heatobs, heatkwargs)
     nbinx, nbiny = size(heatobs[])
     extx, exty = space.extent
     coordx = range(0, extx; length = nbinx)
