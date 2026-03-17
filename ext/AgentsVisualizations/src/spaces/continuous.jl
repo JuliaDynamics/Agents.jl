@@ -17,6 +17,8 @@ function Agents.abmheatmap!(ax, abmobs::ABMObservable, space::ContinuousSpace, h
     return hmap
 end
 
+abmplot_heatarray(model::ABM{<:ContinuousSpace}, heatarray) =
+    Agents.get_data(model, heatarray, identity)
 
 ## Inspection
 
