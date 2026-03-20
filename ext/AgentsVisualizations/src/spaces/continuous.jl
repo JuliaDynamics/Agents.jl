@@ -5,7 +5,7 @@ function Agents.space_axis_limits(space::ContinuousSpace)
     return Tuple(zip(o, e))
 end
 
-function abmheatmap!(ax, abmobs::ABMObservable, space::ContinuousSpace, heatobs, heatkwargs)
+function Agents.abmheatmap!(ax, abmobs::ABMObservable, space::ContinuousSpace, heatobs, heatkwargs)
     nbinx, nbiny = size(heatobs[])
     extx, exty = space.extent
     coordx = range(0, extx; length = nbinx)
@@ -17,7 +17,7 @@ function abmheatmap!(ax, abmobs::ABMObservable, space::ContinuousSpace, heatobs,
     return hmap
 end
 
-abmplot_heatarray(model::ABM{<:ContinuousSpace}, heatarray) =
+Agents.abmplot_heatarray(model::ABM{<:ContinuousSpace}, heatarray) =
     Agents.get_data(model, heatarray, identity)
 
 ## Inspection

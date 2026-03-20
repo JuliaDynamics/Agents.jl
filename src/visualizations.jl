@@ -273,6 +273,14 @@ Return the heatmap (or otherwise) plot object so that a Colorbar can be assigned
 function abmheatmap! end
 
 """
+    abmplot_heatarray(model::ABM{<:S}, heatarray) where {S<:AbstractSpace} end
+
+Return a 2D matrix that will be plotted as a heatmap using the `heatarray`
+keyword of `abmplot`.
+"""
+function abmplot_heatarray end
+
+"""
     spaceplot!(ax, space::AbstractSpace; spaceplotkwargs...)
 
 Add a space-dependent plot to `ax`. `spaceplotkwargs` is propagated
