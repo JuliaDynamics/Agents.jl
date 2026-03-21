@@ -5,7 +5,7 @@ function Agents.space_axis_limits(space::Agents.AbstractGridSpace)
     return Tuple(zip(o, e))
 end
 
-function abmheatmap!(ax, abmobs::ABMObservable, space::Agents.AbstractGridSpace, heatobs, heatkwargs)
+function Agents.abmheatmap!(ax, abmobs::ABMObservable, space::Agents.AbstractGridSpace, heatobs, heatkwargs)
     hmap = Makie.heatmap!(
         ax, heatobs;
         colormap = JULIADYNAMICS_CMAP, heatkwargs...
@@ -13,7 +13,7 @@ function abmheatmap!(ax, abmobs::ABMObservable, space::Agents.AbstractGridSpace,
     return hmap
 end
 
-function abmplot_heatarray(model::ABM{<:Agents.AbstractGridSpace}, heatarray)
+function Agents.abmplot_heatarray(model::ABM{<:Agents.AbstractGridSpace}, heatarray)
     matrix = Agents.get_data(model, heatarray, identity)
     if !(matrix isa AbstractMatrix) || size(matrix) ≠ size(abmspace(model))
         error("The heat array property must yield a matrix of same size as the grid!")

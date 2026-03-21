@@ -82,8 +82,8 @@ function Agents.abmplot!(
     # other plots
     Agents.spaceplot!(ax, abmspace(modelobs[]); spaceplotkwargs...)
     if !isnothing(heatarray)
-        heatobs = @lift(abmplot_heatarray($(modelobs), heatarray))
-        hmap = abmheatmap!(ax, abmobs, abmspace(modelobs[]), heatobs, heatkwargs)
+        heatobs = @lift(Agents.abmplot_heatarray($(modelobs), heatarray))
+        hmap = Agents.abmheatmap!(ax, abmobs, abmspace(modelobs[]), heatobs, heatkwargs)
         add_colorbar && Colorbar(ax.parent[1, 1][1, 2], hmap; width = 20, label = colorbar_label)
         # TODO: Set colorbar to be "glued" to axis
         # Problem with the following code, which comes from the tutorial

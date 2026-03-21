@@ -102,11 +102,12 @@ Agents.spaceplot!
 
 ### Heatmap handling
 
-Heatmaps are extracted and plotted automatically, but your space may require some special handling for that. For example `ContinuousSpace` needs to map the finite heatmap matrix over the continuous space.
+Heatmaps are extracted and plotted automatically, but your space may require some special handling for that. For example `ContinuousSpace` needs to extract a finite heatmap matrix from the continuous space.
 If you require such handling, extend:
 
 ```@docs
 Agents.abmheatmap!
+Agents.abmplot_heatarray
 ```
 
 ## Designing a new Pathfinder Cost Metric
