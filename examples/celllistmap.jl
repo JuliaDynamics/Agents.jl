@@ -45,7 +45,7 @@ PropParticle(; vel, r, k, mass) = (vel, r, k, mass)
 
 # ## Required and data structures for CellListMap.jl
 #
-# We will use the high-level `ParticleSystem` interface (requires version ≥0.9.0):
+# We will use the high-level `ParticleSystem` interface (requires version ≥0.10):
 using CellListMap
 
 # Two auxiliary arrays will be created on model initialization, to be passed to
@@ -65,8 +65,7 @@ using CellListMap
 # use `unitcell = nothing`.
 #
 # More complex output data, variable system geometries and other options are supported,
-# according to the [CellListMap](https://m3g.github.io/CellListMap.jl/stable/ParticleSystem/)
-# user guide.
+# according to the [CellListMap](https://m3g.github.io/CellListMap.jl/) user guide.
 #
 # ## Model initialization
 # We create the model with a keyword-accepting function as is recommended in Agents.jl.
@@ -131,18 +130,18 @@ end
 # ## Computing the pairwise particle forces
 # To follow the `CellListMap` interface, we first need a function that
 # computes the force between a single pair of particles. This function
-# receives the positions of the two particles (already considering
-# the periodic boundary conditions), `x` and `y`, their indices in the
-# array of positions, `i` and `j`, the squared distance between them, `d2`,
-# the `forces` array to be updated and the `model` properties.
-#
+# receives a `CellListMap.NeighborPair` object, which carries the
+# positions (already wrapped according to periodic boundaries, if available),
+# the indices and the distance between the particles.
+# 
 # Given these input parameters, the function obtains the properties of
 # each particle from the model, and computes the force between the particles
 # as (minus) the gradient of the potential energy function defined above.
 #
 # The function *must* return the `forces` array, to follow the `CellListMap` API.
 #
-function calc_forces!(x, y, i, j, d2, forces, model)
+function calc_forces!(pair, forces, model)
+    (; x, y, i, j, d2) = pair
     p_i = model[i]
     p_j = model[j]
     d = sqrt(d2)
@@ -162,8 +161,8 @@ end
 #
 function model_step!(model::ABM)
     ## Update the pairwise forces at this step
-    map_pairwise!(
-        (x, y, i, j, d2, forces) -> calc_forces!(x, y, i, j, d2, forces, model),
+    pairwise!(
+        (pair, forces) -> calc_forces!(pair, forces, model),
         model.system,
     )
     return nothing
@@ -186,7 +185,7 @@ function agent_step!(agent, model::ABM)
     x = normalize_position(x, model)
     agent.vel = v
     move_agent!(agent, x, model)
-    ## !!! IMPORTANT: Update positions in the ParticleSystem
+    ## !!! IMPORTANT: Update positions in the CellListMap.ParticleSystem
     model.system.positions[id] = agent.pos
     return nothing
 end
