@@ -41,7 +41,7 @@ StreamSampling = "ff63dad9-3335-55d8-95ec-f8139d39e468"
 
 [compat]
 BlackBoxOptim = "0.6"
-CellListMap = "0.9"
+CellListMap = "0.10"
 DelaunayTriangulation = "1"
 Documenter = "1"
 Graphs = "1"
