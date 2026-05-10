@@ -133,7 +133,7 @@ end
 # receives a `CellListMap.NeighborPair` object, which carries the
 # positions (already wrapped according to periodic boundaries, if available),
 # the indices and the distance between the particles.
-# 
+#
 # Given these input parameters, the function obtains the properties of
 # each particle from the model, and computes the force between the particles
 # as (minus) the gradient of the potential energy function defined above.
