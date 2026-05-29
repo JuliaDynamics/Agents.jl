@@ -159,7 +159,6 @@ end
 
 @testset "Agents.jl Tests" begin
     include("iterable_tests.jl")
-    #=
     include("package_sanity_tests.jl")
     include("model_creation_tests.jl")
     include("api_tests.jl")
@@ -179,5 +178,4 @@ end
     include("new_space_tests.jl")
     include("reinforcement_learning_tests.jl")
     include("rl_extension_tests.jl")
-    =#
 end
