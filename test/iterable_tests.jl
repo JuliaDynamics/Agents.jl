@@ -1,4 +1,4 @@
-using Agents
+using Agents, Test
 import Agents.Schedulers: fastest, Randomly, ByID, Partially, ByProperty, ByType
 @testset "Iterate over Agents" begin
     TESTSYSTEMSIZE = 10.0
