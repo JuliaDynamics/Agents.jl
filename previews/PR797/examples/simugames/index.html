@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Simulation games · Agents.jl</title><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link href="https://fonts.googleapis.com/css?family=Montserrat|Source+Code+Pro&amp;display=swap" rel="stylesheet" type="text/css"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img src="../../assets/logo.png" alt="Agents.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit">Agents.jl</span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Introduction</a></li><li><a class="tocitem" href="../../tutorial/">Tutorial</a></li><li><input class="collapse-toggle" id="menuitem-3" type="checkbox" checked/><label class="tocitem" for="menuitem-3"><span class="docs-label">Examples</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../schelling/">Schelling&#39;s segregation model</a></li><li><a class="tocitem" href="../sir/">SIR model for the spread of COVID-19</a></li><li><a class="tocitem" href="../flock/">Flocking model</a></li><li><a class="tocitem" href="../zombies/">Zombie Outbreak in a City</a></li><li><a class="tocitem" href="../predator_prey/">Predator-prey dynamics</a></li><li><a class="tocitem" href="../rabbit_fox_hawk/">3D Mixed-Agent Ecosystem with Pathfinding</a></li><li class="is-active"><a class="tocitem" href>Simulation games</a></li><li><a class="tocitem" href="../../models/">Predefined Models</a></li><li><a class="tocitem" href="../">More Examples for Agents.jl</a></li></ul></li><li><a class="tocitem" href="../../api/">API</a></li><li><a class="tocitem" href="../../agents_visualizations/">Plotting and Interactivity</a></li><li><input class="collapse-toggle" id="menuitem-6" type="checkbox"/><label class="tocitem" for="menuitem-6"><span class="docs-label">Ecosystem Integration</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../optim/">BlackBoxOptim.jl</a></li><li><a class="tocitem" href="../diffeq/">DifferentialEquations.jl</a></li><li><a class="tocitem" href="../schoolyard/">Graphs.jl</a></li><li><a class="tocitem" href="../measurements/">Measurements.jl</a></li><li><a class="tocitem" href="../celllistmap/">CellListMap.jl</a></li></ul></li><li><a class="tocitem" href="../../performance_tips/">Performance Tips</a></li><li><a class="tocitem" href="../../comparison/">ABM Framework Comparison</a></li><li><a class="tocitem" href="../../devdocs/">Developer Docs</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>Simulation games</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Simulation games</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/JuliaDynamics/Agents.jl/blob/main/examples/simugames.jl" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Simulation-games-1"><a class="docs-heading-anchor" href="#Simulation-games-1">Simulation games</a><a class="docs-heading-anchor-permalink" href="#Simulation-games-1" title="Permalink"></a></h1><p>A Novel Approach to Interactive Agent-Based Models</p><p>Interactive Agent-Based Models (ABMs) combine the power of agent-based modeling with the engaging nature of games to create immersive, interactive experiences that facilitate the understanding of complex systems. This novel approach to agent-based models allows users to actively participate in simulations, explore various scenarios, and observe the results of their actions in real-time.</p><p>By bridging the gap between traditional agent-based modeling and gaming, simulation games not only provides an enjoyable way to learn and experiment with complex systems but also serves as an effective tool for education and research. For example:</p><p>In ecology and conservation biology, researchers can use simulation games to investigate the impact of human activities on ecosystems, simulate species interactions, and evaluate the effectiveness of various conservation strategies. In the realm of social sciences, simulation games can be employed to explore human behavior, group dynamics, and social networks, enabling researchers to test different theories and observe how participants interact within various simulated environments. In education research, these interactive models can serve as valuable tools for investigating the effectiveness of game-based learning in enhancing students&#39; understanding of complex topics and fostering critical thinking skills.</p><p>In this example, we demonstrate a simple simulation game where the user controls a predator trying to catch preys in a grid-based environment. As the predator moves, the preys also move randomly across the grid.</p><p>In this proof of concept, we have intentionally designed a simple example of a simulation game to demonstrate the potential and feasibility of interactive agent-based models.</p><p>We start with the usual steps of building and ABM in Agents.jl, i.e. defining agent types and a function to initialize the model</p><pre><code class="language-julia">using Agents
+
+@agent Player GridAgent{2} begin end
+
+@agent Prey GridAgent{2} begin
+  destination::NTuple{2,Int}
+end
+
+&quot;Initializes the model with the specified number of preys on a grid of the given dimensions.&quot;
+function initialize_game(; dims=(100, 100), npreys=10, prey_speed=2)
+  space = GridSpace(dims, periodic=false)
+  model = ABM(Union{Player,Prey}, space, properties=Dict(:game_over =&gt; false, :speed =&gt; prey_speed))
+  for z in 1:npreys
+    prey = Prey(z, (1, 1), (rand(1:dims[1]), rand(1:dims[2])))
+    add_agent_single!(prey, model)
+  end
+  player = Player(npreys + 1, (1, 1))
+  add_agent_single!(player, model)
+  return model
+end</code></pre><p>Next, we define a function to move the predator (player) in the specified direction. It takes care of the grid&#39;s boundaries, ensuring that the agent doesn&#39;t go out of bounds.</p><pre><code class="language-julia">function walk_agent!(player::Player, model::ABM, direction::Symbol)
+  new_pos = player.pos
+  if direction == :up
+    new_pos = (player.pos[1] - 1, player.pos[2])
+  elseif direction == :down
+    new_pos = (player.pos[1] + 1, player.pos[2])
+  elseif direction == :left
+    new_pos = (player.pos[1], player.pos[2] - 1)
+  elseif direction == :right
+    new_pos = (player.pos[1], player.pos[2] + 1)
+  end
+  if all(1 .&lt;= new_pos .&lt;= size(model.space))  # Valid position
+    Agents.move_agent!(player, new_pos, model)
+  end
+end
+
+walk_agent!(player::Player, model::ABM) = return</code></pre><p>And a function for automatic movement of preys. This function calculates the distance between the current position and the destination, and moves the object towards the destination with the given speed. If the object is close enough to the destination (i.e., the distance is less than or equal to the speed), it will move directly to the destination. Otherwise, it will move a fraction of the distance based on the given speed.</p><pre><code class="language-julia">function move_towards_destination(pos::Tuple{Int,Int}, speed::Int, destination::Tuple{Int,Int})
+  x1, y1 = pos
+  x2, y2 = destination
+
+  distance_x = x2 - x1
+  distance_y = y2 - y1
+
+  total_distance = sqrt(distance_x^2 + distance_y^2)
+
+  if total_distance &lt;= speed
+    return destination
+  end
+
+  angle = atan(distance_y, distance_x)
+  new_x = x1 + round(Int, speed * cos(angle))
+  new_y = y1 + round(Int, speed * sin(angle))
+
+  # If rounding causes the position to overshoot the destination, clamp to the destination
+  new_x = (distance_x &gt; 0 ? min(new_x, x2) : max(new_x, x2))
+  new_y = (distance_y &gt; 0 ? min(new_y, y2) : max(new_y, y2))
+
+  return (new_x, new_y)
+end</code></pre><p>When preys reach their destination, they choose a new random destination.</p><pre><code class="language-julia">function walk_agent!(player::Prey, model::ABM)
+  dims = size(model.space)
+  new_pos = move_towards_destination(player.pos, model.speed, player.destination)
+  if new_pos == player.destination
+    player.destination = (rand(1:dims[1]), rand(1:dims[2]))
+  end
+  Agents.move_agent!(player, new_pos, model)
+end
+
+function move_preys!(model::ABM)
+  for (zid, z) in model.agents
+    walk_agent!(z, model)
+  end
+end</code></pre><p>The interactivity of the model is achieved using <code>Makie.jl</code>. We use a simple scatter plot and bind one point to the keyboard so the user can move it around.</p><pre><code class="language-">using Makie
+using GLMakie
+using Observables</code></pre><p>The <code>update_point!()</code> function updates the position of a point (predator or prey) in the scatter plot. This function is used to visualize the movement of agents on the grid.</p><pre><code class="language-julia">&quot;&quot;&quot;
+Update the position of point `index`.
+&quot;&quot;&quot;
+function update_point!(points, index, new_point)
+  current_points = copy(points[])
+  current_points[index] = new_point
+  points[] = current_points
+end</code></pre><p>The <code>main()</code> function sets up the game, creates the scatter plot for visualizing the agents, and handles user input for controlling the predator&#39;s movement. The predator moves according to the arrow keys, and the game continues indefinitely. In this first example, no interactions happen between the predator and preys.</p><pre><code class="language-julia">function main()
+  GLMakie.inline!(false) # Add this line to run the plot on a separate thread
+
+  model = initialize_game()
+  dims = size(model.space)
+
+  total_agents = nagents(model)
+  player = model[total_agents]
+
+  # Create a scatter plot and add the player
+  player_scatter = scatter([player.pos[2]], [player.pos[1]], markersize=10, color=:blue, padding=0)
+
+  # Add preys to the plot
+  positions = [getproperty(model[i], :pos) for i in 1:(total_agents-1)]
+  # Create an observable array of points, which can then be updated in real-time
+  points = Observable(positions)
+  scatter!(points, color=:red)
+
+  axis = player_scatter.axis
+  scene = axis.scene
+  limits!(axis, FRect(0, 0, dims[1], dims[2]))
+
+  function handle_key(scene, key)
+    if key == Makie.Keyboard.down
+      walk_agent!(player, model, :up)
+    elseif key == Makie.Keyboard.up
+      walk_agent!(player, model, :down)
+    elseif key == Makie.Keyboard.left
+      walk_agent!(player, model, :left)
+    elseif key == Makie.Keyboard.right
+      walk_agent!(player, model, :right)
+    end
+
+    # Update the scatter plot&#39;s data with the new player position
+    player_scatter.plot.positions[] = [Point2f0(player.pos[2], player.pos[1])]
+  end
+
+  # Wrap the while loop in an async block
+  # using an async task for the while loop allows the loop to run concurrently with the rest of the code. Without it, the while loop would block the main thread, preventing the user from interacting with the game.
+  async_loop = @async begin
+    while model.game_over == false
+      sleep(0.2)
+      move_preys!(model) ## updates the positions of preys in the model.
+      for index in 1:(total_agents-1)
+        update_point!(points, index, model[index].pos) ## update the position of preys on the scatter plot
+      end
+    end
+  end
+
+  on(events(scene).keyboardbutton) do event
+    if event.action == Keyboard.press || event.action == Keyboard.repeat
+      handle_key(scene, event.key)
+    end
+  end
+
+  display(scene)
+  wait(async_loop) ## wait for the async_loop to finish before ending the main function
+end</code></pre><p>One can easily add more complex behavior to the model. For example, the preys die if the predator comes close to them.</p><pre><code class="language-julia">function update_agent_point!(points, agent_id, point_indices, new_point, remove=false)
+  index = point_indices[agent_id]
+  current_points = copy(points[])
+  if remove
+    deleteat!(current_points, index)
+    delete!(point_indices, agent_id)
+    for id in keys(point_indices)
+      if point_indices[id] &gt; index
+        point_indices[id] -= 1
+      end
+    end
+  else
+    current_points[index] = new_point
+  end
+  points[] = current_points
+end
+
+function check_contact(player, model)
+  all_ids = collect(nearby_ids(player, model, 3))
+  if length(all_ids) &gt; 0
+    for i in all_ids
+      return i  ## only one contact per time
+    end
+  end
+  return -1
+end
+
+
+function main2()
+  GLMakie.inline!(false) ## Add this line to run the plot on a separate thread
+
+  model = initialize_game()
+  dims = size(model.space)
+
+  total_agents = nagents(model)
+  player = model[total_agents]
+
+  # Create a scatter plot and add the player
+  player_scatter = scatter([player.pos[2]], [player.pos[1]], markersize=10, color=:blue, padding=0)
+
+  # Add preys to the plot
+  point_indices = Dict(model[i].id =&gt; i for i in 1:(total_agents-1))
+  # Create an observable array of points, which can then be updated in real-time
+  points = Observable([getproperty(model[point_indices[i]], :pos) for i in 1:(total_agents-1)])
+  scatter!(points, color=:red)
+
+  axis = player_scatter.axis
+  scene = axis.scene
+  limits!(axis, FRect(0, 0, dims[1], dims[2]))
+
+  function handle_key(scene, key)
+    if key == Makie.Keyboard.down
+      walk_agent!(player, model, :up)
+    elseif key == Makie.Keyboard.up
+      walk_agent!(player, model, :down)
+    elseif key == Makie.Keyboard.left
+      walk_agent!(player, model, :left)
+    elseif key == Makie.Keyboard.right
+      walk_agent!(player, model, :right)
+    end
+
+    # Check for contact
+    collided_index = check_contact(player, model)
+    if collided_index != -1
+      collided_id = model[collided_index].id
+      kill_agent!(collided_index, model)
+      update_agent_point!(points, collided_id, point_indices, (0, 0), true)
+    end
+
+    # Update the scatter plot&#39;s data with the new player position
+    player_scatter.plot.positions[] = [Point2f0(player.pos[2], player.pos[1])]
+  end
+
+  # Wrap the while loop in an async block
+  async_loop = @async begin
+    while model.game_over == false
+      sleep(0.2)
+      move_preys!(model) ## updates the positions of preys in the model.
+      for agent_id in keys(point_indices)
+        update_agent_point!(points, agent_id, point_indices, model[agent_id].pos)
+      end
+
+      # Check for contact
+      collided_index = check_contact(player, model)
+      if collided_index != -1
+        collided_id = model[collided_index].id
+        kill_agent!(collided_index, model)
+        update_agent_point!(points, collided_id, point_indices, (0, 0), true)
+      end
+
+      if nagents(model) == 1
+        model.game_over = true
+      end
+    end
+  end
+
+  on(events(scene).keyboardbutton) do event
+    if event.action == Keyboard.press || event.action == Keyboard.repeat
+      handle_key(scene, event.key)
+    end
+  end
+
+  display(scene)
+  wait(async_loop) ## wait for the async_loop to finish before ending the main function
+end</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../rabbit_fox_hawk/">« 3D Mixed-Agent Ecosystem with Pathfinding</a><a class="docs-footer-nextpage" href="../../models/">Predefined Models »</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Friday 21 April 2023 13:22">Friday 21 April 2023</span>. Using Julia version 1.8.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>BlackBoxOptim.jl · Agents.jl</title><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script><link href="https://fonts.googleapis.com/css?family=Montserrat|Source+Code+Pro&amp;display=swap" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img src="../../assets/logo.png" alt="Agents.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../../">Agents.jl</a></span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Introduction</a></li><li><a class="tocitem" href="../../tutorial/">Tutorial</a></li><li><input class="collapse-toggle" id="menuitem-3" type="checkbox"/><label class="tocitem" for="menuitem-3"><span class="docs-label">Examples</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../">Overview</a></li><li><a class="tocitem" href="../schelling/">Schelling&#39;s segregation model</a></li><li><a class="tocitem" href="../sugarscape/">Sugarscape</a></li><li><a class="tocitem" href="../sir/">SIR model for the spread of COVID-19</a></li><li><a class="tocitem" href="../social_distancing/">Continuous space social distancing for COVID-19</a></li><li><a class="tocitem" href="../wealth_distribution/">Wealth distribution</a></li><li><a class="tocitem" href="../forest_fire/">Forest fire</a></li><li><a class="tocitem" href="../game_of_life_2D_CA/">Conway&#39;s game of life</a></li><li><a class="tocitem" href="../wright-fisher/">Wright-Fisher model of evolution</a></li><li><a class="tocitem" href="../hk/">Hegselmann-Krause opinion dynamics</a></li><li><a class="tocitem" href="../flock/">Flocking</a></li><li><a class="tocitem" href="../daisyworld/">Daisyworld</a></li><li><a class="tocitem" href="../predator_prey_fast/">Predator-Prey</a></li><li><a class="tocitem" href="../maze/">Maze Solver</a></li><li><a class="tocitem" href="../runners/">Mountain Runners</a></li><li><a class="tocitem" href="../growing_bacteria/">Bacteria Growth</a></li><li><a class="tocitem" href="../opinion_spread/">Opinion spread</a></li><li><a class="tocitem" href="../battle/">Battle Royale</a></li><li><a class="tocitem" href="../zombies/">Zombie Outbreak</a></li><li><a class="tocitem" href="../fractal_growth/">Fractal Growth</a></li></ul></li><li><a class="tocitem" href="../../models/">Predefined Models</a></li><li><a class="tocitem" href="../../api/">API</a></li><li><a class="tocitem" href="../../interact/">Plotting and interactive application</a></li><li><input class="collapse-toggle" id="menuitem-7" type="checkbox" checked/><label class="tocitem" for="menuitem-7"><span class="docs-label">Ecosystem Integration</span><i class="docs-chevron"></i></label><ul class="collapsed"><li class="is-active"><a class="tocitem" href>BlackBoxOptim.jl</a></li><li><a class="tocitem" href="../diffeq/">DifferentialEquations.jl</a></li><li><a class="tocitem" href="../schoolyard/">LightGraphs.jl</a></li><li><a class="tocitem" href="../measurements/">Measurements.jl</a></li></ul></li><li><a class="tocitem" href="../../performance_tips/">Performance Tips</a></li><li><a class="tocitem" href="../../comparison/">ABM Framework Comparison</a></li><li><a class="tocitem" href="../../devdocs/">Developer Docs</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Ecosystem Integration</a></li><li class="is-active"><a href>BlackBoxOptim.jl</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>BlackBoxOptim.jl</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/JuliaDynamics/Agents.jl/blob/master/examples/optim.jl" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Optimizing-agent-based-models"><a class="docs-heading-anchor" href="#Optimizing-agent-based-models">Optimizing agent-based models</a><a id="Optimizing-agent-based-models-1"></a><a class="docs-heading-anchor-permalink" href="#Optimizing-agent-based-models" title="Permalink"></a></h1><p>Sometimes we need to fine-tune our ABMs parameters to a specific outcome. The brute-force solution can quickly become infeasible for even for a few different parameter settings over a number of valid scan ranges. Most of the time, ABMs are also stochastic, so the effect of a parameter setting should be derived from taking the average value only after running the model several times.</p><p>Here we show how to use the evolutionary algorithms in <a href="https://github.com/robertfeldt/BlackBoxOptim.jl">BlackBoxOptim.jl</a> with Agents.jl, to optimize the parameters of an epidemiological model (SIR). We explain this model in detail in <a href="../sir/#SIR-model-for-the-spread-of-COVID-19">SIR model for the spread of COVID-19</a>. For brevity here, we just import</p><pre><code class="language-julia">include(&quot;siroptim.jl&quot;) # From the examples directory</code></pre><p>which provides us a <code>model_initiation</code> helper function to build a SIR model, and an <code>agent_step!</code> function.</p><p>To look for optimal parameters, we need to define a cost function. The cost function takes as arguments the model parameters that we want to tune; in a SIR model, that would be the migration rate, death rate, transmission rate, when an infected person has been detected (<code>β_det</code>), or when the remain undetected (<code>β_und</code>), infection period, reinfection probability, and time until the infection is detected. The function returns an <em>objective</em>: this value takes the form one or more numbers, which the optimiser will attempt to minimize.</p><pre><code class="language-julia">using BlackBoxOptim, Random
+using Statistics: mean
+
+function cost(x)
+    model = model_initiation(;
+        Ns = [500, 500, 500],
+        migration_rate = x[1],
+        death_rate = x[2],
+        β_det = x[3],
+        β_und = x[4],
+        infection_period = x[5],
+        reinfection_probability = x[6],
+        detection_time = x[7],
+    )
+
+    infected_fraction(model) =
+        count(a.status == :I for a in allagents(model)) / nagents(model)
+
+    _, data = run!(
+        model,
+        agent_step!,
+        50;
+        mdata = [infected_fraction],
+        when_model = [50],
+        replicates = 10,
+    )
+
+    return mean(data.infected_fraction)
+end</code></pre><p>This cost function runs our model 10 times for 50 days, then returns the average number of infected people. When we pass this function to an optimiser, we will effectively be asking for a set of parameters that can reduce the number of infected people to the lowest possible number.</p><p>We can now test the function cost with some reasonable parameter values.</p><pre><code class="language-julia">Random.seed!(10)
+
+x0 = [
+    0.2,  # migration_rate
+    0.1,  # death_rate
+    0.05, # β_det
+    0.3,  # β_und
+    10,   # infection_period
+    0.1,  # reinfection_probability
+    5,    # detection_time
+]
+cost(x0)</code></pre><pre class="documenter-example-output">0.9059485530546623</pre><p>With these initial values, 94% of the population is infected after the 50 day period.</p><p>We now let the optimization algorithm change parameters to minimize the number of infected individuals. Complete details on how to use this optimiser can be found in the <a href="https://github.com/robertfeldt/BlackBoxOptim.jl">BlackBoxOptim readme</a>. Here, we assign a range of possible parameter values we would like to test, and a cutoff time in the event that certain parameter sets are unfeasible and cause our model to never converge to a solution.</p><pre><code class="language-julia">result = bboptimize(
+    cost,
+    SearchRange = [
+        (0.0, 1.0),
+        (0.0, 1.0),
+        (0.0, 1.0),
+        (0.0, 1.0),
+        (7.0, 13.0),
+        (0.0, 1.0),
+        (2.0, 6.0),
+    ],
+    NumDimensions = 7,
+    MaxTime = 20,
+)
+best_fitness(result)</code></pre><pre class="documenter-example-output">0.0</pre><p>With the new parameter values found in <code>result</code>, we find that the fraction of the infected population can be dropped down to 11%. These values of these parameters are now:</p><pre><code class="language-julia">best_candidate(result)</code></pre><pre class="documenter-example-output">7-element Array{Float64,1}:
+ 0.1545049978104396
+ 0.886202142470518
+ 0.8258299702140992
+ 0.7411762981538305
+ 9.172098752376595
+ 0.17302035312870545
+ 5.907046385323653
+</pre><p>Unfortunately we&#39;ve not given the optimiser information we probably needed to. Notice that the death rate is 96%, with reinfection quite low. When all the infected individuals die, infection doesn&#39;t transmit - the optimiser has managed to reduce the infection rate by killing the infected.</p><p>This is not the work of some sadistic AI, just an oversight in our instructions. Let&#39;s modify the cost function to also keep the mortality rate low.</p><p>First, we&#39;ll run the model with our new-found parameters:</p><pre><code class="language-julia">x = best_candidate(result)
+
+Random.seed!(0)
+
+model = model_initiation(;
+    Ns = [500, 500, 500],
+    migration_rate = x[1],
+    death_rate = x[2],
+    β_det = x[3],
+    β_und = x[4],
+    infection_period = x[5],
+    reinfection_probability = x[6],
+    detection_time = x[7],
+)
+
+_, data =
+    run!(model, agent_step!, 50; mdata = [nagents], when_model = [50], replicates = 10)
+
+mean(data.nagents)</code></pre><pre class="documenter-example-output">2.0</pre><p>About 10% of the population dies with these parameters over our 50 day window.</p><p>We can define a multi-objective cost function that minimizes the number of infected and deaths by returning more than one value in our cost function.</p><pre><code class="language-julia">function cost_multi(x)
+    model = model_initiation(;
+        Ns = [500, 500, 500],
+        migration_rate = x[1],
+        death_rate = x[2],
+        β_det = x[3],
+        β_und = x[4],
+        infection_period = x[5],
+        reinfection_probability = x[6],
+        detection_time = x[7],
+    )
+
+    initial_size = nagents(model)
+
+    infected_fraction(model) =
+        count(a.status == :I for a in allagents(model)) / nagents(model)
+    n_fraction(model) = -1.0 * nagents(model) / initial_size
+
+    mdata = [infected_fraction, n_fraction]
+    _, data = run!(
+        model,
+        agent_step!,
+        50;
+        mdata,
+        when_model = [50],
+        replicates = 10,
+    )
+
+    return mean(data[!, dataname(mdata[1])), mean(data[!, dataname(mdata[2]))
+end</code></pre><p>Notice that our new objective <code>n_fraction</code> is negative. It would be simpler to state we&#39;d like to &#39;maximise the living population&#39;, but the optimiser we&#39;re using here focuses on minimising objectives only, therefore we must &#39;minimise the number of agents dying&#39;.</p><pre><code class="language-julia">cost_multi(x0)</code></pre><pre class="documenter-example-output">(0.9812286689419796, -0.7813333333333333)</pre><p>The cost of our initial parameter values is high: most of the population (96%) is infected and 22% die.</p><p>Let&#39;s minimize this multi-objective cost function. There is more than one way to approach such an optimisation. Again, refer to the <a href="https://github.com/robertfeldt/BlackBoxOptim.jl">BlackBoxOptim readme</a> for specifics.</p><pre><code class="language-julia">result = bboptimize(
+    cost_multi,
+    Method = :borg_moea,
+    FitnessScheme = ParetoFitnessScheme{2}(is_minimizing = true),
+    SearchRange = [
+        (0.0, 1.0),
+        (0.0, 1.0),
+        (0.0, 1.0),
+        (0.0, 1.0),
+        (7.0, 13.0),
+        (0.0, 1.0),
+        (2.0, 6.0),
+    ],
+    NumDimensions = 7,
+    MaxTime = 55,
+)
+best_fitness(result)</code></pre><pre class="documenter-example-output">(0.0047011417058428475, -0.9926666666666668)</pre><pre><code class="language-julia">best_candidate(result)</code></pre><pre class="documenter-example-output">7-element Array{Float64,1}:
+  0.8798741355149663
+  0.6703698358420607
+  0.07093587652308599
+  0.07760264834010584
+ 10.65213641721431
+  0.9911248984077646
+  5.869646301829334
+</pre><p>These parameters look better: about 0.3% of the population dies and 0.02% are infected:</p><p>The algorithm managed to minimize the number of infected and deaths while still increasing death rate to 42%, reinfection probability to 53%, and migration rates to 33%. The most important change however, was decreasing the transmission rate when individuals are infected and undetected from 30% in our initial calculation, to 0.2%.</p><p>Over a longer period of time than 50 days, that high death rate will take its toll though. Let&#39;s reduce that rate and check the cost.</p><pre><code class="language-julia">x = best_candidate(result)
+x[2] = 0.02
+cost_multi(x)</code></pre><pre class="documenter-example-output">(0.03933333333333333, -1.0)</pre><p>The fraction of infected increases to 0.04%. This is an interesting result: since this virus model is not as deadly, the chances of re-infection increase. We now have a set of parameters to strive towards in the real world. Insights such as these assist us to enact countermeasures like social distancing to mitigate infection risks.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../interact/">« Plotting and interactive application</a><a class="docs-footer-nextpage" href="../diffeq/">DifferentialEquations.jl »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Tuesday 8 June 2021 11:49">Tuesday 8 June 2021</span>. Using Julia version 1.6.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

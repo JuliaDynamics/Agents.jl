@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>LightGraphs.jl · Agents.jl</title><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script><link href="https://fonts.googleapis.com/css?family=Montserrat|Source+Code+Pro&amp;display=swap" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img src="../../assets/logo.png" alt="Agents.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../../">Agents.jl</a></span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Introduction</a></li><li><a class="tocitem" href="../../tutorial/">Tutorial</a></li><li><input class="collapse-toggle" id="menuitem-3" type="checkbox"/><label class="tocitem" for="menuitem-3"><span class="docs-label">Examples</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../">Overview</a></li><li><a class="tocitem" href="../schelling/">Schelling&#39;s segregation model</a></li><li><a class="tocitem" href="../sugarscape/">Sugarscape</a></li><li><a class="tocitem" href="../sir/">SIR model for the spread of COVID-19</a></li><li><a class="tocitem" href="../social_distancing/">Continuous space social distancing for COVID-19</a></li><li><a class="tocitem" href="../wealth_distribution/">Wealth distribution</a></li><li><a class="tocitem" href="../forest_fire/">Forest fire</a></li><li><a class="tocitem" href="../game_of_life_2D_CA/">Conway&#39;s game of life</a></li><li><a class="tocitem" href="../wright-fisher/">Wright-Fisher model of evolution</a></li><li><a class="tocitem" href="../hk/">Hegselmann-Krause opinion dynamics</a></li><li><a class="tocitem" href="../flock/">Flocking</a></li><li><a class="tocitem" href="../daisyworld/">Daisyworld</a></li><li><a class="tocitem" href="../predator_prey_fast/">Predator-Prey</a></li><li><a class="tocitem" href="../maze/">Maze Solver</a></li><li><a class="tocitem" href="../runners/">Mountain Runners</a></li><li><a class="tocitem" href="../growing_bacteria/">Bacteria Growth</a></li><li><a class="tocitem" href="../opinion_spread/">Opinion spread</a></li><li><a class="tocitem" href="../battle/">Battle Royale</a></li><li><a class="tocitem" href="../zombies/">Zombie Outbreak</a></li><li><a class="tocitem" href="../fractal_growth/">Fractal Growth</a></li></ul></li><li><a class="tocitem" href="../../models/">Predefined Models</a></li><li><a class="tocitem" href="../../api/">API</a></li><li><a class="tocitem" href="../../interact/">Plotting and interactive application</a></li><li><input class="collapse-toggle" id="menuitem-7" type="checkbox" checked/><label class="tocitem" for="menuitem-7"><span class="docs-label">Ecosystem Integration</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../optim/">BlackBoxOptim.jl</a></li><li><a class="tocitem" href="../diffeq/">DifferentialEquations.jl</a></li><li class="is-active"><a class="tocitem" href>LightGraphs.jl</a><ul class="internal"><li><a class="tocitem" href="#Rules-of-the-schoolyard"><span>Rules of the schoolyard</span></a></li><li><a class="tocitem" href="#Initialising-the-model"><span>Initialising the model</span></a></li><li><a class="tocitem" href="#Movement-dynamics"><span>Movement dynamics</span></a></li><li><a class="tocitem" href="#Visualising-the-system"><span>Visualising the system</span></a></li></ul></li><li><a class="tocitem" href="../measurements/">Measurements.jl</a></li></ul></li><li><a class="tocitem" href="../../performance_tips/">Performance Tips</a></li><li><a class="tocitem" href="../../comparison/">ABM Framework Comparison</a></li><li><a class="tocitem" href="../../devdocs/">Developer Docs</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Ecosystem Integration</a></li><li class="is-active"><a href>LightGraphs.jl</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>LightGraphs.jl</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/JuliaDynamics/Agents.jl/blob/master/examples/schoolyard.jl" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Social-networks-with-LightGraphs.jl"><a class="docs-heading-anchor" href="#Social-networks-with-LightGraphs.jl">Social networks with LightGraphs.jl</a><a id="Social-networks-with-LightGraphs.jl-1"></a><a class="docs-heading-anchor-permalink" href="#Social-networks-with-LightGraphs.jl" title="Permalink"></a></h1><video width="auto" controls autoplay loop>
+<source src="../schoolyard.mp4" type="video/mp4">
+</video><p>Many ABM frameworks provide graph infrastructure for analysing network properties of agents. Agents.jl is no different in that aspect, we have <a href="../../api/#Agents.GraphSpace"><code>GraphSpace</code></a> for when spatial structure is not important, but connections are.</p><p>What if you wish to model something a little more complex? Perhaps a school yard full of students running around (in space), interacting via some social network. This is precisely the scenario that the <a href="https://cs.gmu.edu/~eclab/projects/mason/">MASON</a> ABM framework uses as an introductory example in their <a href="https://cs.gmu.edu/~eclab/projects/mason/manual.pdf">documentation</a>.</p><p>Rather than implementing an Agents.jl⸺specific graph structure, we can interface with <a href="https://github.com/JuliaGraphs/LightGraphs.jl">LightGraphs.jl</a>: a high class library for managing and implementing graphs, which can be re-used to establish social networks within existing spaces.</p><p>To begin, we load in some dependencies</p><pre><code class="language-julia">using Agents
+using SimpleWeightedGraphs: SimpleWeightedDiGraph # will make social network
+using SparseArrays: findnz                        # for social network connections
+using Random: MersenneTwister                     # reproducibility</code></pre><p>And create a very simple agent without any extra properties</p><pre><code class="language-julia">mutable struct Student &lt;: AbstractAgent
+    id::Int
+    pos::Tuple{Float64,Float64}
+end</code></pre><h2 id="Rules-of-the-schoolyard"><a class="docs-heading-anchor" href="#Rules-of-the-schoolyard">Rules of the schoolyard</a><a id="Rules-of-the-schoolyard-1"></a><a class="docs-heading-anchor-permalink" href="#Rules-of-the-schoolyard" title="Permalink"></a></h2><p>It&#39;s lunchtime, and the students are going out to play. We assume the school building is in the centre of our space, with some fences around the building. A teacher monitors the students, and makes sure they don&#39;t stray too far towards the fence. We use a <code>teacher_attractor</code> force to simulate a teacher&#39;s attentiveness. Students head out to the schoolyard in random directions, but adhere to some social norms.</p><p>Each student has one <em>friend</em> and one <em>foe</em>. These are chosen at random in our model, so it&#39;s possible that for any pair of students, one likes the other but this feeling is not reciprocated. The bond between pairs is chosen at random between 0 and 1, with a bond of 1 being the strongest. If the bond is <em>friendly</em>, agents wish above all else to be near their <em>friend</em>. Bonds that are <em>unfriendly</em> see students moving as far away as possible from their <em>foe</em>.</p><h2 id="Initialising-the-model"><a class="docs-heading-anchor" href="#Initialising-the-model">Initialising the model</a><a id="Initialising-the-model-1"></a><a class="docs-heading-anchor-permalink" href="#Initialising-the-model" title="Permalink"></a></h2><pre><code class="language-julia">function schoolyard(;
+    numStudents = 50,
+    teacher_attractor = 0.15,
+    noise = 0.1,
+    max_force = 1.7,
+    spacing = 4.0,
+    seed = 6998,
+)
+    model = ABM(
+        Student,
+        ContinuousSpace((100, 100), spacing; periodic = false);
+        properties = Dict(
+            :teacher_attractor =&gt; teacher_attractor,
+            :noise =&gt; noise,
+            :buddies =&gt; SimpleWeightedDiGraph(numStudents),
+            :max_force =&gt; max_force,
+        ),
+        rng = MersenneTwister(seed)
+    )
+    for student in 1:numStudents
+        # Students begin near the school building
+        add_agent!(model.space.extent .* 0.5 .+ Tuple(rand(model.rng, 2)) .- 0.5, model)
+
+        # Add one friend and one foe to the social network
+        friend = rand(model.rng, filter(s -&gt; s != student, 1:numStudents))
+        add_edge!(model.buddies, student, friend, rand(model.rng))
+        foe = rand(model.rng, filter(s -&gt; s != student, 1:numStudents))
+        add_edge!(model.buddies, student, foe, -rand(model.rng))
+    end
+    model
+end</code></pre><pre class="documenter-example-output">schoolyard (generic function with 1 method)</pre><p>Our model contains the <code>buddies</code> property, which is our LightGraphs.jl directed, weighted graph. As we can see in the loop, we choose one <code>friend</code> and one <code>foe</code> at random for each <code>student</code> and assign their relationship as a weighted edge on the graph.</p><h2 id="Movement-dynamics"><a class="docs-heading-anchor" href="#Movement-dynamics">Movement dynamics</a><a id="Movement-dynamics-1"></a><a class="docs-heading-anchor-permalink" href="#Movement-dynamics" title="Permalink"></a></h2><pre><code class="language-julia">distance(pos) = sqrt(pos[1]^2 + pos[2]^2)
+scale(L, force) = (L / distance(force)) .* force
+
+function agent_step!(student, model)
+    # place a teacher in the center of the yard, so we don’t go too far away
+    teacher = (model.space.extent .* 0.5 .- student.pos) .* model.teacher_attractor
+
+    # add a bit of randomness
+    noise = model.noise .* (Tuple(rand(model.rng, 2)) .- 0.5)
+
+    # Adhere to the social network
+    network = model.buddies.weights[student.id, :]
+    tidxs, tweights = findnz(network)
+    network_force = (0.0, 0.0)
+    for (widx, tidx) in enumerate(tidxs)
+        buddiness = tweights[widx]
+        force = (student.pos .- model[tidx].pos) .* buddiness
+        if buddiness &gt;= 0
+            # The further I am from them, the more I want to go to them
+            if distance(force) &gt; model.max_force # I&#39;m far enough away
+                force = scale(model.max_force, force)
+            end
+        else
+            # The further I am away from them, the better
+            if distance(force) &gt; model.max_force # I&#39;m far enough away
+                force = (0.0, 0.0)
+            else
+                L = model.max_force - distance(force)
+                force = scale(L, force)
+            end
+        end
+        network_force = network_force .+ force
+    end
+
+    # Add all forces together to assign the students next position
+    new_pos = student.pos .+ noise .+ teacher .+ network_force
+    move_agent!(student, new_pos, model)
+end</code></pre><pre class="documenter-example-output">agent_step! (generic function with 1 method)</pre><p>Applying the rules for movement is relatively simple. For the network specifically, we find the student&#39;s <code>network</code> and figure out how far apart they are. We scale this by the <code>buddiness</code> factor (how much force we should apply), then figure out if that force should be in a positive or negative direction (<em>friend</em> or <em>foe</em>?).</p><p>The <code>findnz</code> function is something that may require some further explanation. LightGraphs uses sparse vectors internally to efficiently represent data. When we find the <code>network</code> of our <code>student</code>, we want to convert the result to a dense representation by <strong>find</strong>ing the <strong>n</strong>on-<strong>z</strong>ero (<code>findnz</code>) elements.</p><h2 id="Visualising-the-system"><a class="docs-heading-anchor" href="#Visualising-the-system">Visualising the system</a><a id="Visualising-the-system-1"></a><a class="docs-heading-anchor-permalink" href="#Visualising-the-system" title="Permalink"></a></h2><p>Now, we can watch the dynamics of the social system unfold:</p><pre><code class="language-julia">using InteractiveDynamics
+using CairoMakie
+
+model = schoolyard()
+
+function static_preplot!(ax, model)
+    obj = CairoMakie.scatter!([50 50]; color = :red) # Show position of teacher
+    CairoMakie.hidedecorations!(ax) # hide tick labels etc.
+    CairoMakie.translate!(obj, 0, 0, 5) # be sure that the teacher will be above students
+end
+
+abm_video(
+    &quot;schoolyard.mp4&quot;, model, agent_step!, dummystep;
+    framerate = 15, frames = 40,
+    title = &quot;Playgound dynamics&quot;,
+    static_preplot!,
+)</code></pre><pre class="documenter-example-output">WARNING: using InteractiveDynamics.scale in module __atexample__named__schoolyard conflicts with an existing identifier.</pre><video width="auto" controls autoplay loop>
+<source src="../schoolyard.mp4" type="video/mp4">
+</video></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../diffeq/">« DifferentialEquations.jl</a><a class="docs-footer-nextpage" href="../measurements/">Measurements.jl »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Tuesday 13 April 2021 22:35">Tuesday 13 April 2021</span>. Using Julia version 1.6.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

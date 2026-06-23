@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Uncertanty Propagation · Agents.jl</title><meta name="title" content="Uncertanty Propagation · Agents.jl"/><meta property="og:title" content="Uncertanty Propagation · Agents.jl"/><meta property="twitter:title" content="Uncertanty Propagation · Agents.jl"/><meta name="description" content="Documentation for Agents.jl."/><meta property="og:description" content="Documentation for Agents.jl."/><meta property="twitter:description" content="Documentation for Agents.jl."/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script><link href="https://fonts.googleapis.com/css?family=Montserrat|Source+Code+Pro&amp;display=swap" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img src="../../assets/logo.png" alt="Agents.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../../">Agents.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Introduction</a></li><li><a class="tocitem" href="../../tutorial/">Tutorial</a></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../sir/">SIR model for the spread of COVID-19</a></li><li><a class="tocitem" href="../flock/">Flocking model</a></li><li><a class="tocitem" href="../zombies/">Zombie Outbreak in a City</a></li><li><a class="tocitem" href="../predator_prey/">Predator-prey dynamics</a></li><li><a class="tocitem" href="../rabbit_fox_hawk/">3D Mixed-Agent Ecosystem with Pathfinding</a></li><li><a class="tocitem" href="../event_rock_paper_scissors/">Spatial rock-paper-scissors (event based)</a></li><li><a class="tocitem" href="../">More Examples for Agents.jl</a></li></ul></li><li><a class="tocitem" href="../../api/">API</a></li><li><a class="tocitem" href="../agents_visualizations/">Plotting and Interactivity</a></li><li><span class="tocitem">Ecosystem Integration</span><ul><li><a class="tocitem" href="../optim/">BlackBoxOptim.jl</a></li><li><a class="tocitem" href="../diffeq/">DifferentialEquations.jl</a></li><li><a class="tocitem" href="../schoolyard/">Graphs.jl</a></li><li><a class="tocitem" href="../celllistmap/">CellListMap.jl</a></li><li><a class="tocitem" href="../delaunay/">DelaunayTriangulation.jl</a></li><li class="is-active"><a class="tocitem" href>Uncertanty Propagation</a><ul class="internal"><li><a class="tocitem" href="#Uncertain-numbers-in-Julia"><span>Uncertain numbers in Julia</span></a></li><li><a class="tocitem" href="#Defining-the-Daisyworld-model-with-uncertainty"><span>Defining the Daisyworld model with uncertainty</span></a></li><li><a class="tocitem" href="#Running-Daisyworld-without-uncertainty"><span>Running Daisyworld without uncertainty</span></a></li><li><a class="tocitem" href="#Running-Daisyworld-with-uncertainty"><span>Running Daisyworld with uncertainty</span></a></li></ul></li></ul></li><li><a class="tocitem" href="../../performance_tips/">Performance Tips</a></li><li><a class="tocitem" href="../../comparison/">ABM Framework Comparison</a></li><li><a class="tocitem" href="../../devdocs/">Developer Docs</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Ecosystem Integration</a></li><li class="is-active"><a href>Uncertanty Propagation</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Uncertanty Propagation</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/JuliaDynamics/Agents.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/JuliaDynamics/Agents.jl/blob/main/examples/measurements.jl" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="uncertainty"><a class="docs-heading-anchor" href="#uncertainty">Encapsulating uncertainty with Measurements.jl or MonteCarloMeasurements.jl</a><a id="uncertainty-1"></a><a class="docs-heading-anchor-permalink" href="#uncertainty" title="Permalink"></a></h1><h2 id="Uncertain-numbers-in-Julia"><a class="docs-heading-anchor" href="#Uncertain-numbers-in-Julia">Uncertain numbers in Julia</a><a id="Uncertain-numbers-in-Julia-1"></a><a class="docs-heading-anchor-permalink" href="#Uncertain-numbers-in-Julia" title="Permalink"></a></h2><p>The Julia language and its multiple dispatch system make it straightforward to incorporate uncertainty in any quantity represented by real number(s). There are two packages in particular that provide such functionality, both of which can be integrated trivially with Agents.jl (due to multiple dispatch). These are:</p><ul><li><a href="https://github.com/JuliaPhysics/Measurements.jl">Measurements.jl</a></li><li><a href="https://github.com/baggepinnen/MonteCarloMeasurements.jl">MonteCarloMeasurements.jl</a></li></ul><p>They both provide a numeric type that represents uncertainty in one way or the other. For example, let&#39;s assume we have two numbers that are normally distributed</p><pre><code class="language-julia hljs">xval = 1.0
+yval = 5.0
+σ = 0.25</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">0.25</code></pre><p>then</p><pre><code class="language-julia hljs">import Measurements
+x = Measurements.measurement(xval, σ)
+y = Measurements.measurement(yval, σ)
+sqrt(x^2 - 2x*y + y^2)</code></pre><p class="math-container">\[4.0 \pm 0.35\]</p><p>or</p><pre><code class="language-julia hljs">import MonteCarloMeasurements
+using Distributions: Normal, Cosine # can use any distributions
+x = MonteCarloMeasurements.Particles(100, Normal(xval, σ))
+y = MonteCarloMeasurements.Particles(100, Normal(yval, σ))
+sqrt(x^2 - 2x*y + y^2)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">4.0 ± 0.327 MonteCarloMeasurements.Particles{Float64, 100}
+</code></pre><p>For convience we will define two functions that will give the mean and std of an uncertain numeric type irrespectively of type used</p><pre><code class="language-julia hljs">meanval(x::Float64) = x
+stdval(x::Float64) = 0.0 # no uncertainty for exact real number!
+
+meanval(x::Measurements.Measurement) = Measurements.value(x)
+stdval(x::Measurements.Measurement) = Measurements.uncertainty(x)
+
+meanval(x::MonteCarloMeasurements.Particles) = MonteCarloMeasurements.pmean(x)
+stdval(x::MonteCarloMeasurements.Particles) = MonteCarloMeasurements.pstd(x)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">stdval (generic function with 3 methods)</code></pre><h2 id="Defining-the-Daisyworld-model-with-uncertainty"><a class="docs-heading-anchor" href="#Defining-the-Daisyworld-model-with-uncertainty">Defining the Daisyworld model with uncertainty</a><a id="Defining-the-Daisyworld-model-with-uncertainty-1"></a><a class="docs-heading-anchor-permalink" href="#Defining-the-Daisyworld-model-with-uncertainty" title="Permalink"></a></h2><p>Here, we&#39;ll modify the <a href="https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/daisyworld/">Daisyworld</a> model to incorporate uncertainty in the initial temperature of the planet as well as the albedo of the daisies.</p><p>First, we define the daisy agent type as parameteric</p><pre><code class="language-julia hljs">using Agents
+
+@agent struct Daisy{T}(GridAgent{2})
+    breed::Symbol
+    age::Int
+    albedo::T
+end</code></pre><p>The type parameter <code>T</code> will represent varius numeric types. Now we need to define the rules of the Daisyworld. There is practically at all in this step from the original Daisyworld example! We only need to change using a logarithm (not defined for negative numbers) and ensure that we are using the mean of an uncertain number in boolean operations, as it is otherwise umbiguous which number to use to make the Boolean decision. The rest of the functions do not care about us wanting to use this uncertainty-representing numeric type. This is one of the beauties of generic programming in Julia!</p><p>We first define the individual daisy dynamics</p><pre><code class="language-julia hljs">function daisy_step!(agent::Daisy, model)
+    agent.age += 1
+    if agent.age ≥ model.max_age
+        remove_agent!(agent, model)
+        return
+    end
+    # if daisy stays alive, it may propagate an offspring
+    pos = agent.pos
+    temperature = meanval(model.temperature[pos...]) # can&#39;t use uncertainty in Boolean operations
+    seed_threshold = (0.1457 * temperature - 0.0032 * temperature^2) - 0.6443
+    if rand(abmrng(model)) &lt; seed_threshold
+        empty_near_pos = random_nearby_position(pos, model, 1, npos -&gt; isempty(npos, model))
+        if !isnothing(empty_near_pos)
+            add_agent!(empty_near_pos, model, agent.breed, 0, agent.albedo)
+        end
+    end
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">daisy_step! (generic function with 1 method)</code></pre><p>and then the dynamics of the Daisyworld</p><pre><code class="language-julia hljs">function daisyworld_step!(model)
+    for p in positions(model)
+        update_surface_temperature!(p, model)
+        diffuse_temperature!(p, model)
+    end
+end
+
+function update_surface_temperature!(pos, model)
+    if isempty(pos, model) # no daisy
+        absorbed_luminosity = (1 - model.surface_albedo) * model.solar_luminosity
+    else
+        daisy = model[id_in_position(pos, model)]
+        absorbed_luminosity = (1 - daisy.albedo) * model.solar_luminosity
+    end
+    # Here we changed the rule to not use `log` because it isn&#39;t defined for negative numbers!
+    # We also need to somehow extract a number from the uncertain number, because boolean
+    # comparisons are not defined on uncertain numbers.
+    local_heating = meanval(absorbed_luminosity) &gt; 0 ? 72 *(2absorbed_luminosity - 1.8) + 80 : 80
+    model.temperature[pos...] = (model.temperature[pos...] + local_heating) / 2
+end
+
+function diffuse_temperature!(pos, model)
+    ratio = model.ratio # diffusion ratio
+    npos = nearby_positions(pos, model)
+    model.temperature[pos...] =
+        (1 - ratio) * model.temperature[pos...] +
+        sum(model.temperature[p...] for p in npos) * 0.125 * ratio
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">diffuse_temperature! (generic function with 1 method)</code></pre><p>Now as per usual in Agents.jl we will define a function that creates the daisyworld and populates it with some daisies. The starting temperature</p><pre><code class="language-julia hljs">using Random: Xoshiro
+using StatsBase: sample
+
+function daisyworld(;
+        griddims = (30, 30),
+        max_age = 25,
+        init_white = 0.3, # % cover of the world surface of white breed
+        init_black = 0.3, # % cover of the world surface of black breed
+        albedo_white = 0.75,
+        albedo_black = 0.25,
+        surface_albedo = 0.4,
+        solar_luminosity = 1.0,
+        seed = 165,
+        starting_temperature = 0.0,
+    )
+
+    rng = Xoshiro(seed)
+    space = GridSpaceSingle(griddims)
+    properties = (; # named tuple
+        max_age, surface_albedo, solar_luminosity,
+        ratio = 0.5, temperature = fill(starting_temperature, griddims)
+    )
+
+    T = typeof(albedo_black)
+    model = StandardABM(Daisy{T}, space; properties, rng, agent_step! = daisy_step!, model_step! = daisyworld_step!)
+
+    # populate the model with random white daisies
+    grid = collect(positions(model))
+    L = length(grid)
+    white_positions = sample(rng, grid, round(Int, init_white*L); replace = false)
+    for wp in white_positions
+        add_agent!(wp, model, :white, rand(abmrng(model), 0:max_age), albedo_white)
+    end
+    # and black daisies
+    possible_black = setdiff(grid, white_positions)
+    black_positions = sample(rng, possible_black, Int(init_black*L); replace = false)
+    for bp in black_positions
+        add_agent!(bp, model, :black, rand(abmrng(model), 0:max_age), albedo_black)
+    end
+
+    for p in positions(model)
+        update_surface_temperature!(p, model)
+    end
+
+    return model
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">daisyworld (generic function with 1 method)</code></pre><h2 id="Running-Daisyworld-without-uncertainty"><a class="docs-heading-anchor" href="#Running-Daisyworld-without-uncertainty">Running Daisyworld without uncertainty</a><a id="Running-Daisyworld-without-uncertainty-1"></a><a class="docs-heading-anchor-permalink" href="#Running-Daisyworld-without-uncertainty" title="Permalink"></a></h2><p>There isn&#39;t anything new here; we are doing the same as in the original Daisyworld example. Let&#39;s define a convenience plotting function first</p><pre><code class="language-julia hljs">using Statistics: mean
+using CairoMakie
+
+function run_plot_daisyworld(; steps = 500, kw...)
+
+    abm = daisyworld(; kw...)
+
+    function temp_mean(abm)
+        T = abm.temperature
+        return mean(meanval(t) for t in T)
+    end
+    function temp_std(abm)
+        T = abm.temperature
+        return mean(stdval(t) for t in T)
+    end
+    black_daisies(abm) = count(a -&gt; a.breed == :black, allagents(abm))
+    white_daisies(abm) = count(a -&gt; a.breed == :white, allagents(abm))
+    mdata = [temp_mean, temp_std, black_daisies, white_daisies]
+
+    adf, mdf = run!(abm, steps; mdata)
+    t = 0:steps
+
+    # plot daisy populations
+    fig, ax = lines(t, mdf.black_daisies; color = &quot;black&quot;, label = &quot;black&quot;)
+    lines!(ax, t, mdf.white_daisies; color = &quot;gray&quot;, linestyle = :dash, label = &quot;white&quot;)
+    axislegend(ax)
+    hidexdecorations!(ax, grid = false)
+    ax.ylabel = &quot;daisy populations&quot;
+    ntype = typeof(first(allagents(abm)).albedo)
+    ax.title = &quot;Numeric type: $(ntype)&quot;
+    # plot planet temperature
+    axt, = lines(fig[2, 1], t, mdf.temp_mean; color = &quot;red&quot;)
+    band!(axt, t, mdf.temp_mean .- mdf.temp_std, mdf.temp_mean .+ mdf.temp_std; color = (&quot;red&quot;, 0.25))
+    axt.ylabel = &quot;temperature&quot;
+    axt.xlabel = &quot;time&quot;
+    return fig
+end
+
+run_plot_daisyworld()</code></pre><img src="c18079ae.png" alt="Example block output"/><p>Right, this looks great! As expected, there is no band plot shown in the temperature axis as there is no uncertainty yet. Let&#39;s change that!</p><h2 id="Running-Daisyworld-with-uncertainty"><a class="docs-heading-anchor" href="#Running-Daisyworld-with-uncertainty">Running Daisyworld with uncertainty</a><a id="Running-Daisyworld-with-uncertainty-1"></a><a class="docs-heading-anchor-permalink" href="#Running-Daisyworld-with-uncertainty" title="Permalink"></a></h2><p>All we have to do to enable uncertainty is change the daisy albedos and starting temperature into numbers with uncertainty. This is as simple as changing three keywords:</p><pre><code class="language-julia hljs">run_plot_daisyworld(;
+    starting_temperature = Measurements.measurement(0.0, 1.0),
+    albedo_white = Measurements.measurement(0.75, 0.1),
+    albedo_black = Measurements.measurement(0.25, 0.1),
+)</code></pre><img src="aa05c874.png" alt="Example block output"/><p>Well that&#39;s great! It also works with the other type of uncertainty:</p><pre><code class="language-julia hljs">run_plot_daisyworld(;
+    starting_temperature = MonteCarloMeasurements.Particles(100, Normal(0.0, 1.0)),
+    albedo_white = MonteCarloMeasurements.Particles(100, Normal(0.75, 0.2)),
+    albedo_black = MonteCarloMeasurements.Particles(100, Cosine(0.25, 0.1)),
+)</code></pre><img src="53522246.png" alt="Example block output"/><p>We can see that:</p><ol><li>The daisy populations do not change regardless of if we use uncertainty or not. This is expected as the uncertainty itself does not actually decide any model dynamics.</li><li>The uncertainty in surface temperature does not increase over time.</li></ol></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../delaunay/">« DelaunayTriangulation.jl</a><a class="docs-footer-nextpage" href="../../performance_tips/">Performance Tips »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.12.0 on <span class="colophon-date" title="Wednesday 11 June 2025 16:52">Wednesday 11 June 2025</span>. Using Julia version 1.11.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

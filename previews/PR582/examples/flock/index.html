@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Flocking · Agents.jl</title><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.039/juliamono-regular.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.11/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script><link href="https://fonts.googleapis.com/css?family=Montserrat|Source+Code+Pro&amp;display=swap" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img src="../../assets/logo.png" alt="Agents.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../../">Agents.jl</a></span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Introduction</a></li><li><a class="tocitem" href="../../tutorial/">Tutorial</a></li><li><input class="collapse-toggle" id="menuitem-3" type="checkbox" checked/><label class="tocitem" for="menuitem-3"><span class="docs-label">Examples</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../schelling/">Schelling&#39;s segregation model</a></li><li><a class="tocitem" href="../sir/">SIR model for the spread of COVID-19</a></li><li class="is-active"><a class="tocitem" href>Flocking</a><ul class="internal"><li><a class="tocitem" href="#Defining-the-core-structures"><span>Defining the core structures</span></a></li><li><a class="tocitem" href="#Defining-the-agent_step!"><span>Defining the agent_step!</span></a></li><li><a class="tocitem" href="#Plotting-the-flock"><span>Plotting the flock</span></a></li></ul></li><li><a class="tocitem" href="../zombies/">Zombie Outbreak</a></li><li><a class="tocitem" href="../rabbit_fox_hawk/">Rabbit, Fox, Hawk</a></li><li><a class="tocitem" href="../../models/">Predefined Models</a></li><li><a class="tocitem" href="../">More Examples for Agents.jl</a></li></ul></li><li><a class="tocitem" href="../../api/">API</a></li><li><a class="tocitem" href="../../interact/">Plotting and interactive application</a></li><li><input class="collapse-toggle" id="menuitem-6" type="checkbox"/><label class="tocitem" for="menuitem-6"><span class="docs-label">Ecosystem Integration</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../optim/">BlackBoxOptim.jl</a></li><li><a class="tocitem" href="../diffeq/">DifferentialEquations.jl</a></li><li><a class="tocitem" href="../schoolyard/">Graphs.jl</a></li><li><a class="tocitem" href="../measurements/">Measurements.jl</a></li></ul></li><li><a class="tocitem" href="../../performance_tips/">Performance Tips</a></li><li><a class="tocitem" href="../../comparison/">ABM Framework Comparison</a></li><li><a class="tocitem" href="../../devdocs/">Developer Docs</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>Flocking</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Flocking</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/JuliaDynamics/Agents.jl/blob/master/examples/flock.jl" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Flocking-model"><a class="docs-heading-anchor" href="#Flocking-model">Flocking model</a><a id="Flocking-model-1"></a><a class="docs-heading-anchor-permalink" href="#Flocking-model" title="Permalink"></a></h1><video width="auto" controls autoplay loop>
+<source src="../flocking.mp4" type="video/mp4">
+</video><p>The flock model illustrates how flocking behavior can emerge when each bird follows three simple rules:</p><ul><li>maintain a minimum distance from other birds to avoid collision</li><li>fly towards the average position of neighbors</li><li>fly in the average direction of neighbors</li></ul><p>It is also available from the <code>Models</code> module as <a href="../../models/#Agents.Models.flocking-Tuple{}"><code>Models.flocking</code></a>.</p><h2 id="Defining-the-core-structures"><a class="docs-heading-anchor" href="#Defining-the-core-structures">Defining the core structures</a><a id="Defining-the-core-structures-1"></a><a class="docs-heading-anchor-permalink" href="#Defining-the-core-structures" title="Permalink"></a></h2><p>We begin by calling the required packages and defining an agent type representing a bird.</p><pre><code class="language-julia hljs">using Agents, LinearAlgebra
+
+mutable struct Bird &lt;: AbstractAgent
+    id::Int
+    pos::NTuple{2,Float64}
+    vel::NTuple{2,Float64}
+    speed::Float64
+    cohere_factor::Float64
+    separation::Float64
+    separate_factor::Float64
+    match_factor::Float64
+    visual_distance::Float64
+end</code></pre><p>The fields <code>id</code> and <code>pos</code> are required for every agent. The field <code>vel</code> is required for using <a href="../../api/#Agents.move_agent!"><code>move_agent!</code></a> in <code>ContinuousSpace</code>. <code>speed</code> defines how far the bird travels in the direction defined by <code>vel</code> per <code>step</code>. <code>seperation</code> defines the minimum distance a bird must maintain from its neighbors. <code>visual_distance</code> refers to the distance a bird can see and defines a radius of neighboring birds. The contribution of each rule defined above recieves an importance weight: <code>cohere_factor</code> is the importance of maintaining the average position of neighbors, <code>match_factor</code> is the importance of matching the average trajectory of neighboring birds, and <code>separate_factor</code> is the importance of maining the minimum distance from neighboring birds.</p><p>The function <code>initialize_model</code> generates birds and returns a model object using default values.</p><pre><code class="language-julia hljs">function initialize_model(;
+    n_birds = 100,
+    speed = 1.0,
+    cohere_factor = 0.25,
+    separation = 4.0,
+    separate_factor = 0.25,
+    match_factor = 0.01,
+    visual_distance = 5.0,
+    extent = (100, 100),
+    spacing = visual_distance / 1.5,
+)
+    space2d = ContinuousSpace(extent, spacing)
+    model = ABM(Bird, space2d, scheduler = Schedulers.randomly)
+    for _ in 1:n_birds
+        vel = Tuple(rand(model.rng, 2) * 2 .- 1)
+        add_agent!(
+            model,
+            vel,
+            speed,
+            cohere_factor,
+            separation,
+            separate_factor,
+            match_factor,
+            visual_distance,
+        )
+    end
+    return model
+end</code></pre><h2 id="Defining-the-agent_step!"><a class="docs-heading-anchor" href="#Defining-the-agent_step!">Defining the agent_step!</a><a id="Defining-the-agent_step!-1"></a><a class="docs-heading-anchor-permalink" href="#Defining-the-agent_step!" title="Permalink"></a></h2><p><code>agent_step!</code> is the primary function called for each step and computes velocity according to the three rules defined above.</p><pre><code class="language-julia hljs">function agent_step!(bird, model)
+    # Obtain the ids of neighbors within the bird&#39;s visual distance
+    neighbor_ids = nearby_ids(bird, model, bird.visual_distance)
+    N = 0
+    match = separate = cohere = (0.0, 0.0)
+    # Calculate behaviour properties based on neighbors
+    for id in neighbor_ids
+        N += 1
+        neighbor = model[id].pos
+        heading = neighbor .- bird.pos
+
+        # `cohere` computes the average position of neighboring birds
+        cohere = cohere .+ heading
+        if edistance(bird.pos, neighbor, model) &lt; bird.separation
+            # `separate` repels the bird away from neighboring birds
+            separate = separate .- heading
+        end
+        # `match` computes the average trajectory of neighboring birds
+        match = match .+ model[id].vel
+    end
+    N = max(N, 1)
+    # Normalise results based on model input and neighbor count
+    cohere = cohere ./ N .* bird.cohere_factor
+    separate = separate ./ N .* bird.separate_factor
+    match = match ./ N .* bird.match_factor
+    # Compute velocity based on rules defined above
+    bird.vel = (bird.vel .+ cohere .+ separate .+ match) ./ 2
+    bird.vel = bird.vel ./ norm(bird.vel)
+    # Move bird according to new velocity and speed
+    move_agent!(bird, model, bird.speed)
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">agent_step! (generic function with 1 method)</code></pre><h2 id="Plotting-the-flock"><a class="docs-heading-anchor" href="#Plotting-the-flock">Plotting the flock</a><a id="Plotting-the-flock-1"></a><a class="docs-heading-anchor-permalink" href="#Plotting-the-flock" title="Permalink"></a></h2><pre><code class="language-julia hljs">using InteractiveDynamics
+using CairoMakie</code></pre><p>The great thing about <a href="../../interact/#InteractiveDynamics.abm_plot"><code>abm_plot</code></a> is its flexibility. We can incorporate the direction of the birds when plotting them, by making the &quot;marker&quot; function <code>am</code> create a <code>Polygon</code>: a triangle with same orientation as the bird&#39;s velocity. It is as simple as defining the following function:</p><pre><code class="language-julia hljs">const bird_polygon = Polygon(Point2f0[(-0.5, -0.5), (1, 0), (-0.5, 0.5)])
+function bird_marker(b::Bird)
+    φ = atan(b.vel[2], b.vel[1]) #+ π/2 + π
+    scale(rotate2D(bird_polygon, φ), 2)
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">bird_marker (generic function with 1 method)</code></pre><p>Where we have used the utility functions <code>scale</code> and <code>rotate2D</code> to act on a predefined polygon. We now give <code>bird_marker</code> to <code>abm_plot</code>, and notice how the <code>as</code> keyword is meaningless when using polygons as markers.</p><pre><code class="language- hljs">model = initialize_model()
+figure, = abm_plot(model; am = bird_marker)
+figure</code></pre><p>And let&#39;s also do a nice little video for it:</p><pre><code class="language- hljs">abm_video(
+    &quot;flocking.mp4&quot;, model, agent_step!;
+    am = bird_marker,
+    framerate = 20, frames = 100,
+    title = &quot;Flocking&quot;
+)</code></pre><video width="auto" controls autoplay loop>
+<source src="../flocking.mp4" type="video/mp4">
+</video></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../sir/">« SIR model for the spread of COVID-19</a><a class="docs-footer-nextpage" href="../zombies/">Zombie Outbreak »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.10 on <span class="colophon-date" title="Monday 10 January 2022 08:45">Monday 10 January 2022</span>. Using Julia version 1.7.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
