@@ -11,7 +11,7 @@
   journal = {{SIMULATION}},
   volume = {0},
   number = {0},
-}</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaDynamics/Agents.jl/blob/57263416a9fd0d2dc6a28f34400357996c6104d6/src/Agents.jl#L4-L48">source</a></section></details></article><div class="admonition is-info" id="Star-us-on-GitHub!-62261b89fd291494"><header class="admonition-header">Star us on GitHub!<a class="admonition-anchor" href="#Star-us-on-GitHub!-62261b89fd291494" title="Permalink"></a></header><div class="admonition-body"><p>If you have found this package useful, please consider starring it on <a href="https://github.com/JuliaDynamics/Agents.jl">GitHub</a>. This gives us an accurate lower bound of the (satisfied) user count.</p></div></div><div class="admonition is-success" id="Latest-news:-Agents.jl-v7-a391c81fb1003f46"><header class="admonition-header">Latest news: Agents.jl v7<a class="admonition-anchor" href="#Latest-news:-Agents.jl-v7-a391c81fb1003f46" title="Permalink"></a></header><div class="admonition-body"><p>This new version brings two powerful and experimental features:</p><ol><li>Allowing the agent container to be based on <code>StructVectors</code>, using a Struct-of-Arrays internal layout. This can increase simulation computational performance however it currently only supports single agent types. To use this, pass <code>container = StructVector</code> to <code>StandardABM</code> or <code>EventQueueABM</code> constructors, as well as use the helper construct <code>SoAType{A}</code> for dispatch purposes instead of your agent type <code>A</code> (read the docstring of <code>SoAType</code>).</li><li>Native integration of ABMs with Reinforcement Learning is now provided by the new model type <code>ReinforcementLearningABM</code>. To learn how to use this functionality checkout the new tutorial on the Boltzmann Wealth Model with Reinforcement Learning.</li></ol><p>There is also a minor breaking change: the internal code for plotting has been fully reworked. This does not affect typical users, as all plotting API remains identical, but it does affect users that were extending plotting for custom spaces. As a result of this change, hovering data inspection is currently disabled.</p></div></div><h2 id="Highlights"><a class="docs-heading-anchor" href="#Highlights">Highlights</a><a id="Highlights-1"></a><a class="docs-heading-anchor-permalink" href="#Highlights" title="Permalink"></a></h2><video width="auto" controls autoplay loop>
+}</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaDynamics/Agents.jl/blob/c86c9c1e0711b5c2fdddf70fa809f37c21b28db6/src/Agents.jl#L4-L48">source</a></section></details></article><div class="admonition is-info" id="Star-us-on-GitHub!-62261b89fd291494"><header class="admonition-header">Star us on GitHub!<a class="admonition-anchor" href="#Star-us-on-GitHub!-62261b89fd291494" title="Permalink"></a></header><div class="admonition-body"><p>If you have found this package useful, please consider starring it on <a href="https://github.com/JuliaDynamics/Agents.jl">GitHub</a>. This gives us an accurate lower bound of the (satisfied) user count.</p></div></div><div class="admonition is-success" id="Latest-news:-Agents.jl-v7-a391c81fb1003f46"><header class="admonition-header">Latest news: Agents.jl v7<a class="admonition-anchor" href="#Latest-news:-Agents.jl-v7-a391c81fb1003f46" title="Permalink"></a></header><div class="admonition-body"><p>This new version brings two powerful and experimental features:</p><ol><li>Allowing the agent container to be based on <code>StructVectors</code>, using a Struct-of-Arrays internal layout. This can increase simulation computational performance however it currently only supports single agent types. To use this, pass <code>container = StructVector</code> to <code>StandardABM</code> or <code>EventQueueABM</code> constructors, as well as use the helper construct <code>SoAType{A}</code> for dispatch purposes instead of your agent type <code>A</code> (read the docstring of <code>SoAType</code>).</li><li>Native integration of ABMs with Reinforcement Learning is now provided by the new model type <code>ReinforcementLearningABM</code>. To learn how to use this functionality checkout the new tutorial on the Boltzmann Wealth Model with Reinforcement Learning.</li></ol><p>There is also a minor breaking change: the internal code for plotting has been fully reworked. This does not affect typical users, as all plotting API remains identical, but it does affect users that were extending plotting for custom spaces. As a result of this change, hovering data inspection is currently disabled.</p></div></div><h2 id="Highlights"><a class="docs-heading-anchor" href="#Highlights">Highlights</a><a id="Highlights-1"></a><a class="docs-heading-anchor-permalink" href="#Highlights" title="Permalink"></a></h2><video width="auto" controls autoplay loop>
 <source src="https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/videos/agents/showcase.mp4?raw=true" type="video/mp4">
 </video><h3 id="Software-quality"><a class="docs-heading-anchor" href="#Software-quality">Software quality</a><a id="Software-quality-1"></a><a class="docs-heading-anchor-permalink" href="#Software-quality" title="Permalink"></a></h3><ul><li>Free and open source.</li><li>Small learning curve due to intuitive design based on a modular space-agnostic functional modelling implementation.</li><li>User-created models typically have much smaller source code versus implementations in other open source ABM frameworks (<a href="https://github.com/JuliaDynamics/ABM_Framework_Comparisons">proof</a>), making them faster to prototype and modify.</li><li>Excellent computational performance, typically <a href="https://github.com/JuliaDynamics/ABMFrameworksComparison">faster than established competitors</a>.</li><li>High quality, extensive documentation featuring tutorials, example ABM implementations, an <a href="https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/">extra zoo of ABM examples</a>, integration examples with other Julia packages, and developer&#39;s docs.</li></ul><h3 id="Agent-based-modelling-specifically"><a class="docs-heading-anchor" href="#Agent-based-modelling-specifically">Agent based modelling specifically</a><a id="Agent-based-modelling-specifically-1"></a><a class="docs-heading-anchor-permalink" href="#Agent-based-modelling-specifically" title="Permalink"></a></h3><ul><li>Universal model structure where agents are identified by a unique id: <a href="api/#Agents.AgentBasedModel"><code>AgentBasedModel</code></a>.</li><li>Extendable <a href="api/#API">API</a> that provides out of the box thousands of possible agent actions.</li><li>Support for many types of space: arbitrary graphs, regular grids, continuous space</li><li>Support for simulations on Open Street Maps including support for utilizing the road&#39;s max speed limit, finding nearby agents/roads/destinations and pathfinding.<ul><li>See this <a href="examples/zombies/#anna_cobb">highlight</a> for a simulation of the whole city of Chicago.</li></ul></li><li>Modular design allows the creation of entirely new types of space configurations that can be integrated fully with the rest of Agents.jl API with only a few lines of code.</li><li>Multi-agent support, for interactions between disparate agent species.</li><li>Support for both discrete time and continuous time (event queue or jump processes) type of simulations.</li><li>Scheduler interface (with default schedulers), making it easy to activate agents in a specific order (e.g. by the value of some property).</li><li>Automatic data collection in a <code>DataFrame</code> at desired intervals.</li><li>Aggregating collected data during model evolution.</li><li>Distributed computing.</li><li>Batch running and batch data collection.</li><li>Extensive pathfinding capabilities in continuous or discrete spaces.</li><li>Reinforcement learning native integration.</li><li>Customizable visualization support for all kinds of models via the <a href="https://makie.juliaplots.org/stable/">Makie</a> ecosystem: publication-quality graphics and video output.</li><li>Interactive applications for any agent based models, which are created with only 5 lines of code and look like this:</li></ul><video width="auto" controls autoplay loop>
 <source src="https://raw.githubusercontent.com/JuliaDynamics/JuliaDynamics/master/videos/interact/agents.mp4?raw=true" type="video/mp4">
@@ -28,10 +28,10 @@
   volume = {0},
   number = {0},
 }</code></pre><h2 id="Reproducibility"><a class="docs-heading-anchor" href="#Reproducibility">Reproducibility</a><a id="Reproducibility-1"></a><a class="docs-heading-anchor-permalink" href="#Reproducibility" title="Permalink"></a></h2><details><summary>The documentation of Agents.jl was built using these direct dependencies,</summary><pre class="documenter-example-output"><code class="nohighlight hljs ansi"><span class="sgr32"><span class="sgr1">Status</span></span> `~/work/Agents.jl/Agents.jl/docs/Project.toml`
-  <span class="sgr90">[46ada45e] </span>Agents v7.0.2 `~/work/Agents.jl/Agents.jl`
+  <span class="sgr90">[46ada45e] </span>Agents v7.0.3 `~/work/Agents.jl/Agents.jl`
   <span class="sgr90">[88acaeb2] </span>AgentsExampleZoo v0.1.3
   <span class="sgr90">[6e4b80f9] </span>BenchmarkTools v1.8.0
-  <span class="sgr90">[a134a8b2] </span>BlackBoxOptim v0.6.5
+  <span class="sgr90">[a134a8b2] </span>BlackBoxOptim v0.6.6
 <span class="sgr32">⌃</span> <span class="sgr90">[13f3f980] </span>CairoMakie v0.13.10
   <span class="sgr90">[69e1c6dd] </span>CellListMap v0.10.2
 <span class="sgr33">⌅</span> <span class="sgr90">[3da002f7] </span>ColorTypes v0.11.5
@@ -39,7 +39,7 @@
   <span class="sgr90">[a93c6f00] </span>DataFrames v1.8.2
   <span class="sgr90">[927a84f5] </span>DelaunayTriangulation v1.6.6
 <span class="sgr32">⌃</span> <span class="sgr90">[459566f4] </span>DiffEqCallbacks v4.1.0
-  <span class="sgr90">[31c24e10] </span>Distributions v0.25.126
+  <span class="sgr90">[31c24e10] </span>Distributions v0.25.127
   <span class="sgr90">[e30172f5] </span>Documenter v1.17.0
   <span class="sgr90">[35a29f4d] </span>DocumenterTools v0.1.21
   <span class="sgr90">[634d3b9d] </span>DrWatson v2.19.1
@@ -61,7 +61,7 @@
   <span class="sgr90">[3cdcf5f2] </span>RecipesBase v1.3.4
   <span class="sgr90">[47aef6b3] </span>SimpleWeightedGraphs v1.5.1
   <span class="sgr90">[90137ffa] </span>StaticArrays v1.9.18
-  <span class="sgr90">[2913bbd2] </span>StatsBase v0.34.11
+  <span class="sgr90">[2913bbd2] </span>StatsBase v0.34.12
   <span class="sgr90">[ff63dad9] </span>StreamSampling v0.8.2
   <span class="sgr90">[37e2e46d] </span>LinearAlgebra v1.12.0
   <span class="sgr90">[44cfe95a] </span>Pkg v1.12.1
@@ -73,40 +73,37 @@ Build Info:
   Official https://julialang.org release
 Platform Info:
   OS: Linux (x86_64-linux-gnu)
-  CPU: 4 × Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz
+  CPU: 4 × AMD EPYC 7763 64-Core Processor
   WORD_SIZE: 64
-  LLVM: libLLVM-18.1.7 (ORCJIT, icelake-server)
+  LLVM: libLLVM-18.1.7 (ORCJIT, znver3)
   GC: Built with stock GC
 Threads: 1 default, 1 interactive, 1 GC (on 4 virtual cores)
 Environment:
   JULIA_DEBUG = Documenter</code></pre></details><details><summary>A more complete overview of all dependencies and their versions is also provided.</summary><pre class="documenter-example-output"><code class="nohighlight hljs ansi"><span class="sgr32"><span class="sgr1">Status</span></span> `~/work/Agents.jl/Agents.jl/docs/Manifest.toml`
-  <span class="sgr90">[47edcb42] </span>ADTypes v1.22.0
+  <span class="sgr90">[47edcb42] </span>ADTypes v1.22.1
   <span class="sgr90">[a4c015fc] </span>ANSIColoredPrinters v0.0.1
   <span class="sgr90">[621f4979] </span>AbstractFFTs v1.5.0
   <span class="sgr90">[1520ce14] </span>AbstractTrees v0.4.5
   <span class="sgr90">[7d9f7c33] </span>Accessors v0.1.44
-  <span class="sgr90">[79e6a3ab] </span>Adapt v4.6.0
+  <span class="sgr90">[79e6a3ab] </span>Adapt v4.6.1
   <span class="sgr90">[35492f91] </span>AdaptivePredicates v1.2.0
-  <span class="sgr90">[46ada45e] </span>Agents v7.0.2 `~/work/Agents.jl/Agents.jl`
+  <span class="sgr90">[46ada45e] </span>Agents v7.0.3 `~/work/Agents.jl/Agents.jl`
   <span class="sgr90">[88acaeb2] </span>AgentsExampleZoo v0.1.3
   <span class="sgr90">[66dad0bd] </span>AliasTables v1.1.3
   <span class="sgr90">[27a7e980] </span>Animations v0.4.2
-  <span class="sgr90">[dce04be8] </span>ArgCheck v2.5.0
   <span class="sgr90">[ec485272] </span>ArnoldiMethod v0.4.0
   <span class="sgr90">[4fba245c] </span>ArrayInterface v7.25.0
 <span class="sgr33">⌅</span> <span class="sgr90">[1dc0ca97] </span>ArrayTools v0.2.7
   <span class="sgr90">[a9b6321e] </span>Atomix v1.1.3
-  <span class="sgr90">[67c07d97] </span>Automa v1.1.0
+  <span class="sgr90">[67c07d97] </span>Automa v1.2.0
   <span class="sgr90">[13072b0f] </span>AxisAlgorithms v1.1.0
   <span class="sgr90">[39de3d68] </span>AxisArrays v0.4.8
   <span class="sgr90">[ab4f0b2a] </span>BFloat16s v0.6.1
-  <span class="sgr90">[198e06fe] </span>BangBang v0.4.9
-  <span class="sgr90">[18cc8868] </span>BaseDirs v1.3.2
-  <span class="sgr90">[9718e550] </span>Baselet v0.1.1
+  <span class="sgr90">[18cc8868] </span>BaseDirs v1.4.0
   <span class="sgr90">[6e4b80f9] </span>BenchmarkTools v1.8.0
   <span class="sgr90">[d1d4a3ce] </span>BitFlags v0.1.10
   <span class="sgr90">[62783981] </span>BitTwiddlingConvenienceFunctions v0.1.6
-  <span class="sgr90">[a134a8b2] </span>BlackBoxOptim v0.6.5
+  <span class="sgr90">[a134a8b2] </span>BlackBoxOptim v0.6.6
   <span class="sgr90">[e1450e63] </span>BufferedStreams v1.2.2
   <span class="sgr90">[fa961155] </span>CEnum v0.5.0
   <span class="sgr90">[2a0fbf3d] </span>CPUSummary v0.2.7
@@ -135,16 +132,15 @@ Environment:
 <span class="sgr32">⌃</span> <span class="sgr90">[c3611d14] </span>ColorVectorSpace v0.10.0
   <span class="sgr90">[5ae59095] </span>Colors v0.13.1
   <span class="sgr90">[d842c3ba] </span>CommonRLInterface v0.3.3
-  <span class="sgr90">[38540f10] </span>CommonSolve v0.2.7
+  <span class="sgr90">[38540f10] </span>CommonSolve v0.2.8
   <span class="sgr90">[bbf7d656] </span>CommonSubexpressions v0.3.1
-  <span class="sgr90">[f70d9fcc] </span>CommonWorldInvalidations v1.0.0
+  <span class="sgr90">[f70d9fcc] </span>CommonWorldInvalidations v1.1.0
   <span class="sgr90">[34da2185] </span>Compat v4.18.1
   <span class="sgr90">[a33af91c] </span>CompositionsBase v0.1.2
   <span class="sgr90">[ed09eef8] </span>ComputationalResources v0.3.2
-  <span class="sgr90">[2569d6c7] </span>ConcreteStructs v0.2.4
+  <span class="sgr90">[2569d6c7] </span>ConcreteStructs v0.2.5
   <span class="sgr90">[f0e56b4a] </span>ConcurrentUtilities v2.5.1
   <span class="sgr90">[187b0558] </span>ConstructionBase v1.6.0
-  <span class="sgr90">[6add18c4] </span>ContextVariablesX v0.1.3
   <span class="sgr90">[d38c429a] </span>Contour v0.6.3
   <span class="sgr90">[150eb455] </span>CoordinateTransformations v0.6.4
   <span class="sgr90">[b7a15901] </span>CoreMath v0.1.0
@@ -156,7 +152,6 @@ Environment:
   <span class="sgr90">[a93c6f00] </span>DataFrames v1.8.2
 <span class="sgr33">⌅</span> <span class="sgr90">[864edb3b] </span>DataStructures v0.18.22
   <span class="sgr90">[e2d170a0] </span>DataValueInterfaces v1.0.0
-  <span class="sgr90">[244e2a9f] </span>DefineSingletons v0.1.2
   <span class="sgr90">[927a84f5] </span>DelaunayTriangulation v1.6.6
   <span class="sgr90">[8bb1440f] </span>DelimitedFiles v1.9.1
 <span class="sgr33">⌅</span> <span class="sgr90">[2b5f629d] </span>DiffEqBase v6.183.2
@@ -165,7 +160,7 @@ Environment:
   <span class="sgr90">[b552c78f] </span>DiffRules v1.16.0
 <span class="sgr33">⌅</span> <span class="sgr90">[a0c0ee7d] </span>DifferentiationInterface v0.6.54
   <span class="sgr90">[b4f34e82] </span>Distances v0.10.12
-  <span class="sgr90">[31c24e10] </span>Distributions v0.25.126
+  <span class="sgr90">[31c24e10] </span>Distributions v0.25.127
   <span class="sgr90">[ffbed154] </span>DocStringExtensions v0.9.5
   <span class="sgr90">[e30172f5] </span>Documenter v1.17.0
   <span class="sgr90">[35a29f4d] </span>DocumenterTools v0.1.21
@@ -176,16 +171,13 @@ Environment:
   <span class="sgr90">[460bff9d] </span>ExceptionUnwrapping v0.1.11
   <span class="sgr90">[e2ba6199] </span>ExprTools v0.1.10
   <span class="sgr90">[55351af7] </span>ExproniconLite v0.10.14
-  <span class="sgr90">[411431e0] </span>Extents v0.1.6
   <span class="sgr90">[c87230d0] </span>FFMPEG v0.4.5
   <span class="sgr90">[b86e33f2] </span>FFTA v0.3.1
   <span class="sgr90">[4f61f5a4] </span>FFTViews v0.3.2
   <span class="sgr90">[7a1cc6ca] </span>FFTW v1.10.0
-  <span class="sgr90">[cc61a311] </span>FLoops v0.2.2
-  <span class="sgr90">[b9860ae5] </span>FLoopsBase v0.1.1
 <span class="sgr33">⌅</span> <span class="sgr90">[7034ab61] </span>FastBroadcast v0.3.5
   <span class="sgr90">[9aa1b823] </span>FastClosures v0.3.2
-  <span class="sgr90">[a4df4552] </span>FastPower v1.3.1
+  <span class="sgr90">[a4df4552] </span>FastPower v1.3.2
   <span class="sgr90">[5789e2e9] </span>FileIO v1.19.0
 <span class="sgr33">⌅</span> <span class="sgr90">[8fc22ac5] </span>FilePaths v0.8.3
   <span class="sgr90">[48062228] </span>FilePathsBase v0.9.24
@@ -193,7 +185,7 @@ Environment:
 <span class="sgr33">⌅</span> <span class="sgr90">[53c48c17] </span>FixedPointNumbers v0.8.6
 <span class="sgr33">⌅</span> <span class="sgr90">[587475ba] </span>Flux v0.14.25
   <span class="sgr90">[1fa38f19] </span>Format v1.3.7
-  <span class="sgr90">[f6369f11] </span>ForwardDiff v1.4.0
+  <span class="sgr90">[f6369f11] </span>ForwardDiff v1.4.1
   <span class="sgr90">[b38be410] </span>FreeType v4.1.1
   <span class="sgr90">[663a7486] </span>FreeTypeAbstraction v0.10.8
   <span class="sgr90">[069b7b12] </span>FunctionWrappers v1.1.3
@@ -201,13 +193,13 @@ Environment:
 <span class="sgr33">⌅</span> <span class="sgr90">[d9f16b24] </span>Functors v0.4.12
   <span class="sgr90">[f7f18e0c] </span>GLFW v3.4.6
 <span class="sgr32">⌃</span> <span class="sgr90">[e9467ef8] </span>GLMakie v0.11.11
-  <span class="sgr90">[0c68f7d7] </span>GPUArrays v11.5.5
+  <span class="sgr90">[0c68f7d7] </span>GPUArrays v11.5.8
   <span class="sgr90">[46192b85] </span>GPUArraysCore v0.2.0
 <span class="sgr33">⌅</span> <span class="sgr90">[61eb1bfa] </span>GPUCompiler v1.17.1
-  <span class="sgr90">[096a3bc2] </span>GPUToolbox v1.1.1
+<span class="sgr33">⌅</span> <span class="sgr90">[096a3bc2] </span>GPUToolbox v1.1.1
   <span class="sgr90">[28b8d3ca] </span>GR v0.73.26
   <span class="sgr90">[c145ed77] </span>GenericSchur v0.5.6
-  <span class="sgr90">[5c1252a2] </span>GeometryBasics v0.5.10
+  <span class="sgr90">[5c1252a2] </span>GeometryBasics v0.5.11
   <span class="sgr90">[4d00f742] </span>GeometryTypes v0.8.5
   <span class="sgr90">[d7ba0133] </span>Git v1.5.0
 <span class="sgr33">⌅</span> <span class="sgr90">[1ecd5474] </span>GraphMakie v0.5.14
@@ -224,7 +216,7 @@ Environment:
   <span class="sgr90">[49057fa9] </span>HybridStructs v0.2.1
   <span class="sgr90">[34004b35] </span>HypergeometricFunctions v0.3.28
   <span class="sgr90">[b5f81e59] </span>IOCapture v1.0.0
-  <span class="sgr90">[7869d1d1] </span>IRTools v0.4.15
+  <span class="sgr90">[7869d1d1] </span>IRTools v0.4.17
   <span class="sgr90">[615f187c] </span>IfElse v0.1.1
   <span class="sgr90">[2803e5a7] </span>ImageAxes v0.6.12
   <span class="sgr90">[c817782e] </span>ImageBase v0.1.7
@@ -245,7 +237,6 @@ Environment:
   <span class="sgr90">[916415d5] </span>Images v0.26.2
   <span class="sgr90">[9b13fd28] </span>IndirectArrays v1.0.0
   <span class="sgr90">[d25df0c9] </span>Inflate v0.1.5
-  <span class="sgr90">[22cec73e] </span>InitialValues v0.3.1
   <span class="sgr90">[842dd82b] </span>InlineStrings v1.4.5
   <span class="sgr90">[18e54dd8] </span>IntegerMathUtils v0.1.3
   <span class="sgr90">[1d092043] </span>IntegralArrays v0.1.6
@@ -264,10 +255,9 @@ Environment:
 <span class="sgr33">⌅</span> <span class="sgr90">[682c06a0] </span>JSON v0.21.4
   <span class="sgr90">[ae98c720] </span>Jieko v0.2.1
   <span class="sgr90">[b835a17e] </span>JpegTurbo v0.1.6
-  <span class="sgr90">[b14d175d] </span>JuliaVariables v0.2.4
   <span class="sgr90">[63c18a36] </span>KernelAbstractions v0.9.41
   <span class="sgr90">[5ab0869b] </span>KernelDensity v0.6.12
-  <span class="sgr90">[929cbde3] </span>LLVM v9.8.2
+  <span class="sgr90">[929cbde3] </span>LLVM v9.9.0
   <span class="sgr90">[8b046642] </span>LLVMLoopInfo v1.0.0
   <span class="sgr90">[b964fa9f] </span>LaTeXStrings v1.4.0
   <span class="sgr90">[23fbe1c1] </span>Latexify v0.16.10
@@ -281,10 +271,9 @@ Environment:
 <span class="sgr33">⌅</span> <span class="sgr90">[2ab3a3ac] </span>LogExpFunctions v0.3.29
   <span class="sgr90">[e6f89c97] </span>LoggingExtras v1.2.0
   <span class="sgr90">[bdcacae8] </span>LoopVectorization v0.12.174
-  <span class="sgr90">[c2834f40] </span>MLCore v1.0.0
+  <span class="sgr90">[c2834f40] </span>MLCore v1.0.2
 <span class="sgr32">⌃</span> <span class="sgr90">[7e8f7934] </span>MLDataDevices v1.5.3
-  <span class="sgr90">[d8e11817] </span>MLStyle v0.4.17
-  <span class="sgr90">[f1d291b0] </span>MLUtils v0.4.8
+  <span class="sgr90">[f1d291b0] </span>MLUtils v0.4.9
   <span class="sgr90">[1914dd2f] </span>MacroTools v0.5.16
 <span class="sgr33">⌅</span> <span class="sgr90">[ee78f7c6] </span>Makie v0.22.10
 <span class="sgr33">⌅</span> <span class="sgr90">[20f20a25] </span>MakieCore v0.9.5
@@ -298,17 +287,15 @@ Environment:
   <span class="sgr90">[442fdcdd] </span>Measures v0.3.3
   <span class="sgr90">[7269a6da] </span>MeshIO v0.5.3
 <span class="sgr33">⌅</span> <span class="sgr90">[626554b9] </span>MetaGraphs v0.8.1
-  <span class="sgr90">[128add7d] </span>MicroCollections v0.2.0
   <span class="sgr90">[e1d29d7a] </span>Missings v1.2.0
   <span class="sgr90">[66fc600b] </span>ModernGL v1.1.8
   <span class="sgr90">[0987c9cc] </span>MonteCarloMeasurements v1.5.2
   <span class="sgr90">[e94cdb99] </span>MosaicViews v0.3.4
   <span class="sgr90">[2e0e35c7] </span>Moshi v0.3.8
-  <span class="sgr90">[46d2c3a1] </span>MuladdMacro v0.2.4
-  <span class="sgr90">[872c559c] </span>NNlib v0.9.35
+  <span class="sgr90">[46d2c3a1] </span>MuladdMacro v0.2.5
+  <span class="sgr90">[872c559c] </span>NNlib v0.9.36
   <span class="sgr90">[5da4648a] </span>NVTX v1.0.3
-  <span class="sgr90">[77ba4419] </span>NaNMath v1.1.3
-  <span class="sgr90">[71a1bf82] </span>NameResolution v0.1.5
+  <span class="sgr90">[77ba4419] </span>NaNMath v1.1.4
   <span class="sgr90">[d9ec5142] </span>NamedTupleTools v0.14.3
   <span class="sgr90">[b8a86587] </span>NearestNeighbors v0.4.27
   <span class="sgr90">[f09324ee] </span>Netpbm v1.1.1
@@ -317,7 +304,7 @@ Environment:
   <span class="sgr90">[510215fc] </span>Observables v0.5.5
   <span class="sgr90">[6fe1bfb0] </span>OffsetArrays v1.17.0
   <span class="sgr90">[0b1bfda6] </span>OneHotArrays v0.2.11
-  <span class="sgr90">[925886fa] </span>OnlineStatsBase v1.7.1
+  <span class="sgr90">[925886fa] </span>OnlineStatsBase v1.7.3
   <span class="sgr90">[52e1d378] </span>OpenEXR v0.3.3
   <span class="sgr90">[4d8831e6] </span>OpenSSL v1.6.1
 <span class="sgr33">⌅</span> <span class="sgr90">[3bd65402] </span>Optimisers v0.3.4
@@ -332,7 +319,7 @@ Environment:
   <span class="sgr90">[19eb6ba3] </span>Packing v0.5.1
   <span class="sgr90">[5432bcbf] </span>PaddedViews v0.5.12
 <span class="sgr33">⌅</span> <span class="sgr90">[d96e819e] </span>Parameters v0.12.3
-  <span class="sgr90">[69de0a69] </span>Parsers v2.8.5
+  <span class="sgr90">[69de0a69] </span>Parsers v2.8.6
   <span class="sgr90">[eebad327] </span>PkgVersion v0.3.3
   <span class="sgr90">[ccf2f8ad] </span>PlotThemes v3.3.0
   <span class="sgr90">[995b91a9] </span>PlotUtils v1.4.4
@@ -345,7 +332,6 @@ Environment:
   <span class="sgr90">[2dfb63ee] </span>PooledArrays v1.4.3
   <span class="sgr90">[aea7be01] </span>PrecompileTools v1.3.4
   <span class="sgr90">[21216c6a] </span>Preferences v1.5.2
-  <span class="sgr90">[8162dcfd] </span>PrettyPrint v0.2.0
   <span class="sgr90">[08abe8d2] </span>PrettyTables v3.3.2
   <span class="sgr90">[27ebfcd6] </span>Primes v0.5.7
   <span class="sgr90">[33c8b6b6] </span>ProgressLogging v0.1.6
@@ -372,15 +358,15 @@ Environment:
   <span class="sgr90">[79098fc4] </span>Rmath v0.9.0
   <span class="sgr90">[6038ab10] </span>Rotations v1.7.1
   <span class="sgr90">[5eaf0fd0] </span>RoundingEmulator v0.2.1
-  <span class="sgr90">[7e49a35a] </span>RuntimeGeneratedFunctions v0.5.19
+  <span class="sgr90">[7e49a35a] </span>RuntimeGeneratedFunctions v0.5.20
   <span class="sgr90">[fdea26ae] </span>SIMD v3.7.2
   <span class="sgr90">[94e857df] </span>SIMDTypes v0.1.0
   <span class="sgr90">[476501e8] </span>SLEEFPirates v0.6.46
   <span class="sgr90">[322a6be2] </span>Sass v0.2.0
 <span class="sgr33">⌅</span> <span class="sgr90">[0bca4576] </span>SciMLBase v2.101.0
-  <span class="sgr90">[c0aeaf25] </span>SciMLOperators v1.22.0
-  <span class="sgr90">[431bcebd] </span>SciMLPublic v1.0.1
-  <span class="sgr90">[53ae85a6] </span>SciMLStructures v1.10.0
+  <span class="sgr90">[c0aeaf25] </span>SciMLOperators v1.22.1
+  <span class="sgr90">[431bcebd] </span>SciMLPublic v1.1.0
+  <span class="sgr90">[53ae85a6] </span>SciMLStructures v1.10.1
   <span class="sgr90">[7e506255] </span>ScopedValues v1.6.2
   <span class="sgr90">[6c6a2e73] </span>Scratch v1.3.0
   <span class="sgr90">[91c51154] </span>SentinelArrays v1.4.10
@@ -394,27 +380,26 @@ Environment:
   <span class="sgr90">[ce78b400] </span>SimpleUnPack v1.1.0
   <span class="sgr90">[47aef6b3] </span>SimpleWeightedGraphs v1.5.1
   <span class="sgr90">[45858cf5] </span>Sixel v0.1.5
-  <span class="sgr90">[a2af1166] </span>SortingAlgorithms v1.2.2
+  <span class="sgr90">[a2af1166] </span>SortingAlgorithms v1.2.3
   <span class="sgr90">[dc90abb0] </span>SparseInverseSubset v0.1.2
   <span class="sgr90">[d4ead438] </span>SpatialIndexing v0.1.6
   <span class="sgr90">[276daf66] </span>SpecialFunctions v2.8.0
-  <span class="sgr90">[171d559e] </span>SplittablesBase v0.1.15
   <span class="sgr90">[860ef19b] </span>StableRNGs v1.0.4
   <span class="sgr90">[cae243ae] </span>StackViews v0.1.2
-  <span class="sgr90">[aedffcd0] </span>Static v1.4.0
+  <span class="sgr90">[aedffcd0] </span>Static v1.4.1
   <span class="sgr90">[0d7ed370] </span>StaticArrayInterface v1.10.0
   <span class="sgr90">[90137ffa] </span>StaticArrays v1.9.18
   <span class="sgr90">[1e83bf80] </span>StaticArraysCore v1.4.4
 <span class="sgr33">⌅</span> <span class="sgr90">[4c8beaf5] </span>StaticGraphs v0.3.1
   <span class="sgr90">[10745b16] </span>Statistics v1.11.1
   <span class="sgr90">[82ae8749] </span>StatsAPI v1.8.0
-  <span class="sgr90">[2913bbd2] </span>StatsBase v0.34.11
+  <span class="sgr90">[2913bbd2] </span>StatsBase v0.34.12
 <span class="sgr33">⌅</span> <span class="sgr90">[4c63d2b9] </span>StatsFuns v1.5.2
   <span class="sgr90">[ff63dad9] </span>StreamSampling v0.8.2
   <span class="sgr90">[7792a7ef] </span>StrideArraysCore v0.5.9
   <span class="sgr90">[892a3eda] </span>StringManipulation v0.4.4
   <span class="sgr90">[09ab397b] </span>StructArrays v0.7.3
-  <span class="sgr90">[2efcf032] </span>SymbolicIndexingInterface v0.3.48
+  <span class="sgr90">[2efcf032] </span>SymbolicIndexingInterface v0.3.49
   <span class="sgr90">[3783bdb8] </span>TableTraits v1.0.1
   <span class="sgr90">[bd369af6] </span>Tables v1.12.1
   <span class="sgr90">[899adc3e] </span>TensorBoardLogger v0.1.26
@@ -425,14 +410,13 @@ Environment:
   <span class="sgr90">[06e1c1a7] </span>TiledIteration v0.5.0
   <span class="sgr90">[e689c965] </span>Tracy v0.1.6
   <span class="sgr90">[3bb67fe8] </span>TranscodingStreams v0.11.3
-  <span class="sgr90">[28d57a85] </span>Transducers v0.4.85
   <span class="sgr90">[410a4b4d] </span>Tricks v0.1.13
   <span class="sgr90">[981d1d27] </span>TriplotBase v0.1.0
   <span class="sgr90">[781d530d] </span>TruncatedStacktraces v1.4.0
   <span class="sgr90">[5c2747f8] </span>URIs v1.6.1
   <span class="sgr90">[3a884ed6] </span>UnPack v1.0.2
   <span class="sgr90">[1cfade01] </span>UnicodeFun v0.4.1
-  <span class="sgr90">[b8865327] </span>UnicodePlots v3.8.3
+  <span class="sgr90">[b8865327] </span>UnicodePlots v3.8.4
   <span class="sgr90">[1986cc42] </span>Unitful v1.28.0
   <span class="sgr90">[013be700] </span>UnsafeAtomics v0.3.1
   <span class="sgr90">[41fe7b60] </span>Unzip v0.2.0
@@ -470,7 +454,7 @@ Environment:
   <span class="sgr90">[020c3dae] </span>Git_LFS_jll v3.7.1+0
   <span class="sgr90">[f8c6e375] </span>Git_jll v2.54.0+0
   <span class="sgr90">[7746bdde] </span>Glib_jll v2.86.3+0
-  <span class="sgr90">[3b182d85] </span>Graphite2_jll v1.3.15+0
+  <span class="sgr90">[3b182d85] </span>Graphite2_jll v1.3.16+0
   <span class="sgr90">[528830af] </span>Gumbo_jll v0.10.2+0
   <span class="sgr90">[2e76f6c2] </span>HarfBuzz_jll v8.5.1+0
   <span class="sgr90">[c73af94c] </span>ImageMagick_jll v7.1.2023+0
@@ -489,13 +473,13 @@ Environment:
   <span class="sgr90">[4b2f31a3] </span>Libmount_jll v2.42.0+0
   <span class="sgr90">[89763e89] </span>Libtiff_jll v4.7.2+0
   <span class="sgr90">[38a345b3] </span>Libuuid_jll v2.42.0+0
-  <span class="sgr90">[d3a379c0] </span>LittleCMS_jll v2.19.0+0
+  <span class="sgr90">[d3a379c0] </span>LittleCMS_jll v2.19.1+0
   <span class="sgr90">[856f044c] </span>MKL_jll v2025.2.0+0
   <span class="sgr90">[c8ffd9c3] </span>MbedTLS_jll v2.28.1010+0
   <span class="sgr90">[e98f9f5b] </span>NVTX_jll v3.2.2+0
   <span class="sgr90">[e7412a2a] </span>Ogg_jll v1.3.6+0
   <span class="sgr90">[6cdc7f73] </span>OpenBLASConsistentFPCSR_jll v0.3.33+0
-  <span class="sgr90">[18a262bb] </span>OpenEXR_jll v3.4.12+0
+  <span class="sgr90">[18a262bb] </span>OpenEXR_jll v3.4.13+0
   <span class="sgr90">[643b3616] </span>OpenJpeg_jll v2.5.5+0
   <span class="sgr90">[9bd350c2] </span>OpenSSH_jll v10.3.1+0
   <span class="sgr90">[efe28fd5] </span>OpenSpecFun_jll v0.5.6+0
@@ -503,7 +487,7 @@ Environment:
   <span class="sgr90">[36c8627f] </span>Pango_jll v1.57.1+0
   <span class="sgr90">[30392449] </span>Pixman_jll v0.46.4+0
   <span class="sgr90">[c0090381] </span>Qt6Base_jll v6.10.2+2
-  <span class="sgr90">[629bc702] </span>Qt6Declarative_jll v6.10.2+1
+  <span class="sgr90">[629bc702] </span>Qt6Declarative_jll v6.10.2+2
   <span class="sgr90">[ce943373] </span>Qt6ShaderTools_jll v6.10.2+1
   <span class="sgr90">[6de9746b] </span>Qt6Svg_jll v6.10.2+0
   <span class="sgr90">[e99dba38] </span>Qt6Wayland_jll v6.10.2+1
@@ -608,4 +592,4 @@ Environment:
   <span class="sgr90">[8e850b90] </span>libblastrampoline_jll v5.15.0+0
   <span class="sgr90">[8e850ede] </span>nghttp2_jll v1.64.0+1
   <span class="sgr90">[3f19e933] </span>p7zip_jll v17.7.0+0
-<span class="sgr36"><span class="sgr1">Info</span></span> Packages marked with <span class="sgr32">⌃</span> and <span class="sgr33">⌅</span> have new versions available. Those with <span class="sgr32">⌃</span> may be upgradable, but those with <span class="sgr33">⌅</span> are restricted by compatibility constraints from upgrading. To see why use `status --outdated -m`</code></pre></details><p>You can also download the <a href="https://github.com/Agents/Agents.jl/tree/gh-pages/v7.0.2/assets/Manifest.toml">manifest</a> file and the <a href="https://github.com/Agents/Agents.jl/tree/gh-pages/v7.0.2/assets/Project.toml">project</a> file.</p></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="tutorial/">Tutorial »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Monday 8 June 2026 09:36">Monday 8 June 2026</span>. Using Julia version 1.12.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+<span class="sgr36"><span class="sgr1">Info</span></span> Packages marked with <span class="sgr32">⌃</span> and <span class="sgr33">⌅</span> have new versions available. Those with <span class="sgr32">⌃</span> may be upgradable, but those with <span class="sgr33">⌅</span> are restricted by compatibility constraints from upgrading. To see why use `status --outdated -m`</code></pre></details><p>You can also download the <a href="https://github.com/Agents/Agents.jl/tree/gh-pages/v7.0.3/assets/Manifest.toml">manifest</a> file and the <a href="https://github.com/Agents/Agents.jl/tree/gh-pages/v7.0.3/assets/Project.toml">project</a> file.</p></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="tutorial/">Tutorial »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Tuesday 23 June 2026 12:11">Tuesday 23 June 2026</span>. Using Julia version 1.12.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
