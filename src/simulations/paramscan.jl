@@ -56,7 +56,7 @@ function initialize(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3)
     model = StandardABM(SchellingAgent, space;
                 properties = properties, agent_step! = schelling_step!, scheduler = Schedulers.Randomly())
     for n in 1:numagents
-        add_agent_single!(SchellingAgent, model, n < numagents / 2 ? 1 : 2)
+        add_agent_single!(model; group = n < numagents / 2 ? 1 : 2)
     end
     return model
 end
