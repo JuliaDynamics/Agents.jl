@@ -48,15 +48,15 @@ the `parameters` dictionary to avoid duplication.
 
 ## Example
 A runnable example that uses `paramscan` is shown in [Schelling's segregation model](@ref Tutorial).
-There, we define
+Run the `Shelling` agent definition and `sheclling_step!()` from there, and the following code:
 ```julia
 function initialize(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3)
     space = GridSpaceSingle(griddims, periodic = false)
     properties = Dict(:min_to_be_happy => min_to_be_happy)
-    model = StandardABM(SchellingAgent, space;
-                properties = properties, scheduler = Schedulers.randomly)
+    model = StandardABM(Schelling, space;
+                properties = properties, agent_step! = schelling_step!, scheduler = Schedulers.Randomly())
     for n in 1:numagents
-        add_agent_single!(SchellingAgent, model, n < numagents / 2 ? 1 : 2)
+        add_agent_single!(model; group = n < numagents / 2 ? 1 : 2)
     end
     return model
 end
