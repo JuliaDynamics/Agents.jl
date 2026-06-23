@@ -53,7 +53,7 @@ Run the `Shelling` agent definition and `sheclling_step!()` from there, and the 
 function initialize(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3)
     space = GridSpaceSingle(griddims, periodic = false)
     properties = Dict(:min_to_be_happy => min_to_be_happy)
-    model = StandardABM(SchellingAgent, space;
+    model = StandardABM(Schelling, space;
                 properties = properties, agent_step! = schelling_step!, scheduler = Schedulers.Randomly())
     for n in 1:numagents
         add_agent_single!(model; group = n < numagents / 2 ? 1 : 2)
