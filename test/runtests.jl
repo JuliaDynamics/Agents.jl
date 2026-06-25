@@ -75,7 +75,7 @@ function schelling_model(ModelType, SpaceType, ContainerType; numagents = 30, gr
     space = SpaceType(griddims, periodic = false)
     properties = Dict(:min_to_be_happy => min_to_be_happy)
     model = ModelType(
-        SchellingAgent2, space, agent_step! = schelling_model_agent_step!,
+        SchellingAgent2, space, (agent_step!) = schelling_model_agent_step!,
         properties = properties, scheduler = Schedulers.Randomly(),
         container = ContainerType, rng = StableRNG(10)
     )
@@ -114,7 +114,7 @@ function flocking_model(
     )
     space2d = ContinuousSpace(extent; spacing)
     model = ModelType(
-        Bird, space2d, agent_step! = flocking_model_agent_step!,
+        Bird, space2d, (agent_step!) = flocking_model_agent_step!,
         scheduler = Schedulers.Randomly(), rng = StableRNG(10),
         container = ContainerType
     )
@@ -158,6 +158,7 @@ function flocking_model_agent_step!(bird, model)
 end
 
 @testset "Agents.jl Tests" begin
+    include("iterable_tests.jl")
     include("package_sanity_tests.jl")
     include("model_creation_tests.jl")
     include("api_tests.jl")
