@@ -263,13 +263,23 @@ function add_agent!(
         args::Vararg{Any, N};
         kwargs...,
     ) where {N}
+
     id = nextid(model)
+
     if !isempty(args)
         newagent = A(id, pos, args...)
     else
         newagent = A(; id = id, pos = pos, kwargs...)
     end
-    return add_agent_own_pos!(newagent, model)
+
+    # try inserting into space first
+    add_agent_to_space!(newagent, model)
+
+    # only after successful insertion update container
+    add_agent_to_container!(newagent, model)
+    extra_actions_after_add!(newagent, model)
+
+    return newagent
 end
 
 #######################################################################################
