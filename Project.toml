@@ -46,7 +46,7 @@ AgentsVisualizations = "Makie"
 
 [compat]
 Arrow = "2"
-CSV = "0.9.7, 0.10"
+CSV = "0.9.7, 0.10, 1"
 CommonSolve = "0.2.4"
 Crux = "0.1"
 DataFrames = "0.21, 0.22, 1"
