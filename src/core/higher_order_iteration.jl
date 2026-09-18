@@ -9,8 +9,13 @@ e.g. `(agent1, agent7, agent8)`. `order` must be larger than `1` but has no uppe
 
 Index order is provided by the `scheduler` input which is a scheduler.
 """
-iter_agent_groups(order::Int, model::ABM; scheduler = abmscheduler(model)) =
-    Iterators.product((map(i -> model[i], scheduler(model)) for _ in 1:order)...)
+function iter_agent_groups(::Val{N}, model::ABM; scheduler = abmscheduler(model)) where {N}
+    base_iter = Iterators.map(i -> model[i], scheduler(model))
+    iters = ntuple(_ -> base_iter, Val(N))
+    return Iterators.product(iters...)
+end
+
+iter_agent_groups(order::Int, model::ABM; scheduler = abmscheduler(model)) = iter_agent_groups(Val(order), model; scheduler)
 
 """
     map_agent_groups(order::Int, f::Function, model::ABM; kwargs...)
