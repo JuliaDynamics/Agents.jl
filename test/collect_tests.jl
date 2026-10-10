@@ -111,6 +111,16 @@ using Distributed
         @test propertynames(df) == [:time, :mean_weight]
         @test df[1, dataname((:weight, mean))] ≈ 0.37333333333
 
+        # Empty model must keep DataFrame columns aligned (#1128)
+        empty_model = StandardABM(Agent2, GridSpace((10, 10)); warn_deprecation = false)
+        props_sum = [(:weight, sum)]
+        # Seed column types from a non-empty model, then collect on empty
+        df_empty = init_agent_dataframe(model, props_sum)
+        collect_agent_data!(df_empty, empty_model, props_sum)
+        @test size(df_empty) == (1, 2)
+        @test df_empty[1, dataname(props_sum[1])] == 0.0
+        @test length(df_empty[!, 1]) == length(df_empty[!, 2])
+
         # Add a function as a property
         props = [:weight, x_position]
         df = init_agent_dataframe(model, props)
