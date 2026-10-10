@@ -34,6 +34,15 @@ function Base.setproperty!(agent::AgentWrapperSoA, name::Symbol, x)
     return agent
 end
 
+# Expose the wrapped agent type's fields for REPL tab-completion (`agent.<TAB>`).
+function Base.propertynames(::AgentWrapperSoA{A}, private::Bool = false) where {A}
+    return fieldnames(A)
+end
+
+function Base.hasproperty(::AgentWrapperSoA{A}, s::Symbol) where {A}
+    return hasfield(A, s)
+end
+
 """
     agent_container_type(container::Type, A)
 

@@ -1,3 +1,8 @@
+# v7.1
+
+- REPL tab-completion for `model.` now lists user-facing model properties
+  instead of internal ABM fields (#1202, #1220).
+
 # v7
 
 ## New features

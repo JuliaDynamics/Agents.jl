@@ -69,6 +69,14 @@ containertype(::ReinforcementLearningABM{S, A, C}) where {S, A, C} = C
 agenttype(::ReinforcementLearningABM{S, A}) where {S, A} = A
 discretimeabm(::ReinforcementLearningABM) = true
 
+# Fields accessible via getproperty / setproperty! without going through `properties`
+const _RLABM_DIRECT_FIELDS = (
+    :rl_config, :trained_policies, :training_history, :is_training,
+    :current_training_agent_type, :current_training_agent_id,
+    :agents, :agent_step, :model_step, :space, :scheduler, :rng,
+    :agents_types, :agents_first, :maxid, :time, :properties,
+)
+
 # Override property access to handle RL-specific fields
 function Base.getproperty(m::ReinforcementLearningABM, s::Symbol)
     # Handle RL-specific fields directly
@@ -118,6 +126,22 @@ function Base.setproperty!(m::ReinforcementLearningABM, s::Symbol, x)
         else
             throw(exception)
         end
+    end
+end
+
+function Base.propertynames(m::ReinforcementLearningABM, private::Bool = false)
+    return (_RLABM_DIRECT_FIELDS..., _abm_properties_names(abmproperties(m), private)...)
+end
+
+function Base.hasproperty(m::ReinforcementLearningABM, s::Symbol)
+    s in _RLABM_DIRECT_FIELDS && return true
+    p = abmproperties(m)
+    if isnothing(p)
+        return false
+    elseif p isa AbstractDict
+        return haskey(p, s)
+    else
+        return hasproperty(p, s)
     end
 end
 

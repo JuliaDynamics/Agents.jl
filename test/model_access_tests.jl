@@ -45,6 +45,15 @@ using Agents, Test
                 @test model.b == "Changed"
                 @test_throws ErrorException model.c = 5
 
+                # propertynames / hasproperty for REPL tab-completion (#1202)
+                @test :a ∈ propertynames(model)
+                @test :b ∈ propertynames(model)
+                @test :agents ∉ propertynames(model)
+                @test hasproperty(model, :a)
+                @test hasproperty(model, :b)
+                @test !hasproperty(model, :c)
+                @test !hasproperty(model, :agents)
+
                 # Add a new agent
                 if ContainerType == StructVector
                     newa = add_agent!(NoSpaceAgent, model)
@@ -67,6 +76,9 @@ using Agents, Test
                 @test model.par1 == 1
                 @test model.par2 == 1.0
                 @test model.par3 == "Test"
+                @test propertynames(model) == (:par1, :par2, :par3)
+                @test hasproperty(model, :par1)
+                @test !hasproperty(model, :par4)
 
                 model.par1 = 7
                 model.par2 = 7
@@ -78,8 +90,18 @@ using Agents, Test
 
                 model = ModelType(agent_type, extra_args...; container = ContainerType, extra_kwargs...)
                 @test_throws ErrorException model.a = 5
+                @test propertynames(model) == ()
+                @test !hasproperty(model, :a)
             end
         end
+    end
+
+    @testset "AgentWrapperSoA propertynames" begin
+        model = StandardABM(SoAType{NoSpaceAgent}; container = StructVector, warn_deprecation = false)
+        a = add_agent!(NoSpaceAgent, model)
+        @test propertynames(a) == fieldnames(NoSpaceAgent)
+        @test hasproperty(a, :id)
+        @test !hasproperty(a, :not_a_field)
     end
 
     @testset "model access typestability" begin
