@@ -172,9 +172,10 @@ guidance.
 
 ## Keywords arguments (in addition to those in `abmplot`)
 * `alabels, mlabels`: If data are collected from agents or the model with `adata, mdata`,
-  the corresponding plots' y-labels are automatically named after the collected data.
-  It is also possible to provide `alabels, mlabels` (vectors of strings with exactly same
-  length as `adata, mdata`), and these labels will be used instead.
+  the corresponding plots' y-labels are automatically named with [`dataname`](@ref)
+  (same names as in `run!` dataframes). You may also pass `alabels, mlabels`
+  (vectors of strings or symbols with exactly the same length as `adata, mdata`);
+  they are converted to strings for Makie.
 * `figure = NamedTuple()`: Keywords to customize the created Figure.
 * `axis = NamedTuple()`: Keywords to customize the created Axis.
 * `plotkwargs = NamedTuple()`: Keywords to customize the styling of the resulting

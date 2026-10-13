@@ -42,7 +42,8 @@ function init_abm_data_plots!(fig, abmobs, adata, mdata, alabels, mlabels, plotk
         )
         ax = plotlayout[i, :] = Axis(fig)
         push!(axs, ax)
-        ax.ylabel = isnothing(alabels) ? y_label : alabels[i]
+        # Makie axis labels require AbstractString; allow Symbol labels (#926 thread).
+        ax.ylabel = string(isnothing(alabels) ? y_label : alabels[i])
         c = JULIADYNAMICS_COLORS[mod1(i, 3)]
         scatterlines!(
             ax, points;
@@ -52,7 +53,7 @@ function init_abm_data_plots!(fig, abmobs, adata, mdata, alabels, mlabels, plotk
     end
 
     for i in 1:Lm # add mdata plots
-        y_label = string(mdata[i])
+        y_label = dataname(mdata[i])
         points = @lift(
             Point2f.(
                 apply_offsets($(abmobs.mdf).time, $(abmobs.offset_time_mdf)),
@@ -61,7 +62,7 @@ function init_abm_data_plots!(fig, abmobs, adata, mdata, alabels, mlabels, plotk
         )
         ax = plotlayout[i + La, :] = Axis(fig)
         push!(axs, ax)
-        ax.ylabel = isnothing(mlabels) ? y_label : mlabels[i]
+        ax.ylabel = string(isnothing(mlabels) ? y_label : mlabels[i])
         c = JULIADYNAMICS_COLORS[mod1(i + La, 3)]
         scatterlines!(
             ax, points;
