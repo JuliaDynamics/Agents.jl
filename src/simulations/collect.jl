@@ -493,10 +493,14 @@ function collect_agent_data!(
         @warn "Passing the `step` argument to `collect_agent_data!` is deprecated,
              now `abmtime(model)` is used automatically" maxlog = 1
     end
-    alla = allagents(model)
+    # Materialize agents and compute aggregates *before* mutating `df`, so a failure
+    # (e.g. empty model after all agents removed) cannot leave unequal column lengths
+    # that later trigger DimensionsMismatch in abmexploration (#1128).
+    alla = collect(allagents(model))
+    agg_vals = [_aggregate_value(df[!, i + 1], prop, alla; kwargs...) for (i, prop) in enumerate(properties)]
     push!(df[!, 1], abmtime(model))
-    for (i, prop) in enumerate(properties)
-        _add_col_data!(df[!, i + 1], prop, alla; kwargs...)
+    for (i, v) in enumerate(agg_vals)
+        push!(df[!, i + 1], v)
     end
     return df
 end
@@ -702,9 +706,7 @@ function _add_col_data!(
         agent_iter;
         obtainer = identity,
     ) where {T, K, A}
-    k, agg = property
-    res::T = agg(get_data(a, k, obtainer) for a in agent_iter)
-    return push!(col, res)
+    return push!(col, _aggregate_value(col, property, agent_iter; obtainer))
 end
 # Conditional aggregates
 function _add_col_data!(
@@ -714,6 +716,41 @@ function _add_col_data!(
         obtainer = identity,
     ) where {T, K, A, C}
     k, agg, condition = property
-    res::T = agg(get_data(a, k, obtainer) for a in Iterators.filter(condition, agent_iter))
-    return push!(col, res)
+    filtered = Iterators.filter(condition, agent_iter)
+    return push!(col, _aggregate_value(col, (k, agg), filtered; obtainer))
+end
+
+"""
+Compute one aggregated value for `property` over `agent_iter`.
+Empty agent sets use a type-stable fallback instead of calling `agg` on an empty
+iterator (which often throws and used to desync DataFrame columns; see #1128).
+"""
+function _aggregate_value(
+        col::AbstractVector{T},
+        property::Tuple{K, A},
+        agent_iter;
+        obtainer = identity,
+    ) where {T, K, A}
+    k, agg = property
+    agents = agent_iter isa AbstractVector ? agent_iter : collect(agent_iter)
+    if isempty(agents)
+        return empty_aggregate_value(T, agg)
+    end
+    return agg(get_data(a, k, obtainer) for a in agents)::T
+end
+
+empty_aggregate_value(::Type{T}, ::typeof(sum)) where {T <: Number} = zero(T)
+empty_aggregate_value(::Type{T}, ::typeof(+)) where {T <: Number} = zero(T)
+empty_aggregate_value(::Type{T}, ::typeof(length)) where {T <: Integer} = zero(T)
+empty_aggregate_value(::Type{T}, ::typeof(length)) where {T} = zero(Int)
+function empty_aggregate_value(::Type{T}, ::Any) where {T <: AbstractFloat}
+    return T(NaN)
+end
+function empty_aggregate_value(::Type{T}, agg) where {T}
+    throw(
+        ArgumentError(
+            "Cannot aggregate an empty agent set with $(agg) into column type $(T). " *
+                "Keep at least one agent, or use an aggregator with a defined empty value (e.g. `sum`).",
+        )
+    )
 end
